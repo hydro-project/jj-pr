@@ -547,9 +547,10 @@ fn find_base_for_commit(commit_id: &str, jj_state: &JjState, dag: &PrDag) -> Str
 /// Walk ancestors from commit_id until we hit trunk or a PR boundary.
 ///
 /// Mode is determined by the first existing trailer encountered:
-/// - No trailer: claim unstamped commits, stop at any stamped commit
+/// - No trailer first: claim unstamped commits, stop at any stamped commit
 /// - Same PR: keep walking (update case)
-/// - Different PR X: reclaim from X, stop at any other PR Y or trunk
+/// - Different PR X first (no unstamped claimed yet): reclaim from X,
+///   stop at any other PR Y or trunk
 fn find_pr_commits(commit_id: &str, jj_state: &JjState, pr_number: u64) -> Vec<String> {
     let mut result = Vec::new();
     let mut queue = vec![commit_id.to_owned()];
@@ -574,11 +575,13 @@ fn find_pr_commits(commit_id: &str, jj_state: &JjState, pr_number: u64) -> Vec<S
                 // Already ours — include and keep walking.
             }
             Some(existing) => {
-                if reclaiming_from.is_none_or(|r| r == existing) {
-                    // First foreign PR, or same one we're reclaiming from.
+                if reclaiming_from == Some(existing) {
+                    // Continuing to reclaim from the same foreign PR.
+                } else if reclaiming_from.is_none() && result.is_empty() {
+                    // Very first commits are foreign — enter reclaim mode.
                     reclaiming_from = Some(existing);
                 } else {
-                    // Different PR boundary — stop this path.
+                    // Hit a different PR boundary — stop this path.
                     continue;
                 }
             }
