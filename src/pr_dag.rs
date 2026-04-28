@@ -544,11 +544,18 @@ fn find_base_for_commit(commit_id: &str, jj_state: &JjState, dag: &PrDag) -> Str
 }
 
 /// Find all commits that should be stamped with a PR trailer.
-/// Walk ancestors from commit_id until we hit trunk or another PR.
-fn find_pr_commits(commit_id: &str, jj_state: &JjState, _pr_number: u64) -> Vec<String> {
+/// Walk ancestors from commit_id until we hit trunk or a PR boundary.
+///
+/// Mode is determined by the first existing trailer encountered:
+/// - No trailer first: claim unstamped commits, stop at any stamped commit
+/// - Same PR: keep walking (update case)
+/// - Different PR X first (no unstamped claimed yet): reclaim from X,
+///   stop at any other PR Y or trunk
+fn find_pr_commits(commit_id: &str, jj_state: &JjState, pr_number: u64) -> Vec<String> {
     let mut result = Vec::new();
     let mut queue = vec![commit_id.to_owned()];
     let mut visited = HashSet::new();
+    let mut reclaiming_from: Option<u64> = None;
 
     while let Some(cid) = queue.pop() {
         if !visited.insert(cid.clone()) {
@@ -559,13 +566,31 @@ fn find_pr_commits(commit_id: &str, jj_state: &JjState, _pr_number: u64) -> Vec<
         };
         let entry = &jj_state.entries[idx];
 
-        // Stop at trunk.
         if entry.immutable {
             continue;
         }
-        // Stop at commits already belonging to a different PR.
-        if let Some(_existing) = jj::parse_pr_trailer(&entry.commit.description) {
-            continue;
+
+        match jj::parse_pr_trailer(&entry.commit.description) {
+            Some(existing) if existing == pr_number => {
+                // Already ours — include and keep walking.
+            }
+            Some(existing) => {
+                if reclaiming_from == Some(existing) {
+                    // Continuing to reclaim from the same foreign PR.
+                } else if reclaiming_from.is_none() && result.is_empty() {
+                    // Very first commits are foreign — enter reclaim mode.
+                    reclaiming_from = Some(existing);
+                } else {
+                    // Hit a different PR boundary — stop this path.
+                    continue;
+                }
+            }
+            None => {
+                if reclaiming_from.is_some() {
+                    // Was reclaiming but hit unstamped — stop.
+                    continue;
+                }
+            }
         }
 
         result.push(cid.clone());
