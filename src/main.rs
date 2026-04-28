@@ -16,9 +16,9 @@ fn main() -> Result<()> {
     let yes = cli.yes;
     match cli.command {
         Command::Log => cmd_log(),
-        Command::Sync { dry_run } => cmd_sync(dry_run),
+        Command::Sync { dry_run } => cmd_sync(dry_run, yes),
         Command::Track(args) => cmd_track(args, yes),
-        Command::Import { dry_run } => cmd_import(dry_run),
+        Command::Import { dry_run } => cmd_import(dry_run, yes),
     }
 }
 
@@ -30,7 +30,7 @@ fn cmd_log() -> Result<()> {
     Ok(())
 }
 
-fn cmd_sync(dry_run: bool) -> Result<()> {
+fn cmd_sync(dry_run: bool, yes: bool) -> Result<()> {
     let jj_state = jj::load_state()?;
     let gh_state = gh::load_prs()?;
     let dag = pr_dag::build(&jj_state, &gh_state)?;
@@ -45,10 +45,10 @@ fn cmd_sync(dry_run: bool) -> Result<()> {
         eprintln!("{action}");
     }
 
-    if !dry_run {
-        pr_dag::execute_sync(&actions)?;
-    } else {
+    if dry_run {
         eprintln!("\n{}", style::warn("Dry run: no changes applied."));
+    } else if ui::confirm(&format!("Apply {} action(s)?", actions.len()), yes) {
+        pr_dag::execute_sync(&actions)?;
     }
 
     Ok(())
@@ -62,9 +62,9 @@ fn cmd_track(args: cli::TrackArgs, yes: bool) -> Result<()> {
     Ok(())
 }
 
-fn cmd_import(dry_run: bool) -> Result<()> {
+fn cmd_import(dry_run: bool, yes: bool) -> Result<()> {
     let jj_state = jj::load_state()?;
     let gh_prs = gh::load_prs()?;
-    pr_dag::import_prs(&jj_state, &gh_prs, dry_run)?;
+    pr_dag::import_prs(&jj_state, &gh_prs, dry_run, yes)?;
     Ok(())
 }
