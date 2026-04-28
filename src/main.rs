@@ -5,6 +5,7 @@ mod pr_dag;
 mod style;
 #[cfg(test)]
 mod tests;
+mod ui;
 
 use anyhow::Result;
 use clap::Parser;
@@ -12,10 +13,11 @@ use cli::{Cli, Command};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+    let yes = cli.yes;
     match cli.command {
         Command::Log => cmd_log(),
         Command::Sync { dry_run } => cmd_sync(dry_run),
-        Command::Track(args) => cmd_track(args),
+        Command::Track(args) => cmd_track(args, yes),
         Command::Import { dry_run } => cmd_import(dry_run),
     }
 }
@@ -52,11 +54,11 @@ fn cmd_sync(dry_run: bool) -> Result<()> {
     Ok(())
 }
 
-fn cmd_track(args: cli::TrackArgs) -> Result<()> {
+fn cmd_track(args: cli::TrackArgs, yes: bool) -> Result<()> {
     let jj_state = jj::load_state()?;
     let gh_state = gh::load_prs()?;
     let dag = pr_dag::build(&jj_state, &gh_state)?;
-    pr_dag::track_pr(&dag, &jj_state, &gh_state, &args)?;
+    pr_dag::track_pr(&dag, &jj_state, &gh_state, &args, yes)?;
     Ok(())
 }
 

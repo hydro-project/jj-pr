@@ -3,6 +3,10 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(name = "jj-pr", about = "Sync jj bookmarks with GitHub PRs")]
 pub struct Cli {
+    /// Skip confirmation prompts
+    #[arg(short = 'y', long = "yes", global = true)]
+    pub yes: bool,
+
     #[command(subcommand)]
     pub command: Command,
 }

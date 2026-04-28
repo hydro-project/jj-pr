@@ -383,7 +383,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
 }
 
 /// Create a new PR or update an existing one.
-pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackArgs) -> Result<()> {
+pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackArgs, yes: bool) -> Result<()> {
     // When --pr is given, resolve the bookmark from the GH PR's headRefName.
     let bookmark = if let Some(pr_num) = args.pr {
         let gh_pr = gh_prs
@@ -506,7 +506,7 @@ pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackAr
     };
 
     // Stamp PR trailer on all commits in the PR.
-    let commits_to_stamp = find_pr_commits(&commit_id, jj_state, pr_number);
+    let commits_to_stamp = find_pr_commits(&commit_id, jj_state, pr_number, yes);
     for cid in &commits_to_stamp {
         if let Some(&idx) = jj_state.by_commit.get(cid) {
             let entry = &jj_state.entries[idx];
@@ -550,8 +550,9 @@ fn find_base_for_commit(commit_id: &str, jj_state: &JjState, dag: &PrDag) -> Str
 /// - No trailer: claim unstamped commits, stop at any stamped commit
 /// - Same PR: keep walking (update case)
 /// - Different PR X: reclaim from X, stop at any other PR Y or trunk
-fn find_pr_commits(commit_id: &str, jj_state: &JjState, pr_number: u64) -> Vec<String> {
-    let mut result = Vec::new();
+fn find_pr_commits(commit_id: &str, jj_state: &JjState, pr_number: u64, yes: bool) -> Vec<String> {
+    let mut own_commits = Vec::new();
+    let mut reclaimed_commits = Vec::new();
     let mut queue = vec![commit_id.to_owned()];
     let mut visited = HashSet::new();
     let mut reclaiming_from: Option<u64> = None;
@@ -572,11 +573,12 @@ fn find_pr_commits(commit_id: &str, jj_state: &JjState, pr_number: u64) -> Vec<S
         match jj::parse_pr_trailer(&entry.commit.description) {
             Some(existing) if existing == pr_number => {
                 // Already ours — include and keep walking.
+                own_commits.push(cid.clone());
             }
             Some(existing) => {
                 if reclaiming_from.is_none_or(|r| r == existing) {
-                    // First foreign PR, or same one we're reclaiming from.
                     reclaiming_from = Some(existing);
+                    reclaimed_commits.push(cid.clone());
                 } else {
                     // Different PR boundary — stop this path.
                     continue;
@@ -587,16 +589,30 @@ fn find_pr_commits(commit_id: &str, jj_state: &JjState, pr_number: u64) -> Vec<S
                     // Was reclaiming but hit unstamped — stop.
                     continue;
                 }
+                own_commits.push(cid.clone());
             }
         }
 
-        result.push(cid.clone());
         for parent_id in &entry.commit.parents {
             queue.push(parent_id.clone());
         }
     }
 
-    result
+    if !reclaimed_commits.is_empty() {
+        let from_pr = reclaiming_from.expect("bug: reclaimed commits without reclaiming_from");
+        let msg = format!(
+            "Reclaiming {} commit(s) from {} → {}",
+            reclaimed_commits.len(),
+            crate::style::pr_num(from_pr, None),
+            crate::style::pr_num(pr_number, None),
+        );
+        if !crate::ui::confirm(&msg, yes) {
+            return own_commits;
+        }
+    }
+
+    own_commits.extend(reclaimed_commits);
+    own_commits
 }
 
 /// Compute the import plan: a map from change_id → pr_number.
