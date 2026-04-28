@@ -383,7 +383,13 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
 }
 
 /// Create a new PR or update an existing one.
-pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackArgs, yes: bool) -> Result<()> {
+pub fn track_pr(
+    dag: &PrDag,
+    jj_state: &JjState,
+    gh_prs: &[GhPr],
+    args: &TrackArgs,
+    yes: bool,
+) -> Result<()> {
     // When --pr is given, resolve the bookmark from the GH PR's headRefName.
     let bookmark = if let Some(pr_num) = args.pr {
         let gh_pr = gh_prs
@@ -500,6 +506,9 @@ pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackAr
             crate::style::bookmark(&base),
             crate::style::status(true),
         );
+        if !crate::ui::confirm("Create draft PR?", yes) {
+            bail!("Aborted.");
+        }
         let n = gh::create_pr(&bookmark, &base, &title, &body, true)?;
         eprintln!("Created {}: {title}", crate::style::pr_num(n, None));
         n
@@ -731,7 +740,7 @@ pub fn plan_import(jj_state: &JjState, gh_prs: &[GhPr]) -> BTreeMap<String, u64>
 }
 
 /// Import existing GitHub PRs by stamping PR trailers on local commits.
-pub fn import_prs(jj_state: &JjState, gh_prs: &[GhPr], dry_run: bool) -> Result<()> {
+pub fn import_prs(jj_state: &JjState, gh_prs: &[GhPr], dry_run: bool, yes: bool) -> Result<()> {
     let plan = plan_import(jj_state, gh_prs);
 
     if plan.is_empty() {
@@ -792,7 +801,14 @@ pub fn import_prs(jj_state: &JjState, gh_prs: &[GhPr], dry_run: bool) -> Result<
             "\n{}",
             crate::style::warn(&format!("Dry run: would stamp {} commit(s)", plan.len()))
         );
-    } else {
+    } else if crate::ui::confirm(
+        &format!(
+            "Stamp {} commit(s) across {} PR(s)?",
+            plan.len(),
+            by_pr.len()
+        ),
+        yes,
+    ) {
         for (change_id, pr_number) in &plan {
             let idx = jj_state.by_change[change_id];
             let entry = &jj_state.entries[idx];
