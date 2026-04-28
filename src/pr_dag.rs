@@ -457,7 +457,7 @@ pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackAr
     jj::git_push_bookmark(&bookmark)?;
 
     // Either create a new PR or use the existing one.
-    let pr_number = if let Some(n) = args.pr {
+    let (pr_number, pr_url): (u64, Option<String>) = if let Some(n) = args.pr {
         // Update existing PR — just re-stamp trailers and push.
         eprintln!(
             "Updating {} ({} → {})",
@@ -465,7 +465,7 @@ pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackAr
             crate::style::bookmark(&bookmark),
             crate::style::bookmark(&base),
         );
-        n
+        (n, None)
     } else {
         // Check if bookmark already has a PR.
         if let Some(&existing) = dag.by_bookmark.get(&bookmark) {
@@ -500,9 +500,9 @@ pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackAr
             crate::style::bookmark(&base),
             crate::style::status(true),
         );
-        let n = gh::create_pr(&bookmark, &base, &title, &body, true)?;
-        eprintln!("Created {}: {title}", crate::style::pr_num(n, None));
-        n
+        let (n, url) = gh::create_pr(&bookmark, &base, &title, &body, true)?;
+        eprintln!("Created {}: {title}", crate::style::pr_num(n, Some(&url)));
+        (n, Some(url))
     };
 
     // Stamp PR trailer on all commits in the PR.
@@ -516,7 +516,7 @@ pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackAr
     }
     eprintln!(
         "Stamped {} on {} commit(s)",
-        crate::style::pr_num(pr_number, None),
+        crate::style::pr_num(pr_number, pr_url.as_deref()),
         commits_to_stamp.len()
     );
 

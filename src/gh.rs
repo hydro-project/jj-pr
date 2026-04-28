@@ -48,7 +48,8 @@ pub fn load_prs() -> Result<Vec<GhPr>> {
     Ok(prs)
 }
 
-pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<u64> {
+/// Create a pull request via `gh pr create`. Returns the PR number and URL.
+pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(u64, String)> {
     let mut args = vec![
         "pr".to_owned(),
         "create".to_owned(),
@@ -86,7 +87,7 @@ pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -
         .and_then(|s| s.parse::<u64>().ok())
         .with_context(|| format!("Could not parse PR number from gh output: {url}"))?;
 
-    Ok(pr_number)
+    Ok((pr_number, url.to_owned()))
 }
 
 pub fn edit_base(pr_number: u64, base: &str) -> Result<()> {
