@@ -13,5 +13,6 @@ pub fn confirm(message: &str, auto_yes: bool) -> bool {
     let Ok(_) = std::io::stdin().lock().read_line(&mut line) else {
         return false;
     };
-    matches!(line.trim(), "y" | "Y" | "yes" | "Yes")
+    let lower = line.trim().to_ascii_lowercase();
+    matches!(lower.as_str(), "y" | "yes")
 }
