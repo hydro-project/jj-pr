@@ -96,6 +96,15 @@ fn with_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e
 }
 
+fn with_git_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
+    e.remote_bookmarks.push(JjRemoteBookmark {
+        name: name.to_owned(),
+        remote: Some("git".to_owned()),
+        target: vec![Some(e.commit.commit_id.clone())],
+    });
+    e
+}
+
 fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
     use crate::gh::PrState;
     GhPr {
@@ -228,6 +237,24 @@ fn needs_push() {
     );
     insta::assert_snapshot!("needs_push_show", render_show(&f));
     insta::assert_snapshot!("needs_push_sync", plan_sync(&f));
+}
+
+#[test]
+fn needs_push_git_remote_not_origin() {
+    // Bookmark moved locally — @git matches local but @origin is absent.
+    // Should still detect push needed.
+    let f = fixture(
+        vec![
+            with_git_remote(
+                entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("needs_push_git_not_origin_sync", plan_sync(&f));
 }
 
 #[test]
