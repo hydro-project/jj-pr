@@ -1,20 +1,43 @@
+use std::fmt;
+use std::num::NonZeroU64;
 use std::process::Command;
 
 use anyhow::{Context, Result, bail};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+/// Newtype for GitHub PR numbers.
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[serde(transparent)]
+pub struct PrNum(NonZeroU64);
+
+impl PrNum {
+    pub fn new(n: u64) -> Option<Self> {
+        NonZeroU64::new(n).map(Self)
+    }
+
+    pub fn get(self) -> u64 {
+        self.0.get()
+    }
+}
+
+impl fmt::Display for PrNum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "#{}", self.0)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PrState {
-    Open,
     Closed,
+    Open,
     Merged,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GhPr {
-    pub number: u64,
+    pub number: PrNum,
     pub head_ref_name: String,
     pub base_ref_name: String,
     pub state: PrState,
@@ -101,6 +124,20 @@ pub fn edit_base(pr_number: u64, base: &str) -> Result<()> {
         bail!("gh pr edit {pr_number} --base {base} failed: {stderr}");
     }
     Ok(())
+}
+
+/// Get the default branch name for the current GitHub repo.
+pub fn default_branch() -> Result<String> {
+    let output = Command::new("gh")
+        .args(["repo", "view", "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"])
+        .output()
+        .context("Failed to run `gh repo view`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("gh repo view failed: {stderr}");
+    }
+    Ok(String::from_utf8(output.stdout)?.trim().to_owned())
 }
 
 #[expect(dead_code, reason = "TODO")]

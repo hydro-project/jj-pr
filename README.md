@@ -5,166 +5,142 @@ A CLI tool that syncs [Jujutsu (jj)](https://github.com/jj-vcs/jj) bookmarks wit
 **Core philosophy:**
 - **jj owns structure** — the DAG of changes
 - **GitHub owns presentation** — PR titles, descriptions, review state
-- **jj-pr synchronizes the two** with no hidden state
-
-PR membership is tracked via `PR: #N` trailers in jj change descriptions. The PR DAG is derived from the jj graph, not stored separately.
+- **No hidden state** — everything derived at runtime from `jj`, `gh`, and commit trailers
+- **Graph structure is the source of truth** — PR membership derived from bookmark positions, not metadata
 
 ## Installation
 
 ```sh
-cargo install --path jj-pr
+cargo install --path .
 ```
 
 Requires `jj` and `gh` (GitHub CLI) on your PATH.
 
 ## Workflow
 
-### 1. Import existing PRs
-
-If you already have open PRs on GitHub with matching local bookmarks:
+### View the PR DAG
 
 ```sh
-jj-pr import --dry-run   # preview what would be stamped
-jj-pr import              # stamp PR trailers on all matching commits
+jj-pr          # or: jj-pr show
 ```
 
-This walks each PR's bookmark back to trunk and stamps `PR: #N` on every commit. PRs are processed in topological order (parents first) so boundaries are correct.
-
-### 2. View the PR DAG
-
-```sh
-jj-pr log
 ```
-
-Renders a graph of your PRs with status, bookmark names, and titles:
-
-```
-○  PR #2812  (draft)  mingwei/delete-subgraph-id
-│  cleanup: remove SubgraphId, SubgraphTag, simplify StateLifespan
+○  PR #12  Draft  mingwei/delete-subgraph-id
+│  cleanup: remove SubgraphId, simplify StateLifespan
 ├─╮
-│ ○  PR #2810  (draft)  mingwei/delete-metrics-slotvec
-│ │  refactor(dfir_rs): use slotmap SecondaryMap for metrics
-○ │  PR #2811  (draft)  mingwei/delete-schedule-subgraph-args
-├─╯  refactor: remove SubgraphId argument from schedule_subgraph
-○    PR #2801  (draft)  mingwei/delete-state-api-usage
-│    refactor: operators capture local state instead of using the state API
-◆  trunk
+│ ○  PR #10  Draft  mingwei/delete-metrics-slotvec
+│ │  refactor: use slotmap SecondaryMap for metrics
+○ │  PR #11  Draft  mingwei/delete-schedule-subgraph-args
+├─╯  refactor: remove SubgraphId argument
+○    PR #1   Draft  mingwei/delete-state-api-usage
+│    refactor: operators capture local state
+◆  trunk()
 ```
 
-PR numbers are clickable hyperlinks (OSC 8) in supported terminals.
+PR numbers are clickable hyperlinks in supported terminals. A `*` after the PR number indicates pending sync actions.
 
-### 3. Create a new PR
+### View individual commits
 
 ```sh
-# From the current working copy, with an existing bookmark:
-jj-pr track -b my-feature
-
-# With a specific revision:
-jj-pr track -b my-feature -r <rev>
-
-# With a custom title:
-jj-pr track -b my-feature -t "feat: add widget support"
+jj-pr log          # commits associated with PRs
+jj-pr log --all    # all commits including unassociated ones
 ```
 
-New PRs are always created as drafts. The base branch is automatically set to the parent PR's bookmark (or `main` if no parent PR).
-
-### 4. Update an existing PR
-
-After adding commits to a PR's bookmark:
+### Sync with GitHub
 
 ```sh
-# Move PR to current working copy (@):
-jj-pr track --pr 2814
-
-# Move PR to a specific revision:
-jj-pr track --pr 2814 -r <rev>
+jj-pr sync              # stamp, rebase, push, update bases
+jj-pr sync --dry-run    # preview only
 ```
 
-This moves the bookmark, pushes, and re-stamps `PR: #N` trailers on the new commit range.
+Handles the full lifecycle:
+1. Stamps missing `PR: #N` trailers on commits
+2. Rebases children of merged PRs onto `trunk()`
+3. Abandons merged PR commits
+4. Pushes affected bookmarks
+5. Updates GitHub base branches to match the DAG
 
-### 5. Sync with GitHub
+Blocks if any bookmarks have conflicts (resolve with `jj bookmark` first).
+
+### Create a new PR
 
 ```sh
-jj-pr sync --dry-run   # preview
-jj-pr sync              # push bookmarks, update base branches
+jj bookmark create my-feature    # first create the bookmark in jj
+jj-pr create my-feature          # then create a draft PR for it
+jj-pr create my-feature -t "title"  # with custom title
 ```
 
-Pushes any bookmarks that differ from the remote and updates GitHub base branches to match the local DAG structure.
+The base branch is auto-detected by walking the parent graph. New PRs are always created as drafts.
 
-## How it works
+## How It Works
 
-### PR identification
+### PR membership
 
-Each commit in a PR has a trailer in its description:
+Computed from the graph, not from trailers:
 
 ```
-feat: add widget support
-
-Co-authored-by: Alice <alice@example.com>
-PR: #1234
+owned(bookmark) = ancestors(bookmark) & ~ancestors(other_bookmarks | trunk())
 ```
 
-This provides stable identity that survives rebases, with no external state file.
+Each commit belongs to the PR whose bookmark is its nearest descendant. Trailers (`PR: #N`) are written as a safety net and used for recovery when merged PR branches are deleted.
 
-### DAG structure
+### Ambiguous commits
 
-The PR DAG is derived from the jj commit graph:
-- Walk from each PR bookmark's tip
-- Commits with matching `PR: #N` trailers belong to that PR
-- The first ancestor commits from a *different* PR (or trunk) are the parent PRs
+Commits shared between multiple PRs (e.g., diamond shapes) or with mismatched trailers are shown as ambiguous nodes with context-sensitive hints:
 
-### Draft/ready status
+```
+⚠  ambiguous shared between PR #1, PR #2
+│  (restructure PRs to resolve — stack one on the other)
+```
 
-Shown in `jj-pr log` based on GitHub's current state. New PRs created via `track` are always drafts.
+### Sync indicator
+
+Nodes marked with `*` have pending sync actions. This propagates transitively — if a parent needs rebase, all descendants are marked too.
 
 ## Development
 
 ### Project structure
 
 ```
-jj-pr/
-├── Cargo.toml
-└── src/
-    ├── main.rs       # CLI entry point, command dispatch
-    ├── cli.rs        # clap argument definitions
-    ├── jj.rs         # jj CLI interaction: state loading, trailer parsing, mutations
-    ├── gh.rs         # GitHub CLI interaction: PR listing, creation, editing
-    ├── pr_dag.rs     # Core logic: DAG building, graph rendering, sync/import planning
-    ├── style.rs      # Terminal styling: ANSI colors, OSC 8 hyperlinks
-    └── tests.rs      # Integration tests for DAG building, sync, and import
+src/
+├── main.rs              # CLI entry point
+├── cli.rs               # clap argument definitions
+├── jj.rs                # jj CLI interaction, trailer parsing
+├── gh.rs                # GitHub CLI interaction, PrNum newtype
+├── pr_dag.rs            # Core: RepoState, build, rendering, sync, create
+├── graph_algorithms.rs  # Generic topo sort and DFS
+├── style.rs             # Terminal styling (ANSI colors, OSC 8 hyperlinks)
+├── ui.rs                # Confirmation prompts
+└── tests.rs             # Snapshot tests (insta)
 ```
 
-### Key dependencies
+### Key types
 
-- **sapling-renderdag** — graph rendering (same renderer jj uses)
-- **clap** — CLI argument parsing
-- **serde/serde_json** — parse jj and gh CLI JSON output
-- **anstyle/anstream** — terminal color support (from clap's dep tree)
+- **`PrNum`** — newtype around `NonZeroU64` for PR numbers
+- **`NodeKey`** — slotmap key for nodes in the DAG
+- **`Node`** — `Root`, `TrunkTip`, `Pr(PrNum)`, or `Ambiguous`
+- **`RepoState`** — immutable world view built from jj + GitHub state
+- **`SyncAction`** — planned mutation for sync
 
-### Reading jj state
+### Dependencies
 
-Single `jj log` call with a composite JSONL template:
-
-```
-jj log --no-graph -r 'trunk().. | trunk()' -T '
-  "{\"commit\": " ++ json(self)
-  ++ ", \"local_bookmarks\": " ++ json(local_bookmarks)
-  ++ ", \"remote_bookmarks\": " ++ json(remote_bookmarks)
-  ++ ", \"immutable\": " ++ json(self.immutable())
-  ++ "}\n"
-'
-```
-
-All mutations go through jj/gh CLI commands — no library dependencies on either.
+- `slotmap` — arena-allocated node DAG
+- `sapling-renderdag` — graph rendering (same as jj)
+- `clap` — CLI
+- `serde` / `serde_json` — JSON parsing
+- `anstyle` / `anstream` — terminal colors
 
 ### Running tests
 
 ```sh
-cargo test -p jj-pr
+cargo test
 ```
-
-22 tests covering trailer parsing, DAG building, sync planning, and import planning.
 
 ### Design document
 
 See [DESIGN.md](DESIGN.md) for the full design rationale.
+
+## Known Limitations
+
+- **Remote hardcoded to `origin`** — fork-based workflows where PRs come from a different remote (e.g., `fork`) are not yet supported.
+- **`gh pr list --limit 200`** — may miss PRs in repos with many PRs.

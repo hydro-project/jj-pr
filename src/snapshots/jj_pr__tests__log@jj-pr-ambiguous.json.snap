@@ -1,0 +1,20 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false)"
+input_file: src/fixtures/jj-pr-ambiguous.json
+---
+○  [1m[35mtovynyrurprp[0m [34ma4e2df517db9[0m [1m[35mmingwei/clickable-pr[0m [1m[35msandbox-b0006e5d-13ed-4a6e-9d34-82765660fe60[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/5PR #5]8;;[0m* [33mDraft[0m
+│  Make PR # references into clickable URL links in create output
+│ ○  [1m[35mzxsrqoxurkyq[0m [34m9fc950c266e8[0m [1m[35mmingwei/confirm[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/4PR #4]8;;[0m* [31mClosed[0m
+│ │  Add confirmation prompts to sync, import, and track create
+│ ○  [1m[35mwkusrytxnoxt[0m [34m563c00e0fa0d[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/4PR #4]8;;[0m* [31mClosed[0m
+├─╯  Make y/yes confirmation case-insensitive
+[33m⚠[0m  [1m[35mpvmxnwquyyoq[0m [34m19313a696d81[0m [33mambiguous[0m* [33m[[0m[1m[36mPR #4[0m, [1m[36mPR #5[0m[33m][0m
+│  Add -y/--yes global flag and confirmation prompt for reclaiming
+○  [1m[35muxllmtmpypns[0m [34m609c28f0194e[0m [1m[35mmingwei/pull-parent-pr-out-of-child[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/7PR #7]8;;[0m* [31mClosed[0m
+│  Fix reclaim mode: only activate when tip is foreign-stamped
+│ ◆  [1m[35mkwnsklrzwtpr[0m [34mf32f28d8c322[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│ │  feat: handle out-of-order PR creation with mode-based trailer walk (#3)
+○ │  [1m[35mwqwvxmmuyxlx[0m [34m97ab83d61724[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/3PR #3]8;;[0m [2mMerged[0m
+├─╯  feat: handle out-of-order PR creation with mode-based trailer walk
+◆  [1m[32mroot()::[0m

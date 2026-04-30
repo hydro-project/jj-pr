@@ -1,0 +1,56 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false)"
+input_file: src/fixtures/hydro-after.json
+---
+○    [1m[35mmzoyxxzzzpuy[0m [34m4440f788eb39[0m [1m[35mmingwei/delete-subgraph-id[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m [33mDraft[0m
+├─╮  cleanup: remove SubgraphId, SubgraphTag, LoopId, LoopTag, simplify StateLifespan
+│ ○  [1m[35mnupvxxvukuwt[0m [34mdff5ea20292a[0m [1m[35mmingwei/delete-schedule-subgraph-args[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2811PR #2811]8;;[0m [33mDraft[0m
+│ │  cleanups
+│ ○  [1m[35muxksyklwwwzn[0m [34med7a27be95be[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2811PR #2811]8;;[0m [33mDraft[0m
+│ │  cleanup: remove no-op schedule_subgraph(false) calls, fix formatting
+│ ○  [1m[35mwttuzpxxzqkx[0m [34md62a90aa0bb4[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2811PR #2811]8;;[0m [33mDraft[0m
+│ │  refactor: remove SubgraphId argument from schedule_subgraph, remove current_subgraph
+○ │  [1m[35munrvosywmqum[0m [34m98963ddbe39c[0m [1m[35mmingwei/delete-metrics-slotvec[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2810PR #2810]8;;[0m [33mDraft[0m
+│ │  cleanup: inline slotmap_key_ffi helper for clarity
+○ │  [1m[35mskzzksouynsz[0m [34m34600dbd6262[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2810PR #2810]8;;[0m [33mDraft[0m
+├─╯  refactor(dfir_rs): use slotmap SecondaryMap for metrics, remove custom slot_vec tags
+○  [1m[35muvpkpkmvkxmu[0m [34m3f07d0e28a64[0m [1m[35mmingwei/delete-state-api-usage[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m [33mDraft[0m
+│  fix(dfir_lang): fix lattice_reduce dropping write_tick_end, use fully qualified RefCell::take
+○  [1m[35mzktzkwxpksou[0m [34m978bbbd3571a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m [33mDraft[0m
+│  refactor(dfir_lang): inline operator state, remove state API usage from all operators
+○  [1m[35mqunzttmwqmpw[0m [34m329b2029871b[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m [33mDraft[0m
+│  WIP: inline operator state — fix state_by tick reset, 3 runtime failures remain
+○  [1m[35mpqqmvykumvoq[0m [34mddc28c7a2ccd[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m [33mDraft[0m
+│  WIP: inline operator state — all operators converted, some test failures remain
+○  [1m[35mtrlnmrvmuqnt[0m [34md548b0a514db[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m [33mDraft[0m
+│  refactor(dfir_lang): add write_tick_end to OperatorWriteOutput
+○    [1m[35mlqxnymrprnpl[0m [34ma6f5cee01ecb[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m [33mDraft[0m
+├─╮  refactor(dfir_lang): add write_tick_end to OperatorWriteOutput, convert fold to inline state
+│ ○  [1m[35mprupozyltvpz[0m [34mcf49be1b8fc8[0m [1m[35mmingwei/delete-intermediate-subgraph[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m [32mReady[0m
+│ │  refactor(dfir_lang): double-buffer defer_tick handoffs, remove intermediate subgraphs
+│ ○  [1m[35mxqxnxvxoyltz[0m [34m7a71c32b196c[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m [32mReady[0m
+│ │  test: add test_mutual_defer_tick reproducing as_code topo sort cycle
+○ │  [1m[35mnmqrowzwxvpn[0m [34m4a69225b9c99[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m [33mDraft[0m
+├─╯  cleanup(dfir_lang): remove unused topo_sort_scc and scc_kosaraju
+│ ◆  [1m[35mrrynsqkzwpuw[0m [34mdbfab17a4726[0m [1m[32mtrunk()[0m
+├─╯  refactor(dfir_lang): remove unused topo_sort_scc and scc_kosaraju (#2800)
+│ ○  [1m[35mltloqrxtnksl[0m [34m2befe7cee65e[0m [1m[35mmingwei/sqs-rebase[0m [1m[35msandbox-236c6a7a-2597-4c57-95fc-46268f948b7a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  Address PR #2746 review comments for AWS SQS support
+│ ○  [1m[35mzqxzmtrvpyzy[0m [34mda5208ce87f4[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  re-enable aws feature gating
+│ ○  [1m[35mrpnyusryuvux[0m [34m73d9a682ebd5[0m [1m[35msandbox-2aebe241-661a-4fc0-8b40-bc0740d6c156[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  Fix clippy warnings in hydro_test SQS module
+│ ○  [1m[35mlsuxxwwlvloy[0m [34m571ab07ebc81[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  enable credentials-login feature for getting login from `aws` cli
+│ ○  [1m[35mzkpvyxzntswr[0m [34m016e66e60486[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  enable credentials-login feature for getting login from `aws` cli
+│ │ ○  [1m[35mwynxrzuqtoyk[0m [34maabc5ed5e290[0m [1m[35mmingwei/fix-inline-tasks[0m [1m[35msandbox-4a704fb2-b41d-4197-a308-a1c84d46de16[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2804PR #2804]8;;[0m [32mReady[0m
+├───╯  fix(dfir_rs): defer `_counter` task spawning via `Context::request_task` buffer
+│ ○  [1m[35mowkpmukqqlwx[0m [34m50143cf21b12[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  cleanup sqs one-write code
+│ ○  [1m[35monsovwqumzxm[0m [34md7f5a17d2181[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  SQS working!
+│ ○  [1m[35mtuwnswwkwnov[0m [34mf7dd09ccc02d[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+├─╯  add aws, sqs hydro_test
+◆  [1m[32mroot()::[0m

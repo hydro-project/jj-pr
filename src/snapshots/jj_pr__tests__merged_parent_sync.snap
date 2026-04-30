@@ -1,0 +1,8 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+---
+rebase children of #1 (feat-a) onto trunk()
+abandon merged #1 (feat-a)
+push: #2 (feat-b)
+update #2 (feat-b) base -> main

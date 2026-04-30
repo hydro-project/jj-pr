@@ -1,0 +1,1273 @@
+{
+  "default_branch": "main",
+  "jj_entries": [
+    {
+      "commit": {
+        "change_id": "vloryrxqmrrwopuvzxtvvywzurlsxwqv",
+        "commit_id": "43ecf88502b8e5195add0de23def7d162d0885c1",
+        "description": "",
+        "parents": [
+          "cd08f3d90f41236bd6a8b6c89074f00905dafcab"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "ynsvrzrsmorunrssouoluozyxktmpmqn",
+        "commit_id": "24a0f20e91d2ad4a56f261ab9262a4003c83e68f",
+        "description": "",
+        "parents": [
+          "cd08f3d90f41236bd6a8b6c89074f00905dafcab"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [
+        {
+          "name": "sandbox-ec8c27d3-7056-4bf6-90f3-767c738708b2",
+          "target": [
+            "24a0f20e91d2ad4a56f261ab9262a4003c83e68f"
+          ]
+        }
+      ],
+      "remote_bookmarks": [
+        {
+          "name": "sandbox-ec8c27d3-7056-4bf6-90f3-767c738708b2",
+          "remote": "git",
+          "target": [
+            "24a0f20e91d2ad4a56f261ab9262a4003c83e68f"
+          ]
+        }
+      ]
+    },
+    {
+      "commit": {
+        "change_id": "xmkvryvvqxtylkvmksuuxsspxzuyynrt",
+        "commit_id": "cd08f3d90f41236bd6a8b6c89074f00905dafcab",
+        "description": "Enable ANSI color codes in test snapshots\n\nAdded a `set_force_color` function using AtomicBool to override terminal\ndetection. Test helpers call it before rendering so snapshots include\nfull ANSI escape sequences (colors, bold, OSC 8 hyperlinks).\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "9ce6941fefd5a4c0c764557925a153610eb216c5"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "owvlttmrsowrtwkwxxlzouqvxnmkonyv",
+        "commit_id": "9ce6941fefd5a4c0c764557925a153610eb216c5",
+        "description": "Add snapshot testing with insta, dump command, and writer refactor\n\n- Added `insta` dev dependency for snapshot testing.\n- Added `Serialize` derives to all jj/gh data types.\n- Added `jj-pr dump` command that outputs jj+gh state as JSON for fixtures.\n- Refactored `render_show` and `render_log` to accept `&mut impl Write`\n  instead of printing directly to stdout.\n- Made `CommitId` inner field pub for test construction.\n- Initialized node_preds/node_succs for all nodes in build() to prevent\n  panics during topo sort.\n- Rewrote tests.rs with insta snapshot tests covering: single PR, stacked\n  PRs, diamond/ambiguous, merged parent, needs push, base mismatch,\n  nothing to sync, and merge child scenarios.\n- 18 tests, all passing.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "e2263e5726c26f36fe2f8064ae81a9d0f69d38d5"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xrlntpyorurqrwsoqsnmvsprxprzxzpo",
+        "commit_id": "e2263e5726c26f36fe2f8064ae81a9d0f69d38d5",
+        "description": "Fix needs_sync propagation: base mismatch no longer propagates to children\n\nChanged needs_sync from SparseSecondaryMap<NodeKey, ()> to\nSparseSecondaryMap<NodeKey, bool>. Value true = propagates to children\n(push/rebase), false = local only (base mismatch). Only push and rebase\nactions affect descendants; updating a GitHub base branch is a\nremote-only metadata change.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "0da79889ae3de743b33837bea8ef68e6ebfeb8f4"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "kquntysnqrsplznwrouksypnqpuwvtqp",
+        "commit_id": "0da79889ae3de743b33837bea8ef68e6ebfeb8f4",
+        "description": "Add DESIGN_3.md and update README.md to reflect current architecture\n\nDESIGN_3.md documents the v3 architecture: SlotMap-based node DAG,\nthree-pass build (membership, edges, topo+needs_sync), sync pipeline,\nNode enum, and key design decisions.\n\nREADME.md updated to match: corrected command examples (show vs log),\nadded sync action ordering, documented ambiguous nodes and sync\nindicator, updated key types and project structure, linked to\nDESIGN_3.md.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "6e2823756a348e9063598d135fae74649f5d6c58"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "mkortsqryqrkyymrmqllswmuqypxrzul",
+        "commit_id": "6e2823756a348e9063598d135fae74649f5d6c58",
+        "description": "Add TODO for multiple PRs sharing the same bookmark\n\nReverted the panic/priority logic. Left a TODO for handling the case\nwhere multiple PRs (e.g. Open + Closed/Merged) share the same\nhead_ref_name.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "4e9a42f6f4352b709d518942a32fe9bdd0873a97"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "tluxmttowqwpsrnsxkowsynpxzszyopy",
+        "commit_id": "4e9a42f6f4352b709d518942a32fe9bdd0873a97",
+        "description": "Panic on multiple PRs sharing the same bookmark name\n\nInstead of silently dropping one PR when two share a head_ref_name,\npanic with a clear message telling the user which PRs conflict.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "3c50e8a6c5eccee96f5c3ec30c48252f1be4aa4b"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "quvoomlnzkylvxzqswszzlxkoopvxzyr",
+        "commit_id": "3c50e8a6c5eccee96f5c3ec30c48252f1be4aa4b",
+        "description": "Make needs_sync the source of truth for push and base update planning\n\nSteps 4 and 5 of plan_sync now iterate needs_sync directly instead of\nall nodes. The Merged PR filter is replaced with assert!, since Merged\nnodes should never appear in needs_sync (that's a bug if they do).\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "db2784185f96d0b88e9098c30722531fd566591f"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "nosprvtrwvppmoppnkxkosukrkqpruky",
+        "commit_id": "db2784185f96d0b88e9098c30722531fd566591f",
+        "description": "Exclude Merged PRs from needs_sync computation\n\nMerged PR nodes are being abandoned, not synced. They shouldn't be marked\nas needing sync (which would show `*` and could theoretically trigger\nbase updates on frozen GitHub PRs). Their children still get propagated\nto via the \"has merged parent\" check.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "b7645f761b950cb3be4df3a1eabf60c686ece306"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "vvktuoznzzunnslqmollnymnqwonmqvx",
+        "commit_id": "b7645f761b950cb3be4df3a1eabf60c686ece306",
+        "description": "Include Closed PRs in sync push and base update actions\n\nOnly Merged PRs are excluded (they're being abandoned). Closed PRs are\ntreated the same as Open — the user may want to re-open them.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "6c65857024dfd3c6af17a56514abb790aa4618dc"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "smzkrolxlmqxrxzskkvmskokkvwynonk",
+        "commit_id": "6c65857024dfd3c6af17a56514abb790aa4618dc",
+        "description": "Fix render_show doc comment\n\nRemoved \"(open PRs only)\" since show displays all PR states.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "5240732070e4aa58dd9e62e75f1b62b3fbb771fb"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "nwwkunuunqvopsrkvkzopptyrootpntp",
+        "commit_id": "5240732070e4aa58dd9e62e75f1b62b3fbb771fb",
+        "description": "Show PR numbers and bookmark names in sync push action display\n\nPush action now shows e.g. `push: #1 (feat-a), #2 (feat-b)` instead of\njust `push 1 bookmark(s)`.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "0a89cc7c584fde51fc1cf08b5e1150f65b50e596"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "wnyzpolqxklzmkytnpwqrzuzxxumpnsm",
+        "commit_id": "0a89cc7c584fde51fc1cf08b5e1150f65b50e596",
+        "description": "Implement `sync` command\n\nAdded jj helpers: `rebase`, `abandon`, `git_push_bookmarks`.\n\nImplemented `plan_sync` and `execute_sync` in pr_dag.rs:\n1. Stamp missing trailers (before push, since it changes commit hashes)\n2. Rebase children of merged PRs onto trunk() via `jj rebase -s <bookmark>+`\n3. Abandon merged PR commits via `jj abandon`\n4. Push all open PR bookmarks that need sync (single `jj git push` call)\n5. Update GitHub base branches via `gh pr edit --base`\n\nBlocks on conflicted bookmarks. Supports --dry-run and confirmation prompts.\nCleaned up dead commented-out code in main.rs and pr_dag.rs.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "9b30de49cda12eac778f2813ccb4f450f9a04c0f"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "yyrkznxltrrurokppqnwmqrkmtkkkqso",
+        "commit_id": "9b30de49cda12eac778f2813ccb4f450f9a04c0f",
+        "description": "Add \"ambiguous\" label to show view, reposition sync indicator\n\n- `show`: now shows `ambiguous* shared between PR #4, PR #5` (added label)\n- `log`: `ambiguous* [PR #4, PR #5]` (moved `*` after \"ambiguous\")\n- Both views now consistently place `*` right after the node type label.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "e987dd87bea48172a7404e21d1f366e59470528c"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "unlqportwnoplxlpsvvsunrrstrmuvwr",
+        "commit_id": "e987dd87bea48172a7404e21d1f366e59470528c",
+        "description": "Move sync indicator `*` to suffix PR number, add to ambiguous nodes\n\n- `show`: `PR #123*  Draft  bookmark` instead of `PR #123  Draft  bookmark *`\n- `show` ambiguous: `shared between PR #1, PR #2*`\n- `log`: `PR #123* Draft` instead of `PR #123 Draft *`\n- `log` ambiguous: `ambiguous [PR #1, PR #2]*`\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "f8b9c0bc0b60abea0371a234c6d6acc85ba59608"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "llwsrrlutwvrpunnwzonxypxrpukkoxs",
+        "commit_id": "f8b9c0bc0b60abea0371a234c6d6acc85ba59608",
+        "description": "Refactor sync helpers to use NodeKey instead of PrNum, remove pr_node\n\n- Renamed `pr_has_merged_parent` -> `has_merged_parent(nk)`,\n  `pr_needs_sync` -> `node_needs_sync(nk)`, `expected_base` now takes `nk`.\n- Removed `pr_node: HashMap<PrNum, NodeKey>` from RepoState entirely.\n- All callers already have the NodeKey in scope, so the indirection was\n  unnecessary. This also means needs_sync works for all node types\n  (Ambiguous nodes included), not just PR nodes.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "ef788e592fc94237d116593feadb66fe5bb30e40"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xqwtsolktzyrxtlwxynnvvrnlvlqqlxz",
+        "commit_id": "ef788e592fc94237d116593feadb66fe5bb30e40",
+        "description": "Fix: populate pr_node map during build()\n\npr_node was never being written to, so pr_needs_sync always returned false.\nNow populated alongside commit_node when a Node::Pr is assigned.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "64f9522558b596f78029418b13cfbe0a88126239"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "pwqrnzsosspqpwvvmkwmuznulvznrkss",
+        "commit_id": "64f9522558b596f78029418b13cfbe0a88126239",
+        "description": "Move topo sort and needs_sync computation into build()\n\n- Added `topo_order: Vec<NodeKey>` to `RepoState`, computed during build\n  with panic on cycle (a cycle would be a bug in our logic).\n- Added `needs_sync: SparseSecondaryMap<NodeKey, ()>` computed via a single\n  forward pass over the topo order, propagating transitively through\n  descendants. A node needs sync if it directly needs push/rebase/base-update,\n  or any ancestor needs sync.\n- `build()` now takes `default_branch: &str` for base mismatch detection.\n- Simplified `pr_needs_sync()` to a set lookup.\n- Removed `default_branch` parameter from render functions.\n- `render_show` now uses stored `topo_order` instead of recomputing.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "df4c65c088c54c4c040de59a15e208f06f51de0c"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "vupspxttxoyypwrtskmuppxnvyntmzty",
+        "commit_id": "df4c65c088c54c4c040de59a15e208f06f51de0c",
+        "description": "Add sync-status helpers and show `*` for all pending sync actions\n\nAdded `gh::default_branch()` to query the GitHub remote's default branch.\n\nAdded reusable helper methods on `RepoState`:\n- `pr_has_merged_parent()` — checks if any parent PR is merged\n- `expected_base()` — derives the correct GitHub base branch from the DAG\n- `pr_needs_sync()` — returns true if a PR needs push, rebase, or base update\n\nUpdated `render_show` and `render_log` to use `pr_needs_sync` instead of\njust `needs_push`, so the `*` indicator now covers all pending sync actions.\nBoth render functions now accept `default_branch` parameter.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "83d8eaaf4fee64e6918d64fc54fc3885ef4cc2d3"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xmvyzzmtyxnxmytzwzwvomtzmqnkstvn",
+        "commit_id": "83d8eaaf4fee64e6918d64fc54fc3885ef4cc2d3",
+        "description": "Fix rendering bugs in show and log views\n\n- Remove duplicate ⚠ from `show` ambiguous node text (already in glyph)\n- Fix `]` not getting yellow styling in `log` ambiguous label by styling\n  brackets separately from the embedded PR num strings (which have their\n  own ANSI reset sequences)\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "c68ba0627398539dafe911de868c54283c69c70a"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "tovynyrurprpxnpxwozuzyvkloxpzyux",
+        "commit_id": "a4e2df517db9fce190e624f2e44be96ab786b58b",
+        "description": "Make PR # references into clickable URL links in create output\n\n- Changed `gh::create_pr` to return `(u64, String)` (PR number + URL) instead\n  of just the number, since `gh pr create` already prints the URL.\n- Updated `create_pr_for_bookmark` to thread the URL through to both the\n  \"Created PR #N\" and \"Stamped PR #N\" messages via `style::pr_num()`, which\n  already supports rendering terminal hyperlinks when given a URL.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n\nAdd doc comment to gh::create_pr\n\nPR: #5\n",
+        "parents": [
+          "19313a696d819e6cbd4c9f99decb1ebf461cdd3d"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [
+        {
+          "name": "mingwei/clickable-pr",
+          "target": [
+            "a4e2df517db9fce190e624f2e44be96ab786b58b"
+          ]
+        },
+        {
+          "name": "sandbox-b0006e5d-13ed-4a6e-9d34-82765660fe60",
+          "target": [
+            "a4e2df517db9fce190e624f2e44be96ab786b58b"
+          ]
+        }
+      ],
+      "remote_bookmarks": [
+        {
+          "name": "mingwei/clickable-pr",
+          "remote": "git",
+          "target": [
+            "a4e2df517db9fce190e624f2e44be96ab786b58b"
+          ]
+        },
+        {
+          "name": "sandbox-b0006e5d-13ed-4a6e-9d34-82765660fe60",
+          "remote": "git",
+          "target": [
+            "a4e2df517db9fce190e624f2e44be96ab786b58b"
+          ]
+        }
+      ]
+    },
+    {
+      "commit": {
+        "change_id": "qwtyvxsryounxxqqvzumnovrqoptztvn",
+        "commit_id": "c68ba0627398539dafe911de868c54283c69c70a",
+        "description": "Show context-sensitive hints for ambiguous nodes in `show` view\n\nInstead of always showing \"restructure PRs to resolve\", the hint now\ndepends on what's actually wrong:\n- Shared commits (multiple branch PRs): suggest restructuring\n- Wrong trailer (trailer PRs differ from branch PRs): suggest editing trailers\n- Both: mention both fixes\n- Neither (edge case): generic hint\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n\nPanic on impossible ambiguous node case\n\nReplace the generic fallback hint with a panic for the (false, false)\ncase — no shared commits and no trailer mismatch should not produce an\nAmbiguous node.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "2ea6172a32899e51c04b3c6f223c3a06f3e22527"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "qmtmvxrsvutqsrlxwwoulqltptwzmyyo",
+        "commit_id": "2ea6172a32899e51c04b3c6f223c3a06f3e22527",
+        "description": "Fix bug in decide_combine_child_nodes: break -> continue\n\nThe first iteration of the child node merge loop was breaking immediately\nafter setting the initial value, making the merge logic for subsequent\nchildren dead code. Changed to `continue` so all child nodes are properly\nmerged together.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "ebc2d5c5296deb6ab54d80b74d21370a6ddd8be0"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "vvmrswyyqplwtwmlwsqznqxpprsontul",
+        "commit_id": "ebc2d5c5296deb6ab54d80b74d21370a6ddd8be0",
+        "description": "add bookmarks_conflicted\n",
+        "parents": [
+          "cbe4fd7c2348be776ebcc41a65aaf8766bf1f1ff"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [
+        {
+          "name": "sandbox-1f246ea3-d1cf-4ccf-b168-61b92a5cc505",
+          "target": [
+            "ebc2d5c5296deb6ab54d80b74d21370a6ddd8be0"
+          ]
+        }
+      ],
+      "remote_bookmarks": [
+        {
+          "name": "sandbox-1f246ea3-d1cf-4ccf-b168-61b92a5cc505",
+          "remote": "git",
+          "target": [
+            "ebc2d5c5296deb6ab54d80b74d21370a6ddd8be0"
+          ]
+        }
+      ]
+    },
+    {
+      "commit": {
+        "change_id": "sqpslpnoovxovumqmrzsqlsyvtprsnsx",
+        "commit_id": "cbe4fd7c2348be776ebcc41a65aaf8766bf1f1ff",
+        "description": "Show * indicator for PRs that need pushing in show and log views\n\nPRs in needs_push set display \" *\" after the bookmark name in both\nthe show (PR-level) and log (commit-level) views.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "55095836107bc95d8a97c34c6c019bb7ffb01cec"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "tplnnlqronmkspkmulvmwpqwrqowlznq",
+        "commit_id": "55095836107bc95d8a97c34c6c019bb7ffb01cec",
+        "description": "Add needs_push: HashSet<PrNum> to RepoState\n\nComputed in build() by comparing local vs remote bookmark targets\nfor each PR. A PR is in the set when its local bookmark points to\na different commit than the remote bookmark. Used by sync for push\ndetection and by show/log for displaying push indicators.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "c680bc201c3ec70742b438043516ff65039c5666"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "ymuopkrlkynprxuzrlsvzvrzznxnmwus",
+        "commit_id": "c680bc201c3ec70742b438043516ff65039c5666",
+        "description": "Render Node::Ambiguous properly in show view\n\nAmbiguous nodes now display:\n- Warning glyph ⚠ in yellow\n- \"shared between PR #1, PR #2\" with clickable PR links\n- Trailer info if present: \"(trailer: PR #1)\"\n- Hint: \"(restructure PRs to resolve — stack one on the other)\"\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "61cf8511dff87b018934ab1456f0fcf03419a7b8"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xtouzqoooortpmosoqvxyultnkswtnly",
+        "commit_id": "61cf8511dff87b018934ab1456f0fcf03419a7b8",
+        "description": "Extract glyphs and labels to style consts, add green trunk/root styling\n\n- Added GLYPH_IMMUTABLE, GLYPH_MUTABLE, GLYPH_WARNING consts\n- Added LABEL_TRUNK, LABEL_ROOT consts\n- Added TRUNK_LABEL style (bold green, matching jj's root() color)\n- Added style::trunk() and style::root() helpers\n- Replaced all inline glyph/label strings in pr_dag.rs\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "8201241aa9603243e4daf9e417df11351c974691"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "lrlluuqnwpnytvxutrnpkzmuowyrumzz",
+        "commit_id": "8201241aa9603243e4daf9e417df11351c974691",
+        "description": "add root() separate from trunk()\n",
+        "parents": [
+          "d43cc7e4a6009b9f5271826be290f99576fa6ac3"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "pmkyynlpvwonptllyzkyzowoyqmzotov",
+        "commit_id": "d43cc7e4a6009b9f5271826be290f99576fa6ac3",
+        "description": "Rename Node::Trunk to Node::Root, trunk_node to root_node\n\nRoot represents the synthetic \"everything before trunk\" boundary.\nTrunkTip (to be added) will represent the actual trunk() commit.\nUpdated all references, display labels show \"root()\" instead of\n\"trunk()\". Tests are out of date from the broader refactor.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "ef149c6ed1db55d8ed14067032fe4e0824b2f8d4"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "zuomwlzzyktwrmoolqqsoywqmqwuptpv",
+        "commit_id": "ef149c6ed1db55d8ed14067032fe4e0824b2f8d4",
+        "description": "Make `show` the default subcommand\n\nRunning `jj-pr` with no subcommand now defaults to `show`.\nUses `Option<Command>` with `unwrap_or(Command::Show(...))`.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "7312253a91f849f5096ddd5c05d7ddee99ae1847"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "quqwrnxzysnznqxypxtvoouoxqnmyluz",
+        "commit_id": "7312253a91f849f5096ddd5c05d7ddee99ae1847",
+        "description": "Use tuple variants with arg structs for all subcommands\n\nAll Command variants now use tuple fields with dedicated arg structs:\nShowArgs, LogArgs, SyncArgs, TrackArgs, TidyArgs. This makes it\ncleaner to pass the full struct to handler functions as we add more\nargs. Added `s` alias for `show`.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "996a56b8ff41b56c6d6a8d1a41100118f6952875"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "lwznovplxzzmusyszusnuosymppkyunn",
+        "commit_id": "996a56b8ff41b56c6d6a8d1a41100118f6952875",
+        "description": "Rename log -> show, log-changes -> log\n\n- `show` (alias `s`): PR-level DAG view\n- `log`: commit-level view with PR annotations\n- Renamed render functions: render_show, render_log\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "408b556c168c5b3eb947a2f7f5a6f245cdb89ac3"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xonnruortkqwxvvktkuyymwzqxoxqvns",
+        "commit_id": "408b556c168c5b3eb947a2f7f5a6f245cdb89ac3",
+        "description": "trunk -> trunk()\n",
+        "parents": [
+          "198195dd679177e719e2b3391c4d30a1a45330d0"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "vxutpooywzrzpqurnmznqxnqlrtkxrvr",
+        "commit_id": "198195dd679177e719e2b3391c4d30a1a45330d0",
+        "description": "Add is_trunk_tip field to JjLogEntry\n\nAdded `is_trunk_tip: bool` to JjLogEntry, computed via\n`self.contained_in(\"trunk()\")` in the jj template. This identifies\nthe exact trunk tip commit, distinguishing \"properly rebased on\nlatest trunk\" from \"behind trunk, needs rebase\".\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "11ccec39b21b65db9faf68daf062be57a83a3786"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "oozrvzmspxvxvvnplqpwymrprokxuvyy",
+        "commit_id": "11ccec39b21b65db9faf68daf062be57a83a3786",
+        "description": "cleanup jj change view\n",
+        "parents": [
+          "90db6a0c9a3a93362ba05f7eb5e5bba0a50e9f52"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "myrzzyzplukzmmlrwvtxmmkmkxxwqpwp",
+        "commit_id": "90db6a0c9a3a93362ba05f7eb5e5bba0a50e9f52",
+        "description": "Improve log-changes: jj-like styling and trunk node\n\n- Added jj-like colors: change_id in bold magenta, commit_id in blue,\n  bookmarks in bold magenta, descriptions styled, empty commits marked\n- Each row shows: change_id, commit_id, bookmarks, PR info, then\n  description on second line\n- Added trunk ◆ node at bottom of graph using CommitId::ref_cast\n- Trunk case in jj entry loop is unreachable (trunk not in jj entries)\n- Added style helpers: commit_id_short, description_first_line,\n  bookmark_label, empty_marker, dim\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "9b7779d36db10f1d1d6d487dc21abcdb6f8fd7b5"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "momnqlkwkpxupukrwsnnsyzxzuvzrppv",
+        "commit_id": "9b7779d36db10f1d1d6d487dc21abcdb6f8fd7b5",
+        "description": "cleanups, add log-changes\n",
+        "parents": [
+          "8b10cdbe0630e813d01b0186eefe3fad06c71fa4"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "woxnqrkxupqynmqtzptlyprxrrqplxqu",
+        "commit_id": "8b10cdbe0630e813d01b0186eefe3fad06c71fa4",
+        "description": "pull out functions, format\n",
+        "parents": [
+          "e3644d7bdfedd1c7d47915838ea7a487381ac796"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "zxsrqoxurkyqspzwktyyxqkyxuwwuxrn",
+        "commit_id": "9fc950c266e81bdb755b733303cc094fa64cb3fa",
+        "description": "Add confirmation prompts to sync, import, and track create\n\n- sync: \"Apply N action(s)?\" before pushing bookmarks / updating bases\n- import: \"Stamp N commit(s) across M PR(s)?\" before writing trailers\n- track create: \"Create draft PR?\" before calling gh pr create\n- All prompts skipped with -y/--yes global flag\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\nPR: #4\n",
+        "parents": [
+          "563c00e0fa0d10522f4ba178220bb041038a854b"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [
+        {
+          "name": "mingwei/confirm",
+          "target": [
+            "9fc950c266e81bdb755b733303cc094fa64cb3fa"
+          ]
+        }
+      ],
+      "remote_bookmarks": [
+        {
+          "name": "mingwei/confirm",
+          "remote": "git",
+          "target": [
+            "9fc950c266e81bdb755b733303cc094fa64cb3fa"
+          ]
+        }
+      ]
+    },
+    {
+      "commit": {
+        "change_id": "wkusrytxnoxtwlslmtwpuuyqvmlysolr",
+        "commit_id": "563c00e0fa0d10522f4ba178220bb041038a854b",
+        "description": "Make y/yes confirmation case-insensitive\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\nPR: #4\n",
+        "parents": [
+          "19313a696d819e6cbd4c9f99decb1ebf461cdd3d"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "pvmxnwquyyoqxkkxnpropsmumtvpyvum",
+        "commit_id": "19313a696d819e6cbd4c9f99decb1ebf461cdd3d",
+        "description": "Add -y/--yes global flag and confirmation prompt for reclaiming\n\nNew `ui` module with `confirm(message, auto_yes)` helper that prompts\n`[y/N]` on stderr, or auto-proceeds with `-y`.\n\nGlobal `-y`/`--yes` flag on the CLI, threaded through to `track_pr`\nand `find_pr_commits`. When reclaiming commits from another PR, the\nuser is prompted to confirm before overwriting trailers. With `-y`,\nthe action is noted but proceeds without waiting.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\nPR: #4\n\nResolve conflict: merge reclaim fix with y/n confirmation changes\n\nMerged the \"only reclaim when tip is foreign-stamped\" fix (using\nown_commits.is_empty()) with the y/n confirmation prompt changes\n(separate own_commits/reclaimed_commits, yes parameter, ui::confirm).\nFixed unicode arrow escape that got mangled during conflict resolution.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "609c28f0194ec73a821745d93711646370685cb6"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "uxllmtmpypnsoozqoookxvpuyvtlszso",
+        "commit_id": "609c28f0194ec73a821745d93711646370685cb6",
+        "description": "Fix reclaim mode: only activate when tip is foreign-stamped\n\nReclaim mode now only activates when the very first commits encountered\nare stamped by a foreign PR (result is empty). If we've already claimed\nunstamped commits, hitting a foreign trailer is a normal boundary stop.\nThis prevents incorrect reclaiming when creating a child PR that\nnaturally stops at the parent's commits.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\nPR: #7\n",
+        "parents": [
+          "97ab83d6172480598b5e6ca6bb03db6660f7a0d9"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [
+        {
+          "name": "mingwei/pull-parent-pr-out-of-child",
+          "target": [
+            "609c28f0194ec73a821745d93711646370685cb6"
+          ]
+        }
+      ],
+      "remote_bookmarks": [
+        {
+          "name": "mingwei/pull-parent-pr-out-of-child",
+          "remote": "git",
+          "target": [
+            "609c28f0194ec73a821745d93711646370685cb6"
+          ]
+        }
+      ]
+    },
+    {
+      "commit": {
+        "change_id": "ssxmzpulzmvklvotlluxxusznrvzttkn",
+        "commit_id": "e3644d7bdfedd1c7d47915838ea7a487381ac796",
+        "description": "log working, single compute step\n",
+        "parents": [
+          "f4ef2f64a9bdba9826b909fa983d4af0be6d0b41"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "ppmmvvqxmmpmsyrrntspwxlklwrlzorm",
+        "commit_id": "f4ef2f64a9bdba9826b909fa983d4af0be6d0b41",
+        "description": "Add comment about orphaned nodes from Node::combine\n\nAdded a NOTE comment at the combine site (pass 1 membership) explaining\nthat intermediate combined nodes can become orphaned in the slotmap\nwhen 3+ PRs converge. Bounded by number of ambiguous merge points.\n\nNo logic changes. render_log filtering deferred for further design.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "06153a096d494af672a001154d7187e1b0f70046"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "nqopxoxznpllrqrnykymqlklutvyxypz",
+        "commit_id": "06153a096d494af672a001154d7187e1b0f70046",
+        "description": "jj log working\n",
+        "parents": [
+          "e3cf09d316e2d81272514107bbe5b49060742b85"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "yoltmmzmplprrppustppkzoomxnuosov",
+        "commit_id": "e3cf09d316e2d81272514107bbe5b49060742b85",
+        "description": "normalize wip\n",
+        "parents": [
+          "2cd29d8d7b37564680afef8b75b52384f02550ab"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "yyxlnkxtlkxooyolkqpyxuvtnssuzpux",
+        "commit_id": "2cd29d8d7b37564680afef8b75b52384f02550ab",
+        "description": "Update design doc: trailers are primary for merged PRs\n\nTrailers now have two roles:\n1. Validation (when bookmarks exist) - graph is primary\n2. Recovery (when bookmarks deleted after merge) - trailers are primary\n\nUpdated Trailers section with detailed explanation of the merged PR\nscenario. Updated RepoState principles to reflect dual membership\nsources.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "064cfb0c0c15443b0604dc2be879b504fb240c62"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "nsuslrzlzwmmzoptqpzzploqzvkllsty",
+        "commit_id": "064cfb0c0c15443b0604dc2be879b504fb240c62",
+        "description": "wip fix graph alg\n",
+        "parents": [
+          "ccdb61e08968e29b7f7bf0bc7d0a4f8aa6933bd3"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "yvwlrqortnvsyzxlomyumnkozwmltkpm",
+        "commit_id": "b7f66fa709957d5a10b0d6114d3e43f2891f08d5",
+        "description": "Fix render_log topo sort: collapse non-displayed predecessors to Trunk\n\nThe topo sort in render_log was panicking because it filtered to only\nopen PRs + ambig + trunk, but the preds closure returned all\npredecessors including merged PRs not in the display set.\n\nFix: build a set of displayed nodes, and in the preds closure, map\nany predecessor not in the display set to DagNode::Trunk. This\ncorrectly collapses merged parent PRs to trunk in the graph view.\n\nNote: 13 tests still failing due to the broader hand-typed algorithm\nrefactor (new JjState/DagNode types), not this fix.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "ccdb61e08968e29b7f7bf0bc7d0a4f8aa6933bd3"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xwtnysrwtkkmmxmyowksvmwrwloutpro",
+        "commit_id": "ccdb61e08968e29b7f7bf0bc7d0a4f8aa6933bd3",
+        "description": "hand-typed graph algorithm\n",
+        "parents": [
+          "2504f4fcda1650909fd63f705aaeeb50514929b9"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "qwxutkpqmzrtqtzrxxrlwxmstyvmvuku",
+        "commit_id": "2504f4fcda1650909fd63f705aaeeb50514929b9",
+        "description": "ignore .infinity\n",
+        "parents": [
+          "0dea9b9ffe17caeea0ac2214f4f9f1e787c4ad1f"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "qwrszrnnwnosopwrpxuxqrvzwkomtskn",
+        "commit_id": "0dea9b9ffe17caeea0ac2214f4f9f1e787c4ad1f",
+        "description": "Add inline comments to build() top-level variables, use mut+freeze pattern\n\nEach computed variable in build() now has a comment describing its\ntype and purpose. Replaced block-scoped tuple returns with mut\nvariables followed by `let x = x;` to freeze them. No renamed\ninner variables.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "149a2fec1964079978f5bed15be213408c7fca57"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "wywusummyrvoqvzotvmvtozlnqxzupqs",
+        "commit_id": "149a2fec1964079978f5bed15be213408c7fca57",
+        "description": "Refactor build() with block-scoped sections\n\nRestructured build() into clearly scoped phases using\n`let (a, b) = { ...; (a, b) }` pattern:\n\n- Phase 1: Index inputs (gh_by_head, bookmark_to_entry, targets)\n- Phase 2: Compute ancestor reachability (ancestor_of)\n- Phase 3: Compute membership and parent PRs\n- Phase 4: Diagnostics (diverged, merged, push, base, trailers)\n\nEach phase's intermediate variables are scoped to their block.\nNo logic changes. All 27 tests pass.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "633487e83f4687c28700a480f4f6febd0fe93be9"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "qxtnsquzkqzuqystqnoplwmvyyvzwywv",
+        "commit_id": "633487e83f4687c28700a480f4f6febd0fe93be9",
+        "description": "Document build() postconditions\n\nAdded detailed doc comment listing postconditions for each field of\nRepoState: prs, by_bookmark, commit_membership, parent_prs, and\ndiagnostics. Specifies ownership rules, parent detection criteria,\nand which diagnostics are emitted under what conditions.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "b4fdd629173ddbf5a9d51f9bd036477dfb393505"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xxqylswtsxuptyzmonnusqwmlkzuzpqz",
+        "commit_id": "b4fdd629173ddbf5a9d51f9bd036477dfb393505",
+        "description": "Fix parent detection for merge children, improve UpdateBase display\n\nFix: when a commit is shared with another bookmark, only treat that\nbookmark as a parent if its tip is an ancestor of our tip (it's below\nus). Previously, merge children were incorrectly treated as parents\nbecause their commits are ancestors of the merge bookmark.\n\nAdded bookmark name to UpdateBase action for clearer display:\n\"update PR #2810 (mingwei/delete-metrics-slotvec) base -> ...\"\n\nAdded test for merge-child scenario (PR #3 merges #1 and #2).\nAll 27 tests pass, clippy clean.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "2a06aea0a2644114efe1b2370a5dd4418a3c1f3a"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "lxwwtkmtswnmqkunxlwymusxvmvstmys",
+        "commit_id": "2a06aea0a2644114efe1b2370a5dd4418a3c1f3a",
+        "description": "Fix: treat parents not in state as trunk (beyond revset boundary)\n\nWhen a commit's parent is not in the JjState entries (beyond the\nrevset boundary), treat it as a trunk parent. Previously the walk\nsilently stopped without recording a trunk parent, causing PRs to\nappear as having no parents.\n\nAdded 2 tests: single PR and stacked PRs with parent not in state.\nAll 26 tests pass.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "f46f112b7a3e090d6f08275cf14388e1f49e94bb"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "qxyxnrmprlyxloqoutxstzmssqtwluko",
+        "commit_id": "f46f112b7a3e090d6f08275cf14388e1f49e94bb",
+        "description": "hydro.jj, .gh\n",
+        "parents": [
+          "fcd55dc30757867f8859c74f94f84f61d4e336a4"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "uspotzpsovsnvkxrpxnzlvmlqolrnxwl",
+        "commit_id": "fcd55dc30757867f8859c74f94f84f61d4e336a4",
+        "description": "Handle diverged bookmarks: diagnostic, sync refusal, null targets\n\n- Fix deserialization: bookmark `target` is now `Vec<Option<String>>`\n  to handle jj's null entries for conflicted/deleted bookmark sides\n- Detect diverged bookmarks (target.len() > 1) in build(), emit\n  `BookmarkDiverged` diagnostic, skip them from PR processing\n- `plan_sync` refuses with clear error listing diverged bookmarks\n- Added 2 tests: diagnostic detection and sync refusal\n- All 24 tests pass, clippy clean\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "3eb081930db5f4dc8ca7fcce87ee6f51416fe89e"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "tonopxqqxmwltrpzlrlstkwmttkpruom",
+        "commit_id": "3eb081930db5f4dc8ca7fcce87ee6f51416fe89e",
+        "description": "Replace design doc and README for v2\n\nDeleted old DESIGN.md (v1), renamed DESIGN_V2.md to DESIGN.md.\nCleaned up: removed v1/v2 framing, implementation plan (done),\nupdated parent_prs to use Option<PrId>, streamlined sections.\n\nUpdated README.md to reflect v2: graph-primary membership, new\ncommand set (log/sync/track/tidy), diagnostic-driven actions,\nupdated project structure and key types.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "45d9b85be3afcf1b3283a947b9f241bb277a2c23"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "vrxsklmylpksnltyrqkknvxtsppwwmxz",
+        "commit_id": "45d9b85be3afcf1b3283a947b9f241bb277a2c23",
+        "description": "Step 4: Add track, tidy commands and CLI restructuring\n\n- CLI: added `track` (create/update PR), `tidy` (repair trailers),\n  global `-y`/`--yes` flag\n- `track_pr`: resolves bookmark/revision, sets bookmark, pushes,\n  creates GH PR or updates, stamps trailers from graph membership\n- `plan_tidy`/`execute_tidy`: converts TrailerMismatch and\n  OrphanedTrailer diagnostics into fix/remove actions\n- `ui` module with `confirm()` helper (default yes [Y/n])\n- `sync` and `tidy` prompt before applying actions\n- Added `jj::remove_pr_trailer`, `jj::resolve_revision`,\n  `jj::read_description` helpers\n- Removed old `import` command\n- All 22 tests pass, clippy clean\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "d7bf4b9ffc941ad112aecf3217b91e3902e0e523"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xzumyolwozzolyuymrulvzrxzupyuouw",
+        "commit_id": "d7bf4b9ffc941ad112aecf3217b91e3902e0e523",
+        "description": "Replace has_trunk_parent with Option<PrId> in parent_prs\n\nparent_prs is now `BTreeMap<PrId, Vec<Option<PrId>>>` where `None`\nrepresents a trunk parent. Removed the separate `has_trunk_parent`\nmap. Expected base computation uses `if let [Some(parent_id)] = parents`\npattern matching. All 22 tests pass.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "de6acf066589847b5efecebfc193c8bd9c07679f"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "snwzwmlowrzsyxnvnwtvlmzqtsllmkys",
+        "commit_id": "de6acf066589847b5efecebfc193c8bd9c07679f",
+        "description": "v2: Rewrite RepoState with graph-primary membership and PrId\n\nMajor refactor implementing the v2 design:\n\n- PrId newtype wrapping NonZeroU64 for type-safe PR references\n- RepoState with normalized top-level maps: prs (GhPr metadata),\n  commit_membership (change_id -> PrId), parent_prs, has_trunk_parent\n- Graph-based membership: walk from each bookmark, exclude ancestors\n  of other bookmarks + trunk (revset-style algorithm in Rust)\n- No raw JjState/GhPr stored on RepoState\n- Full diagnostic system: NeedsPush, BaseRefMismatch, ParentMerged,\n  MissingTrailer, TrailerMismatch, OrphanedTrailer, UnownedCommit\n- plan_sync is pure diagnostic -> action mapping\n- sync refuses if TrailerMismatch/OrphanedTrailer exist (needs tidy)\n- Removed PrNode, track, import commands (to be re-added)\n- 22 tests: membership (single, stacked, diamond), parent detection,\n  sync (no-op, push, base update, merged parent), trailer diagnostics\n  (missing, mismatch, orphaned), sync-refuses-on-conflict\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "ef10a193bed24cec1bc4826012841ac7b02744b5"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xtyvlynrxnpkstwmknpvroqtpqvskvmy",
+        "commit_id": "ef10a193bed24cec1bc4826012841ac7b02744b5",
+        "description": "Add architectural invariants to v2 design doc\n\n- RepoState is immutable once built, no incremental updates\n- Descriptions read at mutation time via CLI, not stored in RepoState\n- Keeps RepoState as a pure planning structure\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "294d226070276d0dc8659535359e69125a67bd03"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "qtoqqllsqzkkmukozruqzzvvmkvmtlon",
+        "commit_id": "65cfc48da8b52f3b7b9b42239b2e062e64a1ac50",
+        "description": "",
+        "parents": [
+          "61f1d2d40296ea101a3e5f2a43fd5ab01f86de53"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "npnrrpnqulrkystnzomuorstkxulpnlw",
+        "commit_id": "294d226070276d0dc8659535359e69125a67bd03",
+        "description": "Update v2 design doc with implementation notes\n\n- Revset algorithm is spec only; implementation computes in Rust\n- Unowned commits rendered as warning nodes in `log` graph\n- `MissingTrailer` moved to sync (happy path, not repair)\n- `sync` only fails on TrailerMismatch/OrphanedTrailer\n- `tidy` prompts [Y/n] per PR, not per commit\n- Diagnostic table updated with command ownership\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "61f1d2d40296ea101a3e5f2a43fd5ab01f86de53"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "zrmnyvysmvtztyvoxqprnsvwtxrzvllq",
+        "commit_id": "61f1d2d40296ea101a3e5f2a43fd5ab01f86de53",
+        "description": "Update v2 design doc: RepoState restructure and implementation plan\n\n- RepoState uses normalized top-level maps instead of per-node graph data\n- GhPr used directly instead of separate PrNode/PrInfo\n- PrId newtype (NonZeroU64) for type safety\n- build() consumes raw data, no raw fields stored\n- 6-step implementation plan: PrId + restructure, graph membership,\n  trailer diagnostics, CLI restructuring, prompts, tests\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "1c2227d845a434780d80c147cef58bf805aca7d4"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "ymnrxmrnylkvkyrqxotruzwrzonnlurs",
+        "commit_id": "1c2227d845a434780d80c147cef58bf805aca7d4",
+        "description": "Update v2 design doc: CLI restructuring and confirmation prompts\n\n- `sync`: push + GH base updates + rebase merged children. Fails if\n  trailer issues exist (must `tidy` first).\n- `tidy`: new command for trailer repair (stamp/fix/remove). Replaces\n  `import`.\n- `track`: create/update PR + stamp trailers (unchanged).\n- `import`: removed, replaced by `tidy`.\n- All destructive actions prompt [Y/n] (default yes). Global -y flag.\n- Diagnostic table updated with command ownership and prompt markers.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "dfb7ac30e5e4b9ac3b585d04190054186bf28e25"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "krtnvvqyokulmkkzvokqqkrltqvplsky",
+        "commit_id": "3ab3dc39565a7c49fab2a5005348b3fff4f5f0f9",
+        "description": "Tighten v2 design doc: precise membership algorithm with revset\n\nReplaced informal \"walk ancestors\" description with concrete algorithm:\ncompute each PR's owned range as `ancestors(bookmark) & ~ancestors(other_bookmarks | trunk())`.\nNo circularity -- bookmark positions are fixed inputs.\n\nAdded examples for simple stack, diamond (unowned commits), and stacked\nshared ancestor. Clarified that step 4 (unowned) is the common invalid\ncase, not step 5 (ambiguous). Renamed AmbiguousCommit to UnownedCommit\nin the diagnostic table.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "a899897b3dd907dce6b878bd3f5f4db3254e8b7a"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "kwnyquqtqnmpktqqzxrvuvtvsyuwxxot",
+        "commit_id": "a899897b3dd907dce6b878bd3f5f4db3254e8b7a",
+        "description": "Add v2 design doc: graph-primary PR membership\n\nNew design document describing the shift from trailer-primary to\ngraph-primary membership computation. Trailers become a secondary\nsafety net for validation and recovery. Includes rules for ambiguous\ncases, diagnostic-driven actions, and command changes.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "9b07578adb3b87bd05a51db5847dcbc036a719de"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "vowqzzpwqwzkuksvlrxyprotlyotxpnt",
+        "commit_id": "9b07578adb3b87bd05a51db5847dcbc036a719de",
+        "description": "Unify all sync state into diagnostics, remove computed fields\n\nRemoved `needs_push` and `expected_base` from `PrNode`. All sync-relevant\nstate is now represented as diagnostics:\n\n- `NeedsPush { pr_number, bookmark }` — local ≠ remote bookmark target\n- `BaseRefMismatch { pr_number, expected, actual }` — GH base ≠ DAG base\n- `ParentMerged { merged_pr, bookmark, child_prs }` — merged PR needs rebase\n\n`BaseRefMismatch` is suppressed for PRs that have a `ParentMerged`\ndiagnostic (the merge is the root cause, not the base mismatch).\n\n`plan_sync` is now a pure diagnostic→action mapper with no logic.\n`ParentMerged` emits both `Rebase` and `UpdateBase` for child PRs.\n\nAll 23 tests pass, clippy clean.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "13ca82318f4c8074dc0ed6f70a3d174287fda0df"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "ltxnuzwnssvxuwpxvwkwttnpssrykkwq",
+        "commit_id": "13ca82318f4c8074dc0ed6f70a3d174287fda0df",
+        "description": "Rename PrDag to RepoState\n\nBetter reflects that it's the unified world view containing jj state,\nGitHub PRs, the PR graph, and diagnostics — not just a DAG.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "468b7f12a747249bf8fa4c0e60e05abd8422dbf1"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "tqurpsyttnyskknmuxnzmyyzwwszlxqs",
+        "commit_id": "468b7f12a747249bf8fa4c0e60e05abd8422dbf1",
+        "description": "Step 3: Unify all commands behind PrDag as single world view\n\n`PrDag` now owns `JjState` and `Vec<GhPr>`. `build()` takes ownership\nof both. All commands take only `&PrDag` (plus user args for track):\n\n- `render_log(&PrDag)`\n- `plan_sync(&PrDag)`\n- `track_pr(&PrDag, &TrackArgs)`\n- `plan_import(&PrDag)` / `import_prs(&PrDag, dry_run)`\n\nNo command takes raw `JjState` or `Vec<GhPr>` as separate parameters.\nFunctions that need them access `dag.jj_state` and `dag.gh_prs`.\n\nAll 23 tests pass, clippy clean.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "da3af247323e29b2e1e2dc223eaf2b641613e451"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "smvlxlpltovrwnlyqymlltrtswvmntru",
+        "commit_id": "da3af247323e29b2e1e2dc223eaf2b641613e451",
+        "description": "Step 2: Move expected base branch into PrNode, plan_sync takes only &PrDag\n\nAdded `expected_base` field to `PrNode`, computed in `build()` after\nall nodes are constructed. `plan_sync` now compares `node.base_ref`\nvs `node.expected_base` directly — no longer needs `gh_prs` parameter.\n\nRemoved `compute_expected_base` function. Cleaned up dead_code expects\nfor `base_ref` and `commit_ids` which are now used. `plan_sync` signature\nis now `plan_sync(&PrDag) -> Result<Vec<SyncAction>>`.\n\nAll 23 tests pass, clippy clean.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "b2980b4da83fae11404d702c63e5921107d6ecf0"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "okqtponltqntmqknzqmwtnrrorypputr",
+        "commit_id": "b2980b4da83fae11404d702c63e5921107d6ecf0",
+        "description": "Step 1: Move bookmark push detection into PrDag\n\nAdded `needs_push` field to `PrNode`, computed during `build()` by\ncomparing local vs remote bookmark targets. `plan_sync` no longer\ntakes `JjState` — it reads `node.needs_push` directly from the DAG.\n\n`plan_sync` now also filters to open PRs only when checking push/base\nstate. All 23 tests pass.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "48084b15c28402842d41a9531c3ede59821deef0"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xlsusooszzxosyyxsmmnousquoknlxpm",
+        "commit_id": "48084b15c28402842d41a9531c3ede59821deef0",
+        "description": "Add diagnostics to PrDag, detect merged parent PRs needing rebase\n\n- Add `Diagnostic` enum and `diagnostics` field to `PrDag`\n- `build()` now includes merged PRs in the DAG (not just open)\n- Detects `ParentMerged` diagnostic when a merged PR has mutable\n  children outside the PR\n- `plan_sync` converts `ParentMerged` into `SyncAction::Rebase` with\n  the merged PR's bookmark (for `jj rebase -s \"bookmark+\" -d trunk()`)\n- `compute_expected_base` treats merged parent PRs as trunk (base=main)\n- `render_log` filters to open PRs only\n- New test `sync_detects_merged_parent_needs_rebase` passes\n- All 23 tests pass\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "2bfed7b21200b52c254b344b8d116e6d7c89bf4d"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "xlwtvlsplvsmpuprkmnkzoskspwulnmv",
+        "commit_id": "2bfed7b21200b52c254b344b8d116e6d7c89bf4d",
+        "description": "Add failing test for merged parent PR rebase detection\n\nTest verifies that when a parent PR is merged (squash into trunk),\nsync should produce a Rebase action for the direct child change\n(not the PR) onto trunk(), plus an UpdateBase to main.\n\nAdded SyncAction::Rebase variant with source_change and destination\nfields. Test currently fails as plan_sync doesn't detect merged PRs.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\n",
+        "parents": [
+          "f32f28d8c3221550d25b8ee3e6fa156c017fe3cf"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    },
+    {
+      "commit": {
+        "change_id": "kwnsklrzwtpruktsnssympvozpprvvnw",
+        "commit_id": "f32f28d8c3221550d25b8ee3e6fa156c017fe3cf",
+        "description": "feat: handle out-of-order PR creation with mode-based trailer walk (#3)\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>",
+        "parents": [
+          "dfb7ac30e5e4b9ac3b585d04190054186bf28e25"
+        ]
+      },
+      "immutable": true,
+      "is_trunk_tip": true,
+      "local_bookmarks": [
+        {
+          "name": "main",
+          "target": [
+            "f32f28d8c3221550d25b8ee3e6fa156c017fe3cf"
+          ]
+        }
+      ],
+      "remote_bookmarks": [
+        {
+          "name": "main",
+          "remote": "git",
+          "target": [
+            "f32f28d8c3221550d25b8ee3e6fa156c017fe3cf"
+          ]
+        },
+        {
+          "name": "main",
+          "remote": "origin",
+          "target": [
+            "f32f28d8c3221550d25b8ee3e6fa156c017fe3cf"
+          ]
+        }
+      ]
+    },
+    {
+      "commit": {
+        "change_id": "wqwvxmmuyxlxuyytmlrukqzqoyowmxvz",
+        "commit_id": "97ab83d6172480598b5e6ca6bb03db6660f7a0d9",
+        "description": "feat: handle out-of-order PR creation with mode-based trailer walk\n\nfind_pr_commits now uses a reclaim mode: when it hits commits stamped\nby a different PR X, it reclaims them (overwrites with current PR),\nbut stops at any other PR Y boundary. This handles the case where a\nchild PR is created before its parent — the parent reclaims its\ncommits from the child without over-claiming into other PRs.\n\nRemoved the re-import approach in favor of this self-contained logic.\n\nCo-authored-by: Infinity 🤖 <infinity@hydro.run>\nPR: #3\n",
+        "parents": [
+          "dfb7ac30e5e4b9ac3b585d04190054186bf28e25"
+        ]
+      },
+      "immutable": false,
+      "is_trunk_tip": false,
+      "local_bookmarks": [],
+      "remote_bookmarks": []
+    }
+  ],
+  "prs": [
+    {
+      "baseRefName": "main",
+      "headRefName": "mingwei/pull-parent-pr-out-of-child",
+      "isDraft": false,
+      "number": 3,
+      "state": "MERGED",
+      "title": "feat: handle out-of-order PR creation with mode-based trailer walk",
+      "url": "https://github.com/hydro-project/jj-pr/pull/3"
+    },
+    {
+      "baseRefName": "main",
+      "headRefName": "mingwei/confirm",
+      "isDraft": true,
+      "number": 4,
+      "state": "CLOSED",
+      "title": "Add confirmation prompts to sync, import, and track create",
+      "url": "https://github.com/hydro-project/jj-pr/pull/4"
+    },
+    {
+      "baseRefName": "main",
+      "headRefName": "mingwei/clickable-pr",
+      "isDraft": true,
+      "number": 5,
+      "state": "OPEN",
+      "title": "Make PR # references into clickable URL links in create output",
+      "url": "https://github.com/hydro-project/jj-pr/pull/5"
+    },
+    {
+      "baseRefName": "mingwei/clickable-pr",
+      "headRefName": "mingwei/pull-parent-pr-out-of-child",
+      "isDraft": true,
+      "number": 7,
+      "state": "CLOSED",
+      "title": "Fix reclaim mode: only activate when tip is foreign-stamped",
+      "url": "https://github.com/hydro-project/jj-pr/pull/7"
+    }
+  ]
+}

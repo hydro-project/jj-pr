@@ -1,0 +1,11 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false)"
+---
+○  [1m[35mch2[0m [34mc2[0m [1m[35mfeat[0m [1m[36m]8;;https://github.com/test/repo/pull/1PR #1]8;;[0m [33mDraft[0m
+│  feat
+○  [1m[35mch1[0m [34mc1[0m [1m[36m]8;;https://github.com/test/repo/pull/1PR #1]8;;[0m [33mDraft[0m
+│  first
+│ ◆  [1m[35mchtrunk[0m [34mtrunk[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│    trunk
+◆  [1m[32mroot()::[0m

@@ -1,47 +1,88 @@
-use std::collections::HashMap;
+use std::borrow::Borrow;
+use std::fmt::Display;
+use std::ops::Deref;
 use std::process::Command;
 
 use anyhow::{Context, Result, bail};
-use serde::Deserialize;
+use ref_cast::RefCast;
+use serde::{Deserialize, Serialize};
+
+use crate::gh::PrNum;
+
+/// Newtype for the commit_id hash.
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, Hash, Ord, PartialEq, PartialOrd, RefCast)]
+#[repr(transparent)]
+#[serde(transparent)]
+pub struct CommitId<T: ?Sized = String>(pub T);
+impl<T: ?Sized> Display for CommitId<T>
+where
+    T: Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl<T: ?Sized> Deref for CommitId<T>
+where
+    T: Deref,
+{
+    type Target = CommitId<T::Target>;
+    fn deref(&self) -> &Self::Target {
+        CommitId::ref_cast(self.0.deref())
+    }
+}
+
+impl Borrow<CommitId<str>> for CommitId {
+    fn borrow(&self) -> &CommitId<str> {
+        self
+    }
+}
+
+impl ToOwned for CommitId<str> {
+    type Owned = CommitId<String>;
+
+    fn to_owned(&self) -> Self::Owned {
+        CommitId(self.0.to_owned())
+    }
+}
 
 /// Raw commit data from `json(self)`.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct JjCommit {
-    pub commit_id: String,
+    pub commit_id: CommitId,
     pub change_id: String,
-    pub parents: Vec<String>,
+    pub parents: Vec<CommitId>,
     pub description: String,
 }
 
 /// Bookmark reference from `json(local_bookmarks)` or `json(remote_bookmarks)`.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct JjBookmark {
     pub name: String,
-    #[expect(dead_code, reason = "TODO")]
-    pub target: Vec<String>,
+    pub target: Vec<Option<CommitId>>,
 }
 
 /// Remote bookmark reference from `json(remote_bookmarks)`.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct JjRemoteBookmark {
     pub name: String,
-    #[expect(dead_code, reason = "TODO")]
     pub remote: Option<String>,
-    #[expect(dead_code, reason = "TODO")]
-    pub target: Vec<String>,
+    pub target: Vec<Option<CommitId>>,
 }
 
 /// One line of JSONL output from our composite template.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct JjLogEntry {
     pub commit: JjCommit,
     pub local_bookmarks: Vec<JjBookmark>,
     pub remote_bookmarks: Vec<JjRemoteBookmark>,
     pub immutable: bool,
+    pub is_trunk_tip: bool,
 }
 
 /// Parsed PR trailer value, e.g. `PR: #1234` → `1234`.
-pub fn parse_pr_trailer(description: &str) -> Option<u64> {
+pub fn parse_pr_trailer(description: &str) -> Option<PrNum> {
     // Trailers are `Key: Value` lines at the end of the description.
     // We look for `PR: #<number>` in the trailer block, skipping trailing blank lines.
     let mut in_trailer_block = false;
@@ -56,8 +97,9 @@ pub fn parse_pr_trailer(description: &str) -> Option<u64> {
         in_trailer_block = true;
         if let Some(value) = line.strip_prefix("PR: #")
             && let Ok(n) = value.trim().parse::<u64>()
+            && let Some(pr_num) = PrNum::new(n)
         {
-            return Some(n);
+            return Some(pr_num);
         }
     }
     None
@@ -107,23 +149,63 @@ pub fn set_pr_trailer(description: &str, pr_number: u64) -> String {
     }
 }
 
-/// Full state loaded from jj.
-#[derive(Debug)]
-pub struct JjState {
-    pub entries: Vec<JjLogEntry>,
-    /// commit_id → index into entries
-    pub by_commit: HashMap<String, usize>,
-    /// change_id → index into entries
-    pub by_change: HashMap<String, usize>,
+/// Remove the `PR: #N` trailer from a description.
+#[expect(dead_code, reason = "used by tidy command (TODO)")]
+pub fn remove_pr_trailer(description: &str) -> String {
+    let lines: Vec<&str> = description.lines().collect();
+    let mut result_lines: Vec<&str> = Vec::new();
+
+    // Find and remove the PR trailer line.
+    let mut found = false;
+    for (i, line) in lines.iter().enumerate() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("PR: #") && !found {
+            found = true;
+            // If previous line is blank (trailer separator), remove it too.
+            if result_lines.last().is_some_and(|l: &&str| l.trim().is_empty()) {
+                // Check if there are other trailers — if so, keep the blank line.
+                let has_other_trailers = lines[..i]
+                    .iter()
+                    .rev()
+                    .take_while(|l| !l.trim().is_empty())
+                    .any(|l| l.contains(": ") && !l.trim().starts_with("PR: #"));
+                if !has_other_trailers {
+                    result_lines.pop();
+                }
+            }
+            continue;
+        }
+        result_lines.push(line);
+    }
+
+    let mut result = result_lines.join("\n");
+    if description.ends_with('\n') && !result.ends_with('\n') {
+        result.push('\n');
+    }
+    result
 }
 
-const JJ_TEMPLATE: &str = r#""{\"commit\": " ++ json(self) ++ ", \"local_bookmarks\": " ++ json(local_bookmarks) ++ ", \"remote_bookmarks\": " ++ json(remote_bookmarks) ++ ", \"immutable\": " ++ json(self.immutable()) ++ "}\n""#;
-
-pub fn load_state() -> Result<JjState> {
-    load_state_with_revset("trunk().. | trunk()")
+/// Resolve a revision string to a commit_id.
+#[expect(dead_code, reason = "used by track command (TODO)")]
+pub fn resolve_revision(rev: &str) -> Result<String> {
+    let output = Command::new("jj")
+        .args(["log", "--no-graph", "-r", rev, "-T", "commit_id"])
+        .output()
+        .context("Failed to resolve revision")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("Failed to resolve revision {rev}: {stderr}");
+    }
+    Ok(String::from_utf8(output.stdout)?.trim().to_owned())
 }
 
-pub fn load_state_with_revset(revset: &str) -> Result<JjState> {
+pub fn load_entries() -> Result<Vec<JjLogEntry>> {
+    load_entries_with_revset("trunk().. | trunk()")
+}
+
+pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
+    const JJ_TEMPLATE: &str = r#""{\"commit\": " ++ json(self) ++ ", \"local_bookmarks\": " ++ json(local_bookmarks) ++ ", \"remote_bookmarks\": " ++ json(remote_bookmarks) ++ ", \"immutable\": " ++ json(self.immutable()) ++ ", \"is_trunk_tip\": " ++ json(self.contained_in("trunk()")) ++ "}\n""#;
+
     let output = Command::new("jj")
         .args(["log", "--no-graph", "-r", revset, "-T", JJ_TEMPLATE])
         .output()
@@ -134,41 +216,31 @@ pub fn load_state_with_revset(revset: &str) -> Result<JjState> {
         bail!("jj log failed: {stderr}");
     }
 
-    let stdout = String::from_utf8(output.stdout).context("jj log output not UTF-8")?;
     let mut entries = Vec::new();
-    let mut by_commit = HashMap::new();
-    let mut by_change = HashMap::new();
 
+    let stdout = String::from_utf8(output.stdout).context("jj log output not UTF-8")?;
     for line in stdout.lines() {
         let line = line.trim();
         if line.is_empty() {
             continue;
         }
-        let entry: JjLogEntry =
-            serde_json::from_str(line).with_context(|| format!("Failed to parse: {line}"))?;
-        let idx = entries.len();
-        by_commit.insert(entry.commit.commit_id.clone(), idx);
-        by_change.insert(entry.commit.change_id.clone(), idx);
+        let entry = serde_json::from_str::<JjLogEntry>(line).with_context(|| format!("Failed to parse: {line}"))?;
         entries.push(entry);
     }
-
-    Ok(JjState::new(entries))
+    Ok(entries)
 }
 
-impl JjState {
-    pub fn new(entries: Vec<JjLogEntry>) -> Self {
-        let mut by_commit = HashMap::new();
-        let mut by_change = HashMap::new();
-        for (idx, entry) in entries.iter().enumerate() {
-            by_commit.insert(entry.commit.commit_id.clone(), idx);
-            by_change.insert(entry.commit.change_id.clone(), idx);
-        }
-        Self {
-            entries,
-            by_commit,
-            by_change,
-        }
+/// Read the description of a revision.
+pub fn read_description(revision: &str) -> Result<String> {
+    let output = Command::new("jj")
+        .args(["log", "--no-graph", "-r", revision, "-T", "description"])
+        .output()
+        .context("Failed to run `jj log` for description")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj log failed: {stderr}");
     }
+    String::from_utf8(output.stdout).context("description not UTF-8")
 }
 
 /// Set the description of a revision via `jj describe --stdin`.
@@ -189,9 +261,7 @@ pub fn describe_stdin(revision: &str, description: &str) -> Result<()> {
         .write_all(description.as_bytes())
         .context("Failed to write to jj describe stdin")?;
 
-    let output = child
-        .wait_with_output()
-        .context("Failed to wait for `jj describe`")?;
+    let output = child.wait_with_output().context("Failed to wait for `jj describe`")?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -215,6 +285,7 @@ pub fn git_push_bookmark(bookmark: &str) -> Result<()> {
 }
 
 /// Set a bookmark to point at a revision.
+#[expect(dead_code, reason = "used by track command (TODO)")]
 pub fn bookmark_set(name: &str, revision: &str) -> Result<()> {
     let output = Command::new("jj")
         .args(["bookmark", "set", name, "-r", revision])
@@ -243,19 +314,67 @@ pub fn bookmark_track(name: &str, remote: &str) -> Result<()> {
     Ok(())
 }
 
+/// Rebase revisions onto a destination.
+/// `sources` is a revset expression for `-s`, `dest` is a revset for `-d`.
+pub fn rebase(sources: &str, dest: &str) -> Result<()> {
+    let output = Command::new("jj")
+        .args(["rebase", "-s", sources, "-d", dest])
+        .output()
+        .context("Failed to run `jj rebase`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj rebase -s {sources} -d {dest} failed: {stderr}");
+    }
+    Ok(())
+}
+
+/// Abandon revisions matching a revset.
+pub fn abandon(revset: &str) -> Result<()> {
+    let output = Command::new("jj")
+        .args(["abandon", revset])
+        .output()
+        .context("Failed to run `jj abandon`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj abandon {revset} failed: {stderr}");
+    }
+    Ok(())
+}
+
+/// Push multiple bookmarks to the remote in a single command.
+pub fn git_push_bookmarks(bookmarks: &[&str]) -> Result<()> {
+    let mut args = vec!["git", "push"];
+    for bm in bookmarks {
+        args.push("--bookmark");
+        args.push(bm);
+    }
+    let output = Command::new("jj")
+        .args(&args)
+        .output()
+        .context("Failed to run `jj git push`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj git push failed: {stderr}");
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn parse_pr_trailer_basic() {
-        assert_eq!(parse_pr_trailer("some commit\n\nPR: #42\n"), Some(42));
+        assert_eq!(parse_pr_trailer("some commit\n\nPR: #42\n"), PrNum::new(42));
     }
 
     #[test]
     fn parse_pr_trailer_with_other_trailers() {
         let desc = "fix bug\n\nCo-authored-by: Alice\nPR: #123\n";
-        assert_eq!(parse_pr_trailer(desc), Some(123));
+        assert_eq!(parse_pr_trailer(desc), PrNum::new(123));
     }
 
     #[test]
@@ -265,7 +384,7 @@ mod tests {
 
     #[test]
     fn parse_pr_trailer_no_trailing_newline() {
-        assert_eq!(parse_pr_trailer("msg\n\nPR: #7"), Some(7));
+        assert_eq!(parse_pr_trailer("msg\n\nPR: #7"), PrNum::new(7));
     }
 
     #[test]
@@ -294,8 +413,8 @@ mod tests {
 
     #[test]
     fn parse_pr_trailer_trailing_blank_lines() {
-        assert_eq!(parse_pr_trailer("msg\n\nPR: #42\n\n"), Some(42));
-        assert_eq!(parse_pr_trailer("msg\n\nPR: #42\n\n\n"), Some(42));
+        assert_eq!(parse_pr_trailer("msg\n\nPR: #42\n\n"), PrNum::new(42));
+        assert_eq!(parse_pr_trailer("msg\n\nPR: #42\n\n\n"), PrNum::new(42));
     }
 
     #[test]

@@ -1,342 +1,839 @@
-use std::collections::{BTreeMap, BinaryHeap, HashMap, HashSet};
-use std::fmt;
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::ops::Deref;
 
-use anyhow::{Context, Result, bail};
+use anyhow::Result;
 use renderdag::{Ancestor, GraphRowRenderer, Renderer};
+use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 
-use crate::cli::TrackArgs;
-use crate::gh::{self, GhPr};
-use crate::jj::{self, JjState};
+use crate::gh::{GhPr, PrNum};
+use crate::graph_algorithms;
+use crate::jj::{self, CommitId, JjLogEntry};
 
-/// A PR node in the DAG.
-#[derive(Debug)]
-pub struct PrNode {
-    /// GitHub PR number.
-    #[expect(dead_code, reason = "TODO")]
-    pub number: u64,
-    /// Bookmark name (head ref).
-    pub bookmark: String,
-    /// GitHub base ref name.
-    #[expect(dead_code, reason = "TODO")]
-    pub base_ref: String,
-    /// GitHub PR URL.
-    pub url: String,
-    /// GitHub PR title.
-    pub title: String,
-    /// Whether the PR is a draft.
-    pub is_draft: bool,
-    /// GitHub state.
-    #[expect(dead_code, reason = "TODO")]
-    pub state: gh::PrState,
-    /// Commit IDs that belong to this PR (tip first).
-    #[cfg_attr(not(test), expect(dead_code, reason = "TODO"))]
-    pub commit_ids: Vec<String>,
-    /// Parent PR numbers (or empty if parent is trunk).
-    pub parent_prs: Vec<u64>,
-    /// True if at least one parent is trunk (not another PR).
-    pub has_trunk_parent: bool,
+new_key_type! {
+    pub struct NodeKey;
 }
 
-/// The full PR DAG.
+/// The unified view of the repo state.
 #[derive(Debug)]
-pub struct PrDag {
-    /// PR number → node.
-    pub nodes: BTreeMap<u64, PrNode>,
-    /// Bookmark name → PR number.
-    pub by_bookmark: HashMap<String, u64>,
+pub struct RepoState {
+    /// All the nodes in the repo state.
+    pub nodes: SlotMap<NodeKey, Node>,
+    /// The node key for `root()` (synthetic boundary below trunk).
+    pub root_node: NodeKey,
+    /// Node -> parent Nodes.
+    pub node_preds: SecondaryMap<NodeKey, Vec<NodeKey>>,
+    /// Node -> child Nodes.
+    pub node_succs: SecondaryMap<NodeKey, Vec<NodeKey>>,
+
+    /// Topological order of nodes (parents before children).
+    pub topo_order: Vec<NodeKey>,
+
+    /// Graph-computed: commit_id -> owning node.
+    pub commit_node: HashMap<CommitId, NodeKey>,
+    /// PRs whose local bookmark points to a different commit than the remote bookmark.
+    pub needs_push: HashSet<PrNum>,
+    /// Nodes that have any pending sync action (push, rebase, base update), including
+    /// transitive descendants of nodes that need rebase.
+    /// Value: `true` = propagates to children (push/rebase), `false` = local only (base mismatch).
+    pub needs_sync: SparseSecondaryMap<NodeKey, bool>,
+
+    /// Bookmarks with conflicting targets (user must resolve with `jj bookmark`).
+    pub bookmarks_conflicted: BTreeSet<String>,
 }
 
-/// Build the PR DAG from jj state and GitHub PRs.
-pub fn build(jj_state: &JjState, gh_prs: &[GhPr]) -> Result<PrDag> {
-    // Index: bookmark name → GhPr.
-    let gh_by_head: HashMap<&str, &GhPr> = gh_prs
-        .iter()
-        .filter(|pr| pr.state == gh::PrState::Open)
-        .map(|pr| (pr.head_ref_name.as_str(), pr))
-        .collect();
+/// Represents a contiguous set of changes/commits within the JJ graph, usually for a PR.
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub enum Node {
+    /// Represents the root - the synthetic "everything before trunk" boundary.
+    Root,
+    /// Represents the tip of `trunk()` - what top-level PRs should be rebased upon.
+    TrunkTip,
+    /// Represents a single PR.
+    Pr(PrNum),
+    /// Represents one or more ambiguous changes/commits.
+    ///
+    /// A node may be ambiguous either because its trailer PR num doesn't match the branch PR,
+    /// or if there are multiple branch PRs that could own this commit (due to multiple children).
+    Ambiguous {
+        /// The set of branch PRs that could include this node.
+        branch_prs: BTreeSet<PrNum>,
+        /// The set of trailer PRs in commits in this node.
+        trailer_prs: BTreeSet<PrNum>,
+    },
+}
 
-    // Find bookmarks that are PR heads.
-    // Walk jj entries, find commits with local bookmarks that match a GH PR head.
-    let mut bookmark_to_commit: HashMap<String, usize> = HashMap::new();
-    for (idx, entry) in jj_state.entries.iter().enumerate() {
-        for bm in &entry.local_bookmarks {
-            if gh_by_head.contains_key(bm.name.as_str()) {
-                bookmark_to_commit.insert(bm.name.clone(), idx);
-            }
-        }
-    }
+/// Build the repo state from raw jj and GitHub data.
+///
+/// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
+pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_branch: &str) -> Result<RepoState> {
+    let mut nodes = SlotMap::with_key();
+    let root_node = nodes.insert(Node::Root);
+    let mut node_preds = SecondaryMap::new();
+    node_preds.insert(root_node, Vec::new()); // `root()` has no parent nodes.
 
-    // For each PR bookmark, walk ancestors to find all commits in the PR.
-    // A commit belongs to a PR if it has the matching `PR: #N` trailer.
-    // We also find parent PRs: the first ancestor commits NOT in this PR.
-    let mut nodes = BTreeMap::new();
-    let mut by_bookmark = HashMap::new();
+    let (node_succs, commit_node, needs_push, needs_sync, bookmarks_conflicted) = Default::default();
+    let mut repo_state = RepoState {
+        nodes,
+        root_node,
+        node_preds,
+        node_succs,
+        topo_order: Vec::new(),
+        commit_node,
+        needs_push,
+        needs_sync,
+        bookmarks_conflicted,
+    };
 
-    // Index: commit_id → PR number (for commits with PR trailers).
-    let mut commit_pr: HashMap<&str, u64> = HashMap::new();
-    for entry in &jj_state.entries {
-        if let Some(n) = jj::parse_pr_trailer(&entry.commit.description) {
-            commit_pr.insert(&entry.commit.commit_id, n);
-        }
-    }
+    let (cid_pr_tip, pr_local) = {
+        // For each commit_id, Which PR it belongs to, but only for the tip (last commit in the PR).
+        let mut cid_pr_tip: HashMap<&CommitId<str>, Vec<PrNum>> = HashMap::new();
 
-    for (bookmark, &tip_idx) in &bookmark_to_commit {
-        let gh_pr = gh_by_head[bookmark.as_str()];
-        let pr_number = gh_pr.number;
+        // GH PR head ref name -> GH PR data.
+        // TODO(mingwei): handle multiple PRs sharing the same bookmark (e.g. Open + Closed/Merged).
+        let head_to_pr: HashMap<&str, &GhPr> = prs.values().map(|pr| (&*pr.head_ref_name, pr)).collect();
 
-        // Walk ancestors from the tip, collecting commits that belong to this PR.
-        let mut pr_commits: Vec<String> = Vec::new();
-        let mut parent_prs: HashSet<u64> = HashSet::new();
-        let mut has_trunk_parent = false;
-        let mut queue: Vec<usize> = vec![tip_idx];
-        let mut visited: HashSet<usize> = HashSet::new();
+        let mut pr_local = BTreeSet::new();
 
-        while let Some(idx) = queue.pop() {
-            if !visited.insert(idx) {
-                continue;
-            }
-            let entry = &jj_state.entries[idx];
-            let commit_belongs = commit_pr
-                .get(entry.commit.commit_id.as_str())
-                .is_some_and(|&n| n == pr_number);
-
-            if commit_belongs {
-                pr_commits.push(entry.commit.commit_id.clone());
-                // Continue walking parents.
-                for parent_id in &entry.commit.parents {
-                    if let Some(&parent_idx) = jj_state.by_commit.get(parent_id) {
-                        queue.push(parent_idx);
+        for jj_entry in jj_entries.iter() {
+            for local_bookmark in jj_entry.local_bookmarks.iter() {
+                let local_bookmark_name = &*local_bookmark.name;
+                if let Some(pr) = head_to_pr.get(local_bookmark_name) {
+                    // This is a PR bookmark.
+                    if 1 < local_bookmark.target.len() {
+                        // Conflict!
+                        // TODO(mingwei): handle conflicts! They can be separate nodes.
+                        repo_state.bookmarks_conflicted.insert(local_bookmark_name.to_owned());
+                    } else {
+                        // Note `local_bookmark.target == vec![jj_entry.commit.commit_id]` in the non-conflicted case.
+                        cid_pr_tip
+                            .entry(&*jj_entry.commit.commit_id)
+                            .or_default()
+                            .push(pr.number);
+                        pr_local.insert(pr.number);
                     }
-                    // If parent not in our state, it's beyond our revset (trunk).
                 }
-            } else if entry.immutable {
-                has_trunk_parent = true;
-            } else if let Some(&parent_pr) = commit_pr.get(entry.commit.commit_id.as_str()) {
-                if parent_pr != pr_number {
-                    parent_prs.insert(parent_pr);
-                }
-            } else {
-                // Commit without PR trailer that isn't trunk — could be an error,
-                // but for now treat as trunk boundary.
-                has_trunk_parent = true;
             }
         }
 
-        // Also check: if tip itself has no PR trailer, log a warning.
-        let tip_entry = &jj_state.entries[tip_idx];
-        if commit_pr
-            .get(tip_entry.commit.commit_id.as_str())
-            .is_none_or(|&n| n != pr_number)
-        {
-            eprintln!(
-                "{}: bookmark {} tip commit {} has no matching PR trailer",
-                crate::style::warn("warning"),
-                crate::style::bookmark(bookmark),
-                crate::style::change_id(&tip_entry.commit.commit_id),
-            );
+        (cid_pr_tip, pr_local)
+    };
+
+    // Compute needs_push: compare local vs remote bookmark targets for PR bookmarks.
+    // TODO(mingwei): this ignores which remote the bookmark is on — breaks with forks
+    // (e.g. "origin" vs "fork"). Should match against the gh-determined remote.
+    let needs_push = {
+        let mut local_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
+        let mut remote_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
+        for jj_entry in jj_entries.iter() {
+            for bm in &jj_entry.local_bookmarks {
+                local_targets.insert(&bm.name, &jj_entry.commit.commit_id);
+            }
+            for bm in &jj_entry.remote_bookmarks {
+                remote_targets.entry(&bm.name).or_insert(&jj_entry.commit.commit_id);
+            }
+        }
+        let mut needs_push = HashSet::new();
+        for gh_pr in prs.values() {
+            let bookmark = &*gh_pr.head_ref_name;
+            let local = local_targets.get(bookmark);
+            let remote = remote_targets.get(bookmark);
+            if local != remote {
+                needs_push.insert(gh_pr.number);
+            }
+        }
+        needs_push
+    };
+    repo_state.needs_push = needs_push;
+
+    // First pass: compute membership.
+    {
+        let _scope = tracing::info_span!("membership").entered();
+
+        // Map from each commit to its children (instead of parents).
+        let mut cid_children = HashMap::<_, Vec<_>>::new();
+        for jj_entry in jj_entries.iter() {
+            for parent_cid in jj_entry.commit.parents.iter() {
+                cid_children
+                    .entry(&**parent_cid)
+                    .or_default()
+                    .push(&*jj_entry.commit.commit_id);
+            }
         }
 
-        if pr_commits.is_empty() {
-            eprintln!(
-                "{}: {} ({}) has no commits with matching PR trailer, skipping",
-                crate::style::warn("warning"),
-                crate::style::pr_num(pr_number, None),
-                crate::style::bookmark(bookmark),
-            );
-            continue;
-        }
+        // Traverse in reverse topological order (children to parents to `trunk()`).
+        for jj_entry in jj_entries.iter() {
+            let cid = &*jj_entry.commit.commit_id;
+            let _cid_scope = tracing::info_span!("commit", %cid).entered();
 
-        by_bookmark.insert(bookmark.clone(), pr_number);
-        nodes.insert(
-            pr_number,
-            PrNode {
-                number: pr_number,
-                bookmark: bookmark.clone(),
-                base_ref: gh_pr.base_ref_name.clone(),
-                url: gh_pr.url.clone(),
-                title: gh_pr.title.clone(),
-                is_draft: gh_pr.is_draft,
-                state: gh_pr.state,
-                commit_ids: pr_commits,
-                parent_prs: parent_prs.into_iter().collect(),
-                has_trunk_parent,
-            },
-        );
+            // At this point we gather all relevant information to decide what `Node` this should be:
+            // - If the entry is the tip of `trunk()`
+            // - The tip PR num, if this is the tip of a PR
+            //   (or multiple if there are multiple PRs that have the same tip, although that is silly).
+            // - All child `Node` types (and `NodeKey`s corresponding).
+            // - The trailer PR num, if set.
+            //
+            // We also consider global info:
+            // - If the trailer PR num has a local branch tracking it.
+            //
+            let is_trunk_tip = jj_entry.is_trunk_tip;
+            let tip_pr_nums = cid_pr_tip.get(cid).map(Deref::deref).unwrap_or_default();
+            let child_nodes = cid_children
+                .get(cid)
+                .into_iter() // Will be `None` at leaf children.
+                .flatten()
+                .filter_map(|&child_cid| {
+                    let &child_nk = repo_state.commit_node.get(child_cid)?;
+                    let child_node = repo_state.nodes.get(child_nk).unwrap();
+                    Some((child_nk, child_node))
+                })
+                .collect::<SparseSecondaryMap<_, _>>();
+            let trailer_pr_num = jj::parse_pr_trailer(&jj_entry.commit.description);
+
+            // Main logic triggered here: decide how to assign the node.
+            let (node, node_key) = decide(is_trunk_tip, tip_pr_nums, child_nodes, trailer_pr_num, &pr_local);
+
+            // Insert or update
+            {
+                let _update_scope = tracing::info_span!("update", ?node, ?node_key).entered();
+                let node_key = match (node, node_key) {
+                    (None, None) => {
+                        tracing::trace!("Commit appears to not belong to any node");
+                        continue;
+                    }
+                    (None, Some(node_key)) => {
+                        tracing::debug!("Assigning commit to existing");
+                        node_key
+                    }
+                    (Some(new_node), None) => {
+                        tracing::debug!("Assigning commit to new node");
+                        repo_state.nodes.insert(new_node)
+                    }
+                    (Some(updated_node), Some(node_key)) => {
+                        tracing::debug!("Assigning commit to existing and updating");
+                        repo_state.nodes[node_key] = updated_node;
+                        node_key
+                    }
+                };
+                repo_state.commit_node.insert(cid.to_owned(), node_key);
+            }
+        }
     }
 
-    Ok(PrDag { nodes, by_bookmark })
+    // Second pass: compute node DAG.
+    {
+        let _scope = tracing::info_span!("dag").entered();
+
+        // Ensure all nodes have pred/succ entries.
+        for nk in repo_state.nodes.keys() {
+            repo_state.node_preds.entry(nk).unwrap().or_default();
+            repo_state.node_succs.entry(nk).unwrap().or_default();
+        }
+
+        // Traverse in reverse topological order (children to parents to `trunk()`).
+        for jj_entry in jj_entries.iter() {
+            let cid = &*jj_entry.commit.commit_id;
+            let _cid_scope = tracing::info_span!("commit", %cid).entered();
+
+            let Some(&prev_nk) = repo_state.commit_node.get(cid) else {
+                // This is a random commit not in any PRs, an branch off of the commits we actually care about.
+                tracing::trace!("Skipping commit not in any PRs.");
+                continue;
+            };
+
+            // If `jj_entries.get(prev_cid)` is `None`, then we should set `next_nk` to `trunk()`.
+            let next_nks = jj_entry
+                .commit
+                .parents
+                .iter()
+                .map(|cid| repo_state.commit_node.get(cid).unwrap_or(&repo_state.root_node))
+                .copied()
+                .collect::<BTreeSet<_>>();
+
+            for next_nk in next_nks {
+                if prev_nk == next_nk {
+                    // No self-references.
+                    continue;
+                }
+                repo_state.node_preds.entry(prev_nk).unwrap().or_default().push(next_nk);
+                repo_state.node_succs.entry(next_nk).unwrap().or_default().push(prev_nk);
+            }
+        }
+    }
+
+    // Third pass: topo sort and compute needs_sync.
+    {
+        let _scope = tracing::info_span!("topo_sync").entered();
+
+        repo_state.topo_order = graph_algorithms::topo_sort(repo_state.nodes.keys(), |nk| {
+            repo_state
+                .node_preds
+                .get(nk)
+                .unwrap_or_else(|| panic!("bug: missing preds for node key {nk:?}"))
+                .iter()
+                .copied()
+        })
+        .unwrap_or_else(|cycle| {
+            panic!(
+                "bug: cycle detected in node DAG: {:?}",
+                cycle.iter().map(|&nk| repo_state.nodes.get(nk).unwrap()).collect::<Vec<_>>()
+            )
+        });
+
+        // Forward pass (parents before children) to propagate needs_sync.
+        for &nk in &repo_state.topo_order {
+            let (needs_push_or_rebase, needs_base_update) = match repo_state.nodes.get(nk).unwrap() {
+                Node::Pr(pr_num) if !prs.get(pr_num).is_some_and(|p| p.state == gh::PrState::Merged) => {
+                    let push_or_rebase =
+                        // Needs push.
+                        repo_state.needs_push.contains(pr_num)
+                        // Has merged parent.
+                        || repo_state.node_preds.get(nk).unwrap().iter().any(|&pred_nk| {
+                            matches!(repo_state.nodes.get(pred_nk), Some(Node::Pr(parent_pr)) if prs.get(parent_pr).is_some_and(|p| p.state == gh::PrState::Merged))
+                        });
+                    let base_update = prs.get(pr_num).is_some_and(|gh_pr| {
+                        let expected = repo_state.expected_base(nk, prs, default_branch);
+                        gh_pr.base_ref_name != expected
+                    });
+                    (push_or_rebase, base_update)
+                }
+                _ => (false, false),
+            };
+
+            // Propagates: true if this node or an ancestor has push/rebase.
+            let ancestor_propagates = repo_state.node_preds.get(nk).unwrap().iter().any(|&pred_nk| {
+                repo_state.needs_sync.get(pred_nk).copied() == Some(true)
+            });
+
+            if needs_push_or_rebase || ancestor_propagates {
+                // true = propagates to children.
+                repo_state.needs_sync.insert(nk, true);
+            } else if needs_base_update {
+                // false = local only, does not propagate.
+                repo_state.needs_sync.insert(nk, false);
+            }
+        }
+    }
+
+    Ok(repo_state)
 }
 
-/// Render the PR DAG as a graph to stdout.
-pub fn render_log(dag: &PrDag) -> Result<()> {
-    if dag.nodes.is_empty() {
-        eprintln!("{}", crate::style::warn("No PRs found."));
-        return Ok(());
+/// The main descision logic for assigning a commit to a `Node`.
+///
+/// Return value is `(new_node_value, existing_node_key)`, both options.
+/// If the existing node key is `Some`, that key will be used, and possibly updated, in-place.
+/// If the new node value is `Some`, that value will be used (inserted or updated based on key).
+/// Returns `None` if the commit should be skipped.
+fn decide(
+    is_trunk_tip: bool,
+    tip_pr_nums: &[PrNum],
+    child_nodes: SparseSecondaryMap<NodeKey, &Node>,
+    trailer_pr_num: Option<PrNum>,
+    pr_local: &BTreeSet<PrNum>,
+) -> (Option<Node>, Option<NodeKey>) {
+    if is_trunk_tip {
+        return (Some(Node::TrunkTip), None);
     }
 
-    let sorted = topo_sort_prs(dag);
+    let (mut node, mut node_key) = match tip_pr_nums {
+        // If no tip PR nums, inherit from the children.
+        [] => {
+            if let Some(trailer_pr_num) = trailer_pr_num
+                && !pr_local.contains(&trailer_pr_num)
+            {
+                // Special case: if `trailer_prs` is set, but the PR is not tracked locally, we use it alone.
+                (Some(Node::Pr(trailer_pr_num)), None)
+            } else {
+                decide_combine_child_nodes(child_nodes)
+            }
+        }
+        // If single tip PR num, use it.
+        &[single] => (Some(Node::Pr(single)), None),
+        // If there are multiple, ambiguous.
+        // (Cannot have multiple PRs with same PR num).
+        multiple => (
+            Some(Node::Ambiguous {
+                branch_prs: multiple.iter().copied().collect(),
+                trailer_prs: BTreeSet::new(),
+            }),
+            None,
+        ),
+    };
+    // Finally, incorporate the trailer PR num.
+    if let Some(trailer_pr_num) = trailer_pr_num {
+        (node, node_key) = if let Some(node) = node {
+            let (node, node_key) = match node {
+                Node::Root => unreachable!(),
+                Node::TrunkTip => unreachable!(),
+                Node::Pr(same_pr_num) if same_pr_num == trailer_pr_num => (node, node_key),
+                Node::Pr(other_pr_num) => (
+                    Node::Ambiguous {
+                        branch_prs: [other_pr_num].into(),
+                        trailer_prs: [trailer_pr_num].into(),
+                    },
+                    None,
+                ),
+                Node::Ambiguous {
+                    branch_prs,
+                    mut trailer_prs,
+                } => {
+                    trailer_prs.insert(trailer_pr_num);
+                    (
+                        Node::Ambiguous {
+                            branch_prs,
+                            trailer_prs,
+                        },
+                        node_key, // Update existing.
+                    )
+                }
+            };
+            (Some(node), node_key)
+        } else {
+            // A trailer PR num alone is not enough to be a PR.
+            (
+                Some(Node::Ambiguous {
+                    branch_prs: BTreeSet::new(),
+                    trailer_prs: [trailer_pr_num].into(),
+                }),
+                None,
+            )
+        };
+    }
+    (node, node_key)
+}
+
+/// [`decide`] helper for combining child nodes.
+fn decide_combine_child_nodes(child_nodes: SparseSecondaryMap<NodeKey, &Node>) -> (Option<Node>, Option<NodeKey>) {
+    // Merge multiple children together.
+    let mut node_and_nk = None;
+    #[expect(clippy::disallowed_methods, reason = "iteration order doesn't affect result — merging into sets")]
+    for (next_nk, &next_node) in child_nodes.iter() {
+        let Some((prev_node, prev_nk)) = &mut node_and_nk else {
+            // Simple/initial case: inherit from one child:
+            node_and_nk = Some((next_node.clone(), Some(next_nk)));
+            continue;
+        };
+        match (&*prev_node, next_node) {
+            (Node::Root, _) | (_, &Node::Root) => unreachable!(),
+            (Node::TrunkTip, _) | (_, &Node::TrunkTip) => unreachable!(),
+            (&Node::Pr(pr_num_prev), &Node::Pr(pr_num_next)) if pr_num_prev == pr_num_next => {
+                // Matches, keep current.
+            }
+            (&Node::Pr(pr_num_prev), &Node::Pr(pr_num_next)) => {
+                *prev_node = Node::Ambiguous {
+                    branch_prs: [pr_num_prev, pr_num_next].into(),
+                    trailer_prs: BTreeSet::new(),
+                };
+                *prev_nk = None;
+            }
+            (
+                &Node::Pr(pr_num),
+                Node::Ambiguous {
+                    branch_prs,
+                    trailer_prs,
+                },
+            )
+            | (
+                Node::Ambiguous {
+                    branch_prs,
+                    trailer_prs,
+                },
+                &Node::Pr(pr_num),
+            ) => {
+                let mut branch_prs = branch_prs.clone();
+                let same = !branch_prs.insert(pr_num);
+                *prev_node = Node::Ambiguous {
+                    branch_prs,
+                    trailer_prs: if same { trailer_prs.clone() } else { BTreeSet::new() },
+                };
+                *prev_nk = same.then_some(next_nk);
+            }
+            (
+                Node::Ambiguous {
+                    branch_prs,
+                    trailer_prs,
+                },
+                Node::Ambiguous {
+                    branch_prs: branch_prs_next,
+                    trailer_prs: trailer_prs_next,
+                },
+            ) => {
+                let same = branch_prs == branch_prs_next;
+                *prev_node = Node::Ambiguous {
+                    branch_prs: branch_prs.iter().chain(branch_prs_next).copied().collect(),
+                    trailer_prs: if same {
+                        trailer_prs.iter().chain(trailer_prs_next).copied().collect()
+                    } else {
+                        BTreeSet::new()
+                    },
+                };
+                *prev_nk = same.then_some(next_nk);
+            }
+        }
+    }
+    node_and_nk
+        .map(|(node, node_key)| (Some(node), node_key))
+        .unwrap_or((None, None))
+}
+
+// --- Sync status helpers ---
+
+impl RepoState {
+    /// Returns the expected GitHub base branch name for a node, derived from the DAG.
+    /// If the parent is another open PR, returns its head_ref_name.
+    /// Otherwise returns the default branch name (trunk).
+    pub fn expected_base(&self, nk: NodeKey, prs: &BTreeMap<PrNum, GhPr>, default_branch: &str) -> String {
+        let Some(preds) = self.node_preds.get(nk) else {
+            return default_branch.to_owned();
+        };
+        // If there's exactly one parent that is an open PR, use its branch.
+        let parent_prs: Vec<_> = preds
+            .iter()
+            .filter_map(|&pred_nk| match self.nodes.get(pred_nk)? {
+                Node::Pr(parent_pr) => prs.get(parent_pr).filter(|p| p.state == gh::PrState::Open).map(|p| &p.head_ref_name),
+                _ => None,
+            })
+            .collect();
+        match parent_prs.as_slice() {
+            [single] => (*single).clone(),
+            _ => default_branch.to_owned(),
+        }
+    }
+
+    /// Returns `true` if a node has any pending sync action.
+    pub fn node_needs_sync(&self, nk: NodeKey) -> bool {
+        self.needs_sync.contains_key(nk)
+    }
+}
+
+// --- Rendering ---
+
+/// Render the PR DAG as a graph.
+pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut impl std::io::Write) -> Result<()> {
+    let mut renderer = GraphRowRenderer::new()
+        .output()
+        .with_min_row_height(1)
+        .build_box_drawing();
+
+    for &node_key in state.topo_order.iter().rev() {
+        let parents = state
+            .node_preds
+            .get(node_key)
+            .unwrap()
+            .iter()
+            .map(|&dag_node| Ancestor::Parent(dag_node))
+            .collect::<Vec<_>>();
+
+        let (message, glyph) = match state.nodes.get(node_key).unwrap() {
+            Node::Root => {
+                let message = crate::style::root();
+                (message, crate::style::GLYPH_IMMUTABLE.to_owned())
+            }
+            Node::TrunkTip => {
+                let message = crate::style::trunk();
+                (message, crate::style::GLYPH_IMMUTABLE.to_owned())
+            }
+            Node::Pr(pr_id) => {
+                let gh_pr = prs.get(pr_id).unwrap();
+                let sync_indicator = if state.node_needs_sync(node_key) { "*" } else { "" };
+                let message = format!(
+                    "{}{sync_indicator}  {}  {}\n{}",
+                    crate::style::pr_num(pr_id.get(), Some(&gh_pr.url)),
+                    crate::style::status(gh_pr.state, gh_pr.is_draft),
+                    crate::style::bookmark(&gh_pr.head_ref_name),
+                    gh_pr.title,
+                );
+                (message, crate::style::GLYPH_MUTABLE.to_owned())
+            }
+            Node::Ambiguous {
+                branch_prs,
+                trailer_prs,
+            } => {
+                let sync_indicator = if state.node_needs_sync(node_key) { "*" } else { "" };
+                let pr_links: Vec<String> = branch_prs
+                    .iter()
+                    .map(|pr_id| {
+                        let url = prs.get(pr_id).map(|p| p.url.as_str());
+                        crate::style::pr_num(pr_id.get(), url)
+                    })
+                    .collect();
+                let mut line1 = format!(
+                    "{}{sync_indicator} shared between {}",
+                    crate::style::warn("ambiguous"),
+                    pr_links.join(", "),
+                );
+                if !trailer_prs.is_empty() {
+                    let trailer_strs: Vec<String> = trailer_prs
+                        .iter()
+                        .map(|pr_id| crate::style::pr_num(pr_id.get(), None))
+                        .collect();
+                    line1.push_str(&format!(" (trailer: {})", trailer_strs.join(", ")));
+                }
+                let has_shared = branch_prs.len() > 1;
+                let has_trailer_mismatch =
+                    !trailer_prs.is_empty() && trailer_prs != branch_prs;
+                let line2 = match (has_shared, has_trailer_mismatch) {
+                    (true, true) => crate::style::dim(
+                        "(restructure PRs to resolve, and edit commit trailers to fix PR: tags)",
+                    ),
+                    (true, false) => crate::style::dim(
+                        "(restructure PRs to resolve — stack one on the other)",
+                    ),
+                    (false, true) => crate::style::dim(
+                        "(edit commit description to fix PR: trailer)",
+                    ),
+                    (false, false) => panic!("bug: ambiguous node with no shared commits and no trailer mismatch"),
+                };
+                let message = format!("{line1}\n{line2}");
+                (message, crate::style::warn(crate::style::GLYPH_WARNING))
+            }
+        };
+
+        let row = renderer.next_row(node_key, parents, glyph, message);
+        write!(out, "{row}")?;
+    }
+
+    Ok(())
+}
+
+pub fn render_log(
+    state: &RepoState,
+    prs: &BTreeMap<PrNum, GhPr>,
+    jj_entries: &[JjLogEntry],
+    show_all: bool,
+    out: &mut impl std::io::Write,
+) -> Result<()> {
+    let known_entries = jj_entries.iter().map(|e| &*e.commit.commit_id).collect::<BTreeSet<_>>();
 
     let mut renderer = GraphRowRenderer::new()
         .output()
         .with_min_row_height(1)
         .build_box_drawing();
 
-    // Sentinel ID for trunk node.
-    let trunk_id: u64 = 0;
+    for jj_entry in jj_entries {
+        let cid = &*jj_entry.commit.commit_id;
+        let _cid_scope = tracing::info_span!("commit", %cid).entered();
 
-    for &pr_num in &sorted {
-        let node = &dag.nodes[&pr_num];
+        let node_key = state.commit_node.get(cid).copied();
+        if !show_all && node_key.is_none() {
+            tracing::trace!("Skipping commit not in any PRs.");
+            continue;
+        };
 
-        let mut parents: Vec<Ancestor<u64>> = node
-            .parent_prs
-            .iter()
-            .filter(|p| dag.nodes.contains_key(p))
-            .map(|&p| Ancestor::Parent(p))
-            .collect();
-        if node.has_trunk_parent || parents.is_empty() {
-            parents.push(Ancestor::Parent(trunk_id));
+        // Build the glyph.
+        let glyph = match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
+            Some(Node::Root | Node::TrunkTip) => crate::style::GLYPH_IMMUTABLE.to_owned(),
+            Some(Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
+            Some(Node::Pr(_)) | None => crate::style::GLYPH_MUTABLE.to_owned(),
+        };
+
+        // First line: change_id commit_id [bookmarks] [PR info]
+        let mut line1_parts = vec![
+            crate::style::change_id(&jj_entry.commit.change_id),
+            crate::style::commit_id_short(&cid.to_string()),
+        ];
+
+        // Add bookmark labels.
+        for bm in &jj_entry.local_bookmarks {
+            line1_parts.push(crate::style::bookmark_label(&bm.name));
         }
 
-        let label = format!(
-            "{}  {}  {}\n{}",
-            crate::style::pr_num(pr_num, Some(&node.url)),
-            crate::style::status(node.is_draft),
-            crate::style::bookmark(&node.bookmark),
-            node.title,
-        );
+        if let Some(node_key) = node_key {
+            match state.nodes.get(node_key).unwrap() {
+                Node::Root => {
+                    panic!("bug: root node should not appear in jj entries");
+                }
+                Node::TrunkTip => {
+                    line1_parts.push(crate::style::trunk());
+                }
+                Node::Pr(pr_id) => {
+                    let gh_pr = prs.get(pr_id);
+                    let sync_indicator = if state.node_needs_sync(node_key) { "*" } else { "" };
+                    let pr_str = match gh_pr {
+                        Some(pr) => format!(
+                            "{}{sync_indicator} {}",
+                            crate::style::pr_num(pr_id.get(), Some(&pr.url)),
+                            crate::style::status(pr.state, pr.is_draft),
+                        ),
+                        None => format!(
+                            "{}{sync_indicator}",
+                            crate::style::pr_num(pr_id.get(), None),
+                        ),
+                    };
+                    line1_parts.push(pr_str);
+                }
+                Node::Ambiguous { branch_prs, .. } => {
+                    let sync_indicator = if state.node_needs_sync(node_key) { "*" } else { "" };
+                    let pr_strs: Vec<String> = branch_prs
+                        .iter()
+                        .map(|pr_id| crate::style::pr_num(pr_id.get(), None))
+                        .collect();
+                    line1_parts.push(format!(
+                        "{}{sync_indicator} {}{}{}",
+                        crate::style::warn("ambiguous"),
+                        crate::style::warn("["),
+                        pr_strs.join(", "),
+                        crate::style::warn("]"),
+                    ));
+                }
+            }
+        } else {
+            line1_parts.push(crate::style::dim("(no PR)"));
+        }
 
-        let row = renderer.next_row(pr_num, parents, String::from("○"), label);
-        print!("{row}");
+        let line1 = line1_parts.join(" ");
+
+        // Second line: description.
+        let line2 = crate::style::description_first_line(&jj_entry.commit.description);
+
+        let message = format!("{line1}\n{line2}");
+
+        let row = renderer.next_row(
+            Some(cid),
+            jj_entry
+                .commit
+                .parents
+                .iter()
+                .map(|cid| Ancestor::Parent(known_entries.contains(&**cid).then_some(&**cid)))
+                .collect(),
+            glyph,
+            message,
+        );
+        write!(out, "{row}")?;
     }
 
-    // Render trunk node.
+    // Print root.
     let row = renderer.next_row(
-        trunk_id,
+        None,
         Vec::new(),
-        String::from("◆"),
-        crate::style::bold("trunk"),
+        crate::style::GLYPH_IMMUTABLE.to_owned(),
+        crate::style::root(),
     );
-    print!("{row}");
+    write!(out, "{row}")?;
 
     Ok(())
 }
 
-/// Topological sort of PR nodes (children before parents).
-fn topo_sort_prs(dag: &PrDag) -> Vec<u64> {
-    // "in_degree" here counts how many children point to a node as a parent.
-    // We want children first, so nodes with in_degree 0 (no children depending on them
-    // that haven't been emitted yet) come first — but actually we want the reverse:
-    // nodes that ARE NOT parents of anything unprocessed come first.
-    // This is a standard Kahn's algorithm where edges go child→parent.
-    let mut in_degree: BTreeMap<u64, usize> = BTreeMap::new();
+// --- Sync ---
 
-    for &pr_num in dag.nodes.keys() {
-        in_degree.entry(pr_num).or_insert(0);
-    }
-    // Edge: child → parent. in_degree counts incoming edges (from children).
-    // We want to emit children first, so we reverse: edge parent → child for topo sort,
-    // meaning in_degree counts parents.
-    for (&pr_num, node) in &dag.nodes {
-        let parent_count = node
-            .parent_prs
-            .iter()
-            .filter(|p| dag.nodes.contains_key(p))
-            .count();
-        *in_degree.entry(pr_num).or_insert(0) += parent_count;
-    }
+use std::fmt;
 
-    // child_of: parent → list of children
-    let mut child_of: BTreeMap<u64, Vec<u64>> = BTreeMap::new();
-    for (&pr_num, node) in &dag.nodes {
-        for &parent in &node.parent_prs {
-            if dag.nodes.contains_key(&parent) {
-                child_of.entry(parent).or_default().push(pr_num);
-            }
-        }
-    }
+use crate::gh;
 
-    // Start with nodes that have no parents in the DAG (roots / trunk children).
-    let mut queue: BinaryHeap<u64> = in_degree
-        .iter()
-        .filter(|(_, deg)| **deg == 0)
-        .map(|(n, _)| *n)
-        .collect();
-
-    let mut result = Vec::new();
-    while let Some(n) = queue.pop() {
-        result.push(n);
-        // "removing" this node means its children lose one parent dependency.
-        if let Some(children) = child_of.get(&n) {
-            for &child in children {
-                let d = in_degree.get_mut(&child).unwrap();
-                *d -= 1;
-                if *d == 0 {
-                    queue.push(child);
-                }
-            }
-        }
-    }
-
-    // We emitted roots first, but renderdag wants children first. Reverse.
-    result.reverse();
-    result
-}
-
-/// A sync action to be executed.
 #[derive(Debug)]
 pub enum SyncAction {
-    PushBookmark(String),
-    UpdateBase { pr_number: u64, new_base: String },
+    /// Stamp a missing `PR: #N` trailer on a commit.
+    StampTrailer { change_id: String, pr: PrNum },
+    /// Rebase children of a merged PR onto trunk.
+    RebaseChildren { bookmark: String, pr: PrNum },
+    /// Abandon commits of a merged PR.
+    AbandonMerged { bookmark: String, pr: PrNum },
+    /// Push bookmarks that differ from remote.
+    Push { bookmarks: Vec<(PrNum, String)> },
+    /// Update a PR's base branch on GitHub.
+    UpdateBase { pr: PrNum, bookmark: String, new_base: String },
 }
 
 impl fmt::Display for SyncAction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SyncAction::PushBookmark(name) => write!(f, "push bookmark: {name}"),
-            SyncAction::UpdateBase {
-                pr_number,
-                new_base,
-            } => write!(f, "update PR #{pr_number} base → {new_base}"),
+            SyncAction::StampTrailer { change_id, pr } => {
+                let short = &change_id[..12.min(change_id.len())];
+                write!(f, "stamp {pr} trailer on {short}")
+            }
+            SyncAction::RebaseChildren { bookmark, pr } => {
+                write!(f, "rebase children of {pr} ({bookmark}) onto trunk()")
+            }
+            SyncAction::AbandonMerged { bookmark, pr } => {
+                write!(f, "abandon merged {pr} ({bookmark})")
+            }
+            SyncAction::Push { bookmarks } => {
+                let details: Vec<_> = bookmarks.iter().map(|(pr, bm)| format!("{pr} ({bm})")).collect();
+                write!(f, "push: {}", details.join(", "))
+            }
+            SyncAction::UpdateBase { pr, bookmark, new_base } => {
+                write!(f, "update {pr} ({bookmark}) base -> {new_base}")
+            }
         }
     }
 }
 
-/// Plan sync actions by comparing local DAG state with GitHub state.
-pub fn plan_sync(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr]) -> Result<Vec<SyncAction>> {
-    let gh_by_number: HashMap<u64, &GhPr> = gh_prs.iter().map(|pr| (pr.number, pr)).collect();
+/// Plan sync actions. Returns Err if blocking issues exist.
+pub fn plan_sync(
+    state: &RepoState,
+    prs: &BTreeMap<PrNum, GhPr>,
+    jj_entries: &[JjLogEntry],
+    default_branch: &str,
+) -> Result<Vec<SyncAction>> {
+    // Block on conflicted bookmarks.
+    if !state.bookmarks_conflicted.is_empty() {
+        let names: Vec<_> = state.bookmarks_conflicted.iter().map(|s| s.as_str()).collect();
+        anyhow::bail!(
+            "Diverged bookmark(s): {}. Resolve with `jj bookmark` before syncing.",
+            names.join(", ")
+        );
+    }
+
     let mut actions = Vec::new();
 
-    // Build bookmark name → local commit_id and remote commit_id from jj state.
-    let mut local_targets: HashMap<&str, &str> = HashMap::new();
-    let mut remote_targets: HashMap<&str, &str> = HashMap::new();
-    for entry in &jj_state.entries {
-        for bm in &entry.local_bookmarks {
-            local_targets.insert(&bm.name, &entry.commit.commit_id);
-        }
-        for bm in &entry.remote_bookmarks {
-            // Use the first remote bookmark we find (typically "git" for colocated repos).
-            remote_targets
-                .entry(&bm.name)
-                .or_insert(&entry.commit.commit_id);
+    // 1. Stamp missing trailers.
+    for jj_entry in jj_entries {
+        let cid = &*jj_entry.commit.commit_id;
+        let Some(&nk) = state.commit_node.get(cid) else { continue };
+        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else { continue };
+        let existing_trailer = jj::parse_pr_trailer(&jj_entry.commit.description);
+        if existing_trailer != Some(*pr_num) {
+            actions.push(SyncAction::StampTrailer {
+                change_id: jj_entry.commit.change_id.clone(),
+                pr: *pr_num,
+            });
         }
     }
 
-    for (&pr_number, node) in &dag.nodes {
-        // Only push if local and remote targets differ.
-        let local = local_targets.get(node.bookmark.as_str());
-        let remote = remote_targets.get(node.bookmark.as_str());
-        if local != remote {
-            actions.push(SyncAction::PushBookmark(node.bookmark.clone()));
+    // 2 & 3. Rebase children + abandon for merged PRs.
+    for &nk in &state.topo_order {
+        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else { continue };
+        let Some(gh_pr) = prs.get(pr_num) else { continue };
+        if gh_pr.state != gh::PrState::Merged { continue; }
+        let has_children = state.node_succs.get(nk).is_some_and(|succs| !succs.is_empty());
+        if has_children {
+            actions.push(SyncAction::RebaseChildren {
+                bookmark: gh_pr.head_ref_name.clone(),
+                pr: *pr_num,
+            });
         }
+        actions.push(SyncAction::AbandonMerged {
+            bookmark: gh_pr.head_ref_name.clone(),
+            pr: *pr_num,
+        });
+    }
 
-        // Compute expected base branch.
-        let expected_base = compute_expected_base(node, dag);
-        if let Some(gh_pr) = gh_by_number.get(&pr_number)
-            && gh_pr.base_ref_name != expected_base
-        {
+    // 4. Push — collect all PR bookmarks that need pushing.
+    {
+        let mut push_bookmarks = Vec::new();
+        for &nk in &state.topo_order {
+            if !state.needs_sync.contains_key(nk) { continue; }
+            let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else { continue };
+            let Some(gh_pr) = prs.get(pr_num) else { continue };
+            assert!(gh_pr.state != gh::PrState::Merged, "bug: merged PR {} in needs_sync", pr_num);
+            push_bookmarks.push((*pr_num, gh_pr.head_ref_name.clone()));
+        }
+        if !push_bookmarks.is_empty() {
+            actions.push(SyncAction::Push { bookmarks: push_bookmarks });
+        }
+    }
+
+    // 5. Update GitHub base branches.
+    for &nk in &state.topo_order {
+        if !state.needs_sync.contains_key(nk) { continue; }
+        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else { continue };
+        let Some(gh_pr) = prs.get(pr_num) else { continue };
+        assert!(gh_pr.state != gh::PrState::Merged, "bug: merged PR {} in needs_sync", pr_num);
+        let expected = state.expected_base(nk, prs, default_branch);
+        if gh_pr.base_ref_name != expected {
             actions.push(SyncAction::UpdateBase {
-                pr_number,
-                new_base: expected_base,
+                pr: *pr_num,
+                bookmark: gh_pr.head_ref_name.clone(),
+                new_base: expected,
             });
         }
     }
@@ -344,443 +841,195 @@ pub fn plan_sync(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr]) -> Result<Vec
     Ok(actions)
 }
 
-/// Compute what the GitHub base branch should be for a PR.
-fn compute_expected_base(node: &PrNode, dag: &PrDag) -> String {
-    // If the PR has exactly one non-trunk parent PR, base on that bookmark.
-    // If it has trunk parent (or no parents), base on main.
-    // If it has multiple parent PRs, pick the first one (DAG merge — imperfect but workable).
-    if node.parent_prs.len() == 1 && !node.has_trunk_parent {
-        let parent_num = node.parent_prs[0];
-        if let Some(parent_node) = dag.nodes.get(&parent_num) {
-            return parent_node.bookmark.clone();
-        }
-    }
-    String::from("main")
-}
-
 /// Execute planned sync actions.
 pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
     for action in actions {
         match action {
-            SyncAction::PushBookmark(name) => {
-                eprintln!("Pushing bookmark: {}", crate::style::bookmark(name));
-                jj::git_push_bookmark(name)?;
-            }
-            SyncAction::UpdateBase {
-                pr_number,
-                new_base,
-            } => {
+            SyncAction::StampTrailer { change_id, pr } => {
                 eprintln!(
-                    "Updating {} base → {}",
-                    crate::style::pr_num(*pr_number, None),
+                    "Stamping {} on {}",
+                    crate::style::pr_num(pr.get(), None),
+                    crate::style::change_id(change_id),
+                );
+                let desc = jj::read_description(change_id)?;
+                let new_desc = jj::set_pr_trailer(&desc, pr.get());
+                jj::describe_stdin(change_id, &new_desc)?;
+            }
+            SyncAction::RebaseChildren { bookmark, pr } => {
+                eprintln!(
+                    "Rebasing children of {} ({}) onto trunk()",
+                    crate::style::pr_num(pr.get(), None),
+                    crate::style::bookmark(bookmark),
+                );
+                jj::rebase(&format!("{bookmark}+"), "trunk()")?;
+            }
+            SyncAction::AbandonMerged { bookmark, pr } => {
+                eprintln!(
+                    "Abandoning merged {} ({})",
+                    crate::style::pr_num(pr.get(), None),
+                    crate::style::bookmark(bookmark),
+                );
+                jj::abandon(bookmark)?;
+            }
+            SyncAction::Push { bookmarks } => {
+                eprintln!(
+                    "Pushing {} bookmark(s): {}",
+                    bookmarks.len(),
+                    bookmarks.iter().map(|(_, b)| crate::style::bookmark(b)).collect::<Vec<_>>().join(", "),
+                );
+                let refs: Vec<&str> = bookmarks.iter().map(|(_, s)| s.as_str()).collect();
+                jj::git_push_bookmarks(&refs)?;
+            }
+            SyncAction::UpdateBase { pr, bookmark, new_base } => {
+                eprintln!(
+                    "Updating {} ({}) base -> {}",
+                    crate::style::pr_num(pr.get(), None),
+                    crate::style::bookmark(bookmark),
                     crate::style::bookmark(new_base),
                 );
-                gh::edit_base(*pr_number, new_base)?;
+                gh::edit_base(pr.get(), new_base)?;
             }
         }
     }
     Ok(())
 }
 
-/// Create a new PR or update an existing one.
-pub fn track_pr(dag: &PrDag, jj_state: &JjState, gh_prs: &[GhPr], args: &TrackArgs) -> Result<()> {
-    // When --pr is given, resolve the bookmark from the GH PR's headRefName.
-    let bookmark = if let Some(pr_num) = args.pr {
-        let gh_pr = gh_prs
-            .iter()
-            .find(|pr| pr.number == pr_num)
-            .with_context(|| format!("PR #{pr_num} not found on GitHub"))?;
-        gh_pr.head_ref_name.clone()
-    } else if let Some(ref bm) = args.bookmark {
-        bm.clone()
-    } else {
-        // No --pr or -b: resolve from the revision's bookmark.
-        String::new() // placeholder, resolved below after commit_id
+// --- Create ---
+
+use anyhow::Context;
+
+/// Find the base branch for a bookmark by walking the parent graph.
+/// Returns the head_ref_name of the nearest ancestor PR, or `default_branch` if none.
+fn find_base_branch(
+    state: &RepoState,
+    prs: &BTreeMap<PrNum, GhPr>,
+    jj_entries: &[JjLogEntry],
+    bookmark: &str,
+    default_branch: &str,
+) -> String {
+    // Find the tip commit for this bookmark.
+    let tip_cid = jj_entries.iter().find_map(|e| {
+        e.local_bookmarks.iter().any(|bm| bm.name == bookmark).then_some(&*e.commit.commit_id)
+    });
+    let Some(tip_cid) = tip_cid else {
+        return default_branch.to_owned();
     };
 
-    // Resolve the revision.
-    // With --pr and no -r, default to @ (update PR to current working copy).
-    // With -b and no -r, default to bookmark target.
-    // With neither, default to @.
-    let rev_str = if let Some(ref r) = args.revision {
-        r.clone()
-    } else if args.pr.is_none() && !bookmark.is_empty() {
-        bookmark.clone() // -b without -r: use bookmark target
-    } else {
-        "@".to_owned() // --pr without -r, or no flags: use @
-    };
+    // Build a parent lookup from jj_entries.
+    let parent_map: HashMap<&CommitId<str>, &[CommitId]> = jj_entries
+        .iter()
+        .map(|e| (&*e.commit.commit_id, e.commit.parents.as_slice()))
+        .collect();
 
-    let rev_output = std::process::Command::new("jj")
-        .args(["log", "--no-graph", "-r", &rev_str, "-T", "commit_id"])
-        .output()
-        .context("Failed to resolve revision")?;
-    if !rev_output.status.success() {
-        bail!(
-            "Failed to resolve revision {}: {}",
-            rev_str,
-            String::from_utf8_lossy(&rev_output.stderr)
-        );
-    }
-    let commit_id = String::from_utf8(rev_output.stdout)?.trim().to_owned();
-
-    // If bookmark was not determined yet, look it up from the commit.
-    let bookmark = if bookmark.is_empty() {
-        let idx = jj_state
-            .by_commit
-            .get(&commit_id)
-            .with_context(|| format!("Commit {commit_id} not found in jj state"))?;
-        let entry = &jj_state.entries[*idx];
-        if let Some(bm) = entry.local_bookmarks.first() {
-            bm.name.clone()
-        } else {
-            bail!(
-                "No bookmark on revision {} — use --bookmark to specify one",
-                rev_str
-            );
+    // BFS up through parents looking for a commit owned by a different PR node.
+    let tip_node = state.commit_node.get(tip_cid);
+    let mut queue = std::collections::VecDeque::new();
+    let mut visited = HashSet::new();
+    if let Some(parents) = parent_map.get(tip_cid) {
+        for p in *parents {
+            queue.push_back(&**p);
         }
-    } else {
-        bookmark
-    };
+    }
+    while let Some(cid) = queue.pop_front() {
+        if !visited.insert(cid) {
+            continue;
+        }
+        if let Some(&nk) = state.commit_node.get(cid) {
+            // Skip if same node as the tip (same PR).
+            if tip_node != Some(&nk) {
+                if let Some(Node::Pr(pr_num)) = state.nodes.get(nk)
+                    && let Some(gh_pr) = prs.get(pr_num)
+                    && gh_pr.state != gh::PrState::Merged
+                {
+                    return gh_pr.head_ref_name.clone();
+                }
+                // Hit trunk/root/ambiguous — use default.
+                return default_branch.to_owned();
+            }
+        }
+        if let Some(parents) = parent_map.get(cid) {
+            for p in *parents {
+                queue.push_back(&**p);
+            }
+        } else {
+            // Parent not in entries — beyond revset, treat as trunk.
+            return default_branch.to_owned();
+        }
+    }
+    default_branch.to_owned()
+}
 
-    // Ensure bookmark exists and points to the revision.
-    jj::bookmark_set(&bookmark, &rev_str)?;
+/// Create a new PR for an existing bookmark.
+pub fn cmd_create(
+    state: &RepoState,
+    prs: &BTreeMap<PrNum, GhPr>,
+    jj_entries: &[JjLogEntry],
+    default_branch: &str,
+    bookmark: &str,
+    title: Option<&str>,
+    body: Option<&str>,
+) -> Result<()> {
+    // Verify bookmark exists.
+    let tip_entry = jj_entries
+        .iter()
+        .find(|e| e.local_bookmarks.iter().any(|bm| bm.name == bookmark))
+        .with_context(|| format!("bookmark '{}' not found — create it with `jj bookmark create {}`", bookmark, bookmark))?;
 
-    // Track the remote bookmark if it exists (needed before push).
-    if let Err(e) = jj::bookmark_track(&bookmark, "origin") {
-        eprintln!("{}: {e:#}", crate::style::warn("note: bookmark track"));
+    // Verify no PR already exists for this bookmark.
+    if let Some(existing) = prs.values().find(|pr| pr.head_ref_name == bookmark) {
+        anyhow::bail!(
+            "bookmark '{}' already has {} — use `jj-pr sync` to update it",
+            bookmark,
+            existing.number,
+        );
     }
 
     // Determine base branch.
-    let base = find_base_for_commit(&commit_id, jj_state, dag);
+    let base = find_base_branch(state, prs, jj_entries, bookmark, default_branch);
 
-    // Push the bookmark.
-    jj::git_push_bookmark(&bookmark)?;
-
-    // Either create a new PR or use the existing one.
-    let pr_number = if let Some(n) = args.pr {
-        // Update existing PR — just re-stamp trailers and push.
-        eprintln!(
-            "Updating {} ({} → {})",
-            crate::style::pr_num(n, None),
-            crate::style::bookmark(&bookmark),
-            crate::style::bookmark(&base),
-        );
-        n
-    } else {
-        // Check if bookmark already has a PR.
-        if let Some(&existing) = dag.by_bookmark.get(&bookmark) {
-            bail!(
-                "Bookmark {bookmark} already has {} — use --pr {existing} to update",
-                crate::style::pr_num(existing, None),
-            );
-        }
-
-        // Generate title/body.
-        let title = args.title.clone().unwrap_or_else(|| {
-            jj_state
-                .by_commit
-                .get(&commit_id)
-                .map(|&idx| {
-                    jj_state.entries[idx]
-                        .commit
-                        .description
-                        .lines()
-                        .next()
-                        .unwrap_or("untitled")
-                        .to_owned()
-                })
-                .unwrap_or_else(|| "untitled".to_owned())
+    // Determine title.
+    let title = title
+        .map(|s| s.to_owned())
+        .unwrap_or_else(|| {
+            tip_entry.commit.description.lines().next().unwrap_or("untitled").to_owned()
         });
-        let body = args.body.clone().unwrap_or_default();
+    let body = body.unwrap_or("");
 
-        // Create the PR on GitHub (always as draft).
-        eprintln!(
-            "Creating PR: {title} ({} → {}) [{}]",
-            crate::style::bookmark(&bookmark),
-            crate::style::bookmark(&base),
-            crate::style::status(true),
-        );
-        let n = gh::create_pr(&bookmark, &base, &title, &body, true)?;
-        eprintln!("Created {}: {title}", crate::style::pr_num(n, None));
-        n
-    };
-
-    // Stamp PR trailer on all commits in the PR.
-    let commits_to_stamp = find_pr_commits(&commit_id, jj_state, pr_number);
-    for cid in &commits_to_stamp {
-        if let Some(&idx) = jj_state.by_commit.get(cid) {
-            let entry = &jj_state.entries[idx];
-            let new_desc = jj::set_pr_trailer(&entry.commit.description, pr_number);
-            jj::describe_stdin(&entry.commit.change_id, &new_desc)?;
-        }
+    // Track remote (ignore error — remote bookmark may not exist yet).
+    // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.
+    if let Err(e) = jj::bookmark_track(bookmark, "origin") {
+        tracing::debug!("bookmark track failed (expected if new): {e:#}");
     }
+
+    // Push.
+    eprintln!("Pushing {}", crate::style::bookmark(bookmark));
+    jj::git_push_bookmark(bookmark)?;
+
+    // Create PR.
     eprintln!(
-        "Stamped {} on {} commit(s)",
-        crate::style::pr_num(pr_number, None),
-        commits_to_stamp.len()
+        "Creating PR: {} ({} → {}) [draft]",
+        title,
+        crate::style::bookmark(bookmark),
+        crate::style::bookmark(&base),
     );
+    let pr_number = gh::create_pr(bookmark, &base, &title, body, true)?;
+    eprintln!("Created {}", crate::style::pr_num(pr_number, None));
 
-    Ok(())
-}
-
-/// Find the base branch for a new PR by walking parents.
-fn find_base_for_commit(commit_id: &str, jj_state: &JjState, dag: &PrDag) -> String {
-    let Some(&idx) = jj_state.by_commit.get(commit_id) else {
-        return String::from("main");
-    };
-    let entry = &jj_state.entries[idx];
-    for parent_id in &entry.commit.parents {
-        // Check if parent has a PR trailer pointing to a known PR.
-        if let Some(&parent_idx) = jj_state.by_commit.get(parent_id) {
-            let parent_entry = &jj_state.entries[parent_idx];
-            if let Some(pr_num) = jj::parse_pr_trailer(&parent_entry.commit.description)
-                && let Some(node) = dag.nodes.get(&pr_num)
-            {
-                return node.bookmark.clone();
-            }
+    // Stamp trailers on owned commits.
+    let mut stamped = 0;
+    for jj_entry in jj_entries {
+        let cid = &*jj_entry.commit.commit_id;
+        let Some(&nk) = state.commit_node.get(cid) else { continue };
+        let tip_nk = state.commit_node.get(&*tip_entry.commit.commit_id);
+        if Some(&nk) != tip_nk { continue; }
+        if jj::parse_pr_trailer(&jj_entry.commit.description) != PrNum::new(pr_number) {
+            let new_desc = jj::set_pr_trailer(&jj_entry.commit.description, pr_number);
+            jj::describe_stdin(&jj_entry.commit.change_id, &new_desc)?;
+            stamped += 1;
         }
     }
-    String::from("main")
-}
-
-/// Find all commits that should be stamped with a PR trailer.
-/// Walk ancestors from commit_id until we hit trunk or a PR boundary.
-///
-/// Mode is determined by the first existing trailer encountered:
-/// - No trailer first: claim unstamped commits, stop at any stamped commit
-/// - Same PR: keep walking (update case)
-/// - Different PR X first (no unstamped claimed yet): reclaim from X,
-///   stop at any other PR Y or trunk
-fn find_pr_commits(commit_id: &str, jj_state: &JjState, pr_number: u64) -> Vec<String> {
-    let mut result = Vec::new();
-    let mut queue = vec![commit_id.to_owned()];
-    let mut visited = HashSet::new();
-    let mut reclaiming_from: Option<u64> = None;
-
-    while let Some(cid) = queue.pop() {
-        if !visited.insert(cid.clone()) {
-            continue;
-        }
-        let Some(&idx) = jj_state.by_commit.get(&cid) else {
-            continue;
-        };
-        let entry = &jj_state.entries[idx];
-
-        if entry.immutable {
-            continue;
-        }
-
-        match jj::parse_pr_trailer(&entry.commit.description) {
-            Some(existing) if existing == pr_number => {
-                // Already ours — include and keep walking.
-            }
-            Some(existing) => {
-                if reclaiming_from == Some(existing) {
-                    // Continuing to reclaim from the same foreign PR.
-                } else if reclaiming_from.is_none() && result.is_empty() {
-                    // Very first commits are foreign — enter reclaim mode.
-                    reclaiming_from = Some(existing);
-                } else {
-                    // Hit a different PR boundary — stop this path.
-                    continue;
-                }
-            }
-            None => {
-                if reclaiming_from.is_some() {
-                    // Was reclaiming but hit unstamped — stop.
-                    continue;
-                }
-            }
-        }
-
-        result.push(cid.clone());
-        for parent_id in &entry.commit.parents {
-            queue.push(parent_id.clone());
-        }
-    }
-
-    result
-}
-
-/// Compute the import plan: a map from change_id → pr_number.
-///
-/// PRs are processed in topological order (parents before children) using
-/// GitHub's baseRefName to determine the DAG. Each PR walks from its
-/// bookmark tip toward trunk, claiming unstamped commits and stopping
-/// at any commit already assigned to another PR.
-pub fn plan_import(jj_state: &JjState, gh_prs: &[GhPr]) -> BTreeMap<String, u64> {
-    let open_prs: Vec<&GhPr> = gh_prs
-        .iter()
-        .filter(|pr| pr.state == gh::PrState::Open)
-        .collect();
-
-    // Topological sort: parents before children.
-    // A PR whose base is another PR's head is a child and must come after.
-    let pr_heads: HashSet<&str> = open_prs
-        .iter()
-        .map(|pr| pr.head_ref_name.as_str())
-        .collect();
-    let mut sorted: Vec<&GhPr> = Vec::new();
-    let mut remaining: Vec<&GhPr> = open_prs;
-    let mut processed: HashSet<&str> = HashSet::new();
-
-    loop {
-        let before = remaining.len();
-        let mut next = Vec::new();
-        for pr in remaining {
-            if !pr_heads.contains(pr.base_ref_name.as_str())
-                || processed.contains(pr.base_ref_name.as_str())
-            {
-                processed.insert(&pr.head_ref_name);
-                sorted.push(pr);
-            } else {
-                next.push(pr);
-            }
-        }
-        remaining = next;
-        if remaining.is_empty() || remaining.len() == before {
-            // Append any remaining (cycles or missing base) at the end.
-            sorted.extend(remaining);
-            break;
-        }
-    }
-
-    // Build bookmark name → jj entry index.
-    let mut bookmark_to_idx: HashMap<&str, usize> = HashMap::new();
-    for (idx, entry) in jj_state.entries.iter().enumerate() {
-        for bm in &entry.local_bookmarks {
-            bookmark_to_idx.insert(&bm.name, idx);
-        }
-    }
-
-    // Process each PR: claim unstamped commits, stop at any stamped commit.
-    let mut plan: BTreeMap<String, u64> = BTreeMap::new();
-
-    for pr in &sorted {
-        let Some(&tip_idx) = bookmark_to_idx.get(pr.head_ref_name.as_str()) else {
-            eprintln!(
-                "{}: {} ({}) — no local bookmark",
-                crate::style::warn("skip"),
-                crate::style::pr_num(pr.number, Some(&pr.url)),
-                crate::style::bookmark(&pr.head_ref_name),
-            );
-            continue;
-        };
-
-        let mut queue: Vec<usize> = vec![tip_idx];
-        let mut visited: HashSet<usize> = HashSet::new();
-
-        while let Some(idx) = queue.pop() {
-            if !visited.insert(idx) {
-                continue;
-            }
-            let entry = &jj_state.entries[idx];
-
-            if entry.immutable {
-                continue;
-            }
-
-            // Stop at commits already assigned to another PR.
-            if let Some(&existing) = plan.get(&entry.commit.change_id) {
-                if existing != pr.number {
-                    continue;
-                }
-                // Already ours — keep walking.
-            } else {
-                // Unstamped — claim it.
-                plan.insert(entry.commit.change_id.clone(), pr.number);
-            }
-
-            for parent_id in &entry.commit.parents {
-                if let Some(&pidx) = jj_state.by_commit.get(parent_id) {
-                    queue.push(pidx);
-                }
-            }
-        }
-    }
-
-    // Filter out changes that already have the correct trailer.
-    plan.into_iter()
-        .filter(|(change_id, pr_number)| {
-            let Some(&idx) = jj_state.by_change.get(change_id) else {
-                return true;
-            };
-            let existing = jj::parse_pr_trailer(&jj_state.entries[idx].commit.description);
-            existing != Some(*pr_number)
-        })
-        .collect()
-}
-
-/// Import existing GitHub PRs by stamping PR trailers on local commits.
-pub fn import_prs(jj_state: &JjState, gh_prs: &[GhPr], dry_run: bool) -> Result<()> {
-    let plan = plan_import(jj_state, gh_prs);
-
-    if plan.is_empty() {
-        eprintln!("Nothing to import — all PRs already have correct trailers.");
-        return Ok(());
-    }
-
-    // Build PR number → URL lookup for display.
-    let pr_urls: HashMap<u64, &str> = gh_prs
-        .iter()
-        .map(|pr| (pr.number, pr.url.as_str()))
-        .collect();
-
-    // Phase 2: Display plan grouped by PR.
-    let mut by_pr: BTreeMap<u64, Vec<&str>> = BTreeMap::new();
-    for (change_id, pr_number) in &plan {
-        by_pr.entry(*pr_number).or_default().push(change_id);
-    }
-    // Sort each PR's changes by their position in jj log (topological order).
-    for changes in by_pr.values_mut() {
-        changes.sort_by_key(|cid| {
-            *jj_state
-                .by_change
-                .get(*cid)
-                .expect("bug: change_id not in jj state")
-        });
-    }
-
-    eprintln!(
-        "{}",
-        crate::style::bold(&format!("{} commit(s) to update:", plan.len()))
-    );
-    for (pr_number, change_ids) in &by_pr {
-        let url = pr_urls.get(pr_number).copied();
-        eprintln!(
-            "  {} ({} commit(s))",
-            crate::style::pr_num(*pr_number, url),
-            change_ids.len()
-        );
-        for change_id in change_ids {
-            let idx = *jj_state
-                .by_change
-                .get(*change_id)
-                .expect("bug: change_id not in jj state");
-            let first_line = jj_state.entries[idx]
-                .commit
-                .description
-                .lines()
-                .next()
-                .unwrap_or("(empty)");
-            eprintln!("    {} {first_line}", crate::style::change_id(change_id),);
-        }
-    }
-
-    // Phase 3: Apply.
-    if dry_run {
-        eprintln!(
-            "\n{}",
-            crate::style::warn(&format!("Dry run: would stamp {} commit(s)", plan.len()))
-        );
-    } else {
-        for (change_id, pr_number) in &plan {
-            let idx = jj_state.by_change[change_id];
-            let entry = &jj_state.entries[idx];
-            let new_desc = jj::set_pr_trailer(&entry.commit.description, *pr_number);
-            jj::describe_stdin(change_id, &new_desc)?;
-        }
-        eprintln!("\nStamped {} commit(s)", plan.len());
+    if stamped > 0 {
+        eprintln!("Stamped {} on {} commit(s)", crate::style::pr_num(pr_number, None), stamped);
     }
 
     Ok(())
