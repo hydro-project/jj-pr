@@ -305,7 +305,11 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
             };
 
             let propagates = needs_push_or_rebase
-                || repo_state.node_preds.get(nk).unwrap().iter()
+                || repo_state
+                    .node_preds
+                    .get(nk)
+                    .unwrap()
+                    .iter()
                     .any(|&pred_nk| repo_state.node_needs_sync.get(pred_nk).copied() == Some(true));
 
             if propagates || needs_base_update {
@@ -538,7 +542,11 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
             }
             Node::Pr(pr_id) => {
                 let gh_pr = prs.get(pr_id).unwrap();
-                let sync_indicator = if state.node_needs_sync.contains_key(node_key) { "*" } else { "" };
+                let sync_indicator = if state.node_needs_sync.contains_key(node_key) {
+                    "*"
+                } else {
+                    ""
+                };
                 let message = format!(
                     "{}{sync_indicator}  {}  {}\n{}",
                     crate::style::pr_num(pr_id.get(), Some(&gh_pr.url)),
@@ -552,7 +560,11 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                 branch_prs,
                 trailer_prs,
             } => {
-                let sync_indicator = if state.node_needs_sync.contains_key(node_key) { "*" } else { "" };
+                let sync_indicator = if state.node_needs_sync.contains_key(node_key) {
+                    "*"
+                } else {
+                    ""
+                };
                 let pr_links: Vec<String> = branch_prs
                     .iter()
                     .map(|pr_id| {
@@ -646,7 +658,11 @@ pub fn render_log(
                 }
                 Node::Pr(pr_id) => {
                     let gh_pr = prs.get(pr_id);
-                    let sync_indicator = if state.node_needs_sync.contains_key(node_key) { "*" } else { "" };
+                    let sync_indicator = if state.node_needs_sync.contains_key(node_key) {
+                        "*"
+                    } else {
+                        ""
+                    };
                     let pr_str = match gh_pr {
                         Some(pr) => format!(
                             "{}{sync_indicator} {}",
@@ -658,7 +674,11 @@ pub fn render_log(
                     line1_parts.push(pr_str);
                 }
                 Node::Ambiguous { branch_prs, .. } => {
-                    let sync_indicator = if state.node_needs_sync.contains_key(node_key) { "*" } else { "" };
+                    let sync_indicator = if state.node_needs_sync.contains_key(node_key) {
+                        "*"
+                    } else {
+                        ""
+                    };
                     let pr_strs: Vec<String> = branch_prs
                         .iter()
                         .map(|pr_id| crate::style::pr_num(pr_id.get(), None))
@@ -1046,7 +1066,9 @@ pub fn cmd_create(
         Some(b) => b,
         None => {
             // Default body: description body (everything after the first line).
-            default_body = tip_entry.commit.description
+            default_body = tip_entry
+                .commit
+                .description
                 .lines()
                 .skip(1)
                 .collect::<Vec<_>>()

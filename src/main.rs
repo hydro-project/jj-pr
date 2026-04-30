@@ -30,17 +30,19 @@ static INPUT_DATA: OnceLock<InputData> = OnceLock::new();
 fn main() -> Result<()> {
     let hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
-        if let Some(input) = INPUT_DATA.get() {
-            eprintln!("jj-pr panicked! Dumping input state...");
-            dump_input(input);
-        }
+        eprintln!("jj-pr panicked! Dumping input state...");
+        dump_input_on_failure(INPUT_DATA.get());
         hook(info);
     }));
     run()
 }
 
-/// Write input data as JSON to a temp file for debugging.
-fn dump_input(input: &InputData) {
+/// Dump input data as JSON to a temp file for debugging, or print a message if unavailable.
+fn dump_input_on_failure(input: Option<&InputData>) {
+    let Some(input) = input else {
+        eprintln!("Input state was not yet loaded, no dump available.");
+        return;
+    };
     let dir = std::env::temp_dir();
     let path = dir.join(format!("jj-pr-dump-{}.json", std::process::id()));
     match std::fs::File::create(&path) {
@@ -50,12 +52,6 @@ fn dump_input(input: &InputData) {
         },
         Err(e) => eprintln!("Failed to create state dump file: {e}"),
     }
-}
-
-/// Write input data as JSON to a writer (used by `dump` command).
-fn write_input_json(input: &InputData, out: &mut impl std::io::Write) -> Result<()> {
-    serde_json::to_writer(out, input)?;
-    Ok(())
 }
 
 fn run() -> Result<()> {
@@ -71,17 +67,17 @@ fn run() -> Result<()> {
         .collect::<BTreeMap<_, _>>();
     let default_branch = gh::default_branch()?;
 
-    // Handle `dump` before building derived state — it only needs raw input.
+    // Store input data globally for panic/error dump.
+    let input = INPUT_DATA.get_or_init(|| InputData { jj_entries, prs, default_branch });
+
     let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
+
+    // Handle `dump` before building derived state — it only needs raw input.
     if let Command::Dump = &command {
-        let input = InputData { jj_entries, prs, default_branch };
-        write_input_json(&input, &mut std::io::stdout())?;
+        serde_json::to_writer(std::io::stdout(), input)?;
         println!();
         return Ok(());
     }
-
-    // Store input data globally for panic dump.
-    let input = INPUT_DATA.get_or_init(|| InputData { jj_entries, prs, default_branch });
 
     let state = pr_dag::build(&input.jj_entries, &input.prs, &input.default_branch)?;
 
@@ -118,8 +114,8 @@ fn run() -> Result<()> {
         Command::Dump => unreachable!("handled above"),
     };
 
-    if result.is_err() && let Some(data) = INPUT_DATA.get() {
-        dump_input(data);
+    if result.is_err() {
+        dump_input_on_failure(INPUT_DATA.get());
     }
     result
 }
