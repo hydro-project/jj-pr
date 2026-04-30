@@ -908,7 +908,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     crate::style::change_id(change_id),
                 );
                 let desc = jj::read_description(change_id)?;
-                let new_desc = jj::set_pr_trailer(&desc, pr.get());
+                let new_desc = jj::set_pr_trailer(&desc, *pr);
                 jj::describe_stdin(change_id, &new_desc)?;
             }
             SyncAction::RebaseChildren { tip_commit_id, pr } => {
@@ -1095,7 +1095,7 @@ pub fn cmd_create(
         crate::style::bookmark(&base),
     );
     let (pr_number, pr_url) = gh::create_pr(bookmark, &base, &title, body, true)?;
-    eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
+    eprintln!("Created {}", crate::style::pr_num(pr_number.get(), Some(&pr_url)));
 
     // Stamp trailers on owned commits.
     let mut stamped = 0;
@@ -1108,7 +1108,7 @@ pub fn cmd_create(
         if Some(&nk) != tip_nk {
             continue;
         }
-        if jj::parse_pr_trailer(&jj_entry.commit.description) != PrNum::new(pr_number) {
+        if jj::parse_pr_trailer(&jj_entry.commit.description) != Some(pr_number) {
             let new_desc = jj::set_pr_trailer(&jj_entry.commit.description, pr_number);
             jj::describe_stdin(&jj_entry.commit.change_id, &new_desc)?;
             stamped += 1;
@@ -1117,7 +1117,7 @@ pub fn cmd_create(
     if stamped > 0 {
         eprintln!(
             "Stamped {} on {} commit(s)",
-            crate::style::pr_num(pr_number, None),
+            crate::style::pr_num(pr_number.get(), None),
             stamped
         );
     }

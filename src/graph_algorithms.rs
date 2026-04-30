@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashSet};
 
-/// Depth-first search, pre-order traversal in `nexts`.
+/// Depth-first reachability walk following `succs` edges.
 #[expect(dead_code, reason = "general utility, will be used")]
 pub fn dfs<Id, Nexts>(start: Id, mut succs: impl FnMut(Id) -> Nexts)
 where

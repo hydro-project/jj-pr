@@ -106,8 +106,8 @@ pub fn parse_pr_trailer(description: &str) -> Option<PrNum> {
 }
 
 /// Update or append a `PR: #N` trailer in a description.
-pub fn set_pr_trailer(description: &str, pr_number: u64) -> String {
-    let trailer_line = format!("PR: #{pr_number}");
+pub fn set_pr_trailer(description: &str, pr: PrNum) -> String {
+    let trailer_line = format!("PR: #{}", pr.get());
     let lines: Vec<&str> = description.lines().collect();
 
     // Find existing PR trailer and replace it, skipping trailing blank lines.
@@ -389,25 +389,25 @@ mod tests {
 
     #[test]
     fn set_pr_trailer_append_new() {
-        let result = set_pr_trailer("add feature\n", 99);
+        let result = set_pr_trailer("add feature\n", PrNum::new(99).unwrap());
         assert_eq!(result, "add feature\n\nPR: #99\n");
     }
 
     #[test]
     fn set_pr_trailer_replace_existing() {
-        let result = set_pr_trailer("fix\n\nPR: #10\n", 20);
+        let result = set_pr_trailer("fix\n\nPR: #10\n", PrNum::new(20).unwrap());
         assert_eq!(result, "fix\n\nPR: #20\n");
     }
 
     #[test]
     fn set_pr_trailer_append_to_existing_trailers() {
-        let result = set_pr_trailer("fix\n\nCo-authored-by: Bob\n", 55);
+        let result = set_pr_trailer("fix\n\nCo-authored-by: Bob\n", PrNum::new(55).unwrap());
         assert_eq!(result, "fix\n\nCo-authored-by: Bob\nPR: #55\n");
     }
 
     #[test]
     fn set_pr_trailer_empty_description() {
-        let result = set_pr_trailer("", 1);
+        let result = set_pr_trailer("", PrNum::new(1).unwrap());
         assert_eq!(result, "PR: #1\n");
     }
 
@@ -419,7 +419,7 @@ mod tests {
 
     #[test]
     fn set_pr_trailer_replace_with_trailing_blank_lines() {
-        let result = set_pr_trailer("fix\n\nPR: #10\n\n", 20);
+        let result = set_pr_trailer("fix\n\nPR: #10\n\n", PrNum::new(20).unwrap());
         assert_eq!(result, "fix\n\nPR: #20\n\n");
     }
 }

@@ -71,7 +71,7 @@ pub fn load_prs() -> Result<Vec<GhPr>> {
     Ok(prs)
 }
 
-pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(u64, String)> {
+pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(PrNum, String)> {
     let mut args = vec![
         "pr".to_owned(),
         "create".to_owned(),
@@ -106,6 +106,7 @@ pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -
         .rsplit('/')
         .next()
         .and_then(|s| s.parse::<u64>().ok())
+        .and_then(PrNum::new)
         .with_context(|| format!("Could not parse PR number from gh output: {url}"))?;
 
     Ok((pr_number, url))

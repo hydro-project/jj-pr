@@ -44,13 +44,17 @@ fn dump_input_on_failure(input: Option<&InputData>) {
         return;
     };
     let dir = std::env::temp_dir();
-    let path = dir.join(format!("jj-pr-dump-{}.json", std::process::id()));
-    match std::fs::File::create(&path) {
+    let epoch = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let path = dir.join(format!("jj-pr-dump-{epoch}.json"));
+    match std::fs::OpenOptions::new().write(true).create_new(true).open(&path) {
         Ok(file) => match serde_json::to_writer(file, input) {
             Ok(()) => eprintln!("State dumped to: {}", path.display()),
             Err(e) => eprintln!("Failed to serialize state dump: {e}"),
         },
-        Err(e) => eprintln!("Failed to create state dump file: {e}"),
+        Err(e) => eprintln!("Failed to create state dump file {}: {e}", path.display()),
     }
 }
 
@@ -68,7 +72,11 @@ fn run() -> Result<()> {
     let default_branch = gh::default_branch()?;
 
     // Store input data globally for panic/error dump.
-    let input = INPUT_DATA.get_or_init(|| InputData { jj_entries, prs, default_branch });
+    let input = INPUT_DATA.get_or_init(|| InputData {
+        jj_entries,
+        prs,
+        default_branch,
+    });
 
     let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
 
@@ -97,7 +105,9 @@ fn run() -> Result<()> {
             }
             if args.dry_run {
                 eprintln!("\n{}", style::warn("Dry run: no changes applied."));
-            } else if ui::confirm(&format!("Apply {} action(s)?", actions.len()), yes) {
+            } else if !ui::confirm(&format!("Apply {} action(s)?", actions.len()), yes) {
+                anyhow::bail!("Aborted.");
+            } else {
                 pr_dag::execute_sync(&actions)?;
             }
             Ok(())
