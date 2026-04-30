@@ -733,9 +733,9 @@ pub enum SyncAction {
     /// Stamp a missing `PR: #N` trailer on a commit.
     StampTrailer { change_id: String, pr: PrNum },
     /// Rebase children of a merged PR onto trunk.
-    RebaseChildren { bookmark: String, pr: PrNum },
+    RebaseChildren { tip_commit_id: String, pr: PrNum },
     /// Abandon commits of a merged PR.
-    AbandonMerged { bookmark: String, pr: PrNum },
+    AbandonMerged { tip_commit_id: String, pr: PrNum },
     /// Push bookmarks that differ from remote.
     Push { bookmarks: Vec<(PrNum, String)> },
     /// Update a PR's base branch on GitHub.
@@ -753,11 +753,11 @@ impl fmt::Display for SyncAction {
                 let short = &change_id[..12.min(change_id.len())];
                 write!(f, "stamp {pr} trailer on {short}")
             }
-            SyncAction::RebaseChildren { bookmark, pr } => {
-                write!(f, "rebase children of {pr} ({bookmark}) onto trunk()")
+            SyncAction::RebaseChildren { pr, .. } => {
+                write!(f, "rebase children of {pr} onto trunk()")
             }
-            SyncAction::AbandonMerged { bookmark, pr } => {
-                write!(f, "abandon merged {pr} ({bookmark})")
+            SyncAction::AbandonMerged { pr, .. } => {
+                write!(f, "abandon merged {pr}")
             }
             SyncAction::Push { bookmarks } => {
                 let details: Vec<_> = bookmarks.iter().map(|(pr, bm)| format!("{pr} ({bm})")).collect();
@@ -815,15 +815,22 @@ pub fn plan_sync(
         if gh_pr.state != gh::PrState::Merged {
             continue;
         }
+        // Find the tip commit (first in jj_entries, which is reverse topo order) for this node.
+        let tip_commit_id = jj_entries
+            .iter()
+            .filter(|e| state.commit_node.get(&*e.commit.commit_id) == Some(&nk))
+            .map(|e| e.commit.commit_id.0.clone())
+            .next();
+        let Some(tip_commit_id) = tip_commit_id else { continue };
         let has_children = state.node_succs.get(nk).is_some_and(|succs| !succs.is_empty());
         if has_children {
             actions.push(SyncAction::RebaseChildren {
-                bookmark: gh_pr.head_ref_name.clone(),
+                tip_commit_id: tip_commit_id.clone(),
                 pr: *pr_num,
             });
         }
         actions.push(SyncAction::AbandonMerged {
-            bookmark: gh_pr.head_ref_name.clone(),
+            tip_commit_id,
             pr: *pr_num,
         });
     }
@@ -897,21 +904,20 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 let new_desc = jj::set_pr_trailer(&desc, pr.get());
                 jj::describe_stdin(change_id, &new_desc)?;
             }
-            SyncAction::RebaseChildren { bookmark, pr } => {
+            SyncAction::RebaseChildren { tip_commit_id, pr } => {
                 eprintln!(
-                    "Rebasing children of {} ({}) onto trunk()",
+                    "Rebasing children of {} onto trunk()",
                     crate::style::pr_num(pr.get(), None),
-                    crate::style::bookmark(bookmark),
                 );
-                jj::rebase(&format!("{bookmark}+"), "trunk()")?;
+                jj::rebase(&format!("{tip_commit_id}+"), "trunk()")?;
             }
-            SyncAction::AbandonMerged { bookmark, pr } => {
+            SyncAction::AbandonMerged { tip_commit_id, pr } => {
                 eprintln!(
-                    "Abandoning merged {} ({})",
+                    "Abandoning merged {}",
                     crate::style::pr_num(pr.get(), None),
-                    crate::style::bookmark(bookmark),
                 );
-                jj::abandon(bookmark)?;
+                let revset = format!("ancestors({tip_commit_id}) & ~ancestors(trunk())");
+                jj::abandon(&revset)?;
             }
             SyncAction::Push { bookmarks } => {
                 eprintln!(
