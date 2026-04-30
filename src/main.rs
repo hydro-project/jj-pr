@@ -20,7 +20,7 @@ fn dump_state_on_error(jj_entries: &[jj::JjLogEntry], prs: &BTreeMap<gh::PrNum, 
         "prs": prs.values().collect::<Vec<_>>(),
         "default_branch": default_branch,
     });
-    let Ok(json) = serde_json::to_string_pretty(&fixture) else {
+    let Ok(json) = serde_json::to_string(&fixture) else {
         return;
     };
     write_dump(&json);
@@ -59,7 +59,7 @@ fn run() -> Result<()> {
             "prs": prs.values().collect::<Vec<_>>(),
             "default_branch": default_branch,
         });
-        *cell.borrow_mut() = serde_json::to_string_pretty(&fixture).ok();
+        *cell.borrow_mut() = serde_json::to_string(&fixture).ok();
     });
 
     let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
@@ -97,7 +97,7 @@ fn run() -> Result<()> {
                 "prs": prs.values().collect::<Vec<_>>(),
                 "default_branch": default_branch,
             });
-            println!("{}", serde_json::to_string_pretty(&fixture)?);
+            println!("{}", serde_json::to_string(&fixture)?);
             Ok(())
         }
     };
