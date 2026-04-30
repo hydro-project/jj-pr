@@ -392,7 +392,7 @@ fn decide(
             };
             (Some(node), node_key)
         } else {
-            // A trailer PR num alone is not enough to be a PR.
+            // A trailer PR num alone is not enough to assign to a PR node.
             (
                 Some(Node::Ambiguous {
                     branch_prs: BTreeSet::new(),
@@ -585,14 +585,15 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                     line1.push_str(&format!(" (trailer: {})", trailer_strs.join(", ")));
                 }
                 let has_shared = branch_prs.len() > 1;
-                let has_trailer_mismatch = !trailer_prs.is_empty() && trailer_prs != branch_prs;
+                let has_trailer_mismatch = !trailer_prs.is_subset(branch_prs);
                 let line2 = match (has_shared, has_trailer_mismatch) {
                     (true, true) => {
                         crate::style::dim("(restructure PRs to resolve, and edit commit trailers to fix PR: tags)")
                     }
                     (true, false) => crate::style::dim("(restructure PRs to resolve — stack one on the other)"),
                     (false, true) => crate::style::dim("(edit commit description to fix PR: trailer)"),
-                    (false, false) => panic!("bug: ambiguous node with no shared commits and no trailer mismatch"),
+                    // Single branch PR with matching trailer — not truly ambiguous.
+                    (false, false) => crate::style::dim("(commits not at PR tip — use `jj-pr log` for details)"),
                 };
                 let message = format!("{line1}\n{line2}");
                 (message, crate::style::warn(crate::style::GLYPH_WARNING))
