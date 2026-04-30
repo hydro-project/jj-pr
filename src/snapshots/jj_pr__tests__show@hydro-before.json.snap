@@ -9,7 +9,7 @@ input_file: src/fixtures/hydro-before.json
 ├─╯  feat(hydro_test): add example of AWS + SQS support
 │ ◆  [1m[32mtrunk()[0m
 ├─╯
-│ ○    [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m  [33mDraft[0m  [1m[35mmingwei/delete-subgraph-id[0m
+│ ○    [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m*  [33mDraft[0m  [1m[35mmingwei/delete-subgraph-id[0m
 │ ├─╮  refactor(dfir_rs): remove SubgraphId, SubgraphTag, LoopId, LoopTag, simplify StateLifespan
 │ │ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2811PR #2811]8;;[0m*  [33mDraft[0m  [1m[35mmingwei/delete-schedule-subgraph-args[0m
 │ │ │  refactor(dfir_rs,dfir_lang): remove SubgraphId argument from schedule_subgraph, remove current_subgraph

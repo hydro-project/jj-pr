@@ -119,8 +119,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
     };
 
     // Compute needs_push: compare local vs remote bookmark targets for PR bookmarks.
-    // TODO(mingwei): this ignores which remote the bookmark is on — breaks with forks
-    // (e.g. "origin" vs "fork"). Should match against the gh-determined remote.
+    // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.
     let needs_push = {
         let mut local_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
         let mut remote_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
@@ -129,7 +128,10 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
                 local_targets.insert(&bm.name, &jj_entry.commit.commit_id);
             }
             for bm in &jj_entry.remote_bookmarks {
-                remote_targets.entry(&bm.name).or_insert(&jj_entry.commit.commit_id);
+                // Only consider the push remote, not @git (local tracking ref).
+                if bm.remote.as_deref() == Some("origin") {
+                    remote_targets.entry(&bm.name).or_insert(&jj_entry.commit.commit_id);
+                }
             }
         }
         let mut needs_push = HashSet::new();
