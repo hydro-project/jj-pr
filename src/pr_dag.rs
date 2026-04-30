@@ -909,14 +909,14 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     "Rebasing children of {} onto trunk()",
                     crate::style::pr_num(pr.get(), None),
                 );
-                jj::rebase(&format!("{tip_commit_id}+"), "trunk()")?;
+                jj::rebase(&format!("commit_id({tip_commit_id})+"), "trunk()")?;
             }
             SyncAction::AbandonMerged { tip_commit_id, pr } => {
                 eprintln!(
                     "Abandoning merged {}",
                     crate::style::pr_num(pr.get(), None),
                 );
-                let revset = format!("ancestors({tip_commit_id}) & ~ancestors(trunk())");
+                let revset = format!("ancestors(commit_id({tip_commit_id})) & ~ancestors(trunk())");
                 jj::abandon(&revset)?;
             }
             SyncAction::Push { bookmarks } => {
