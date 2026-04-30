@@ -48,9 +48,15 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
-        Command::Create(args) => {
-            pr_dag::cmd_create(&state, &prs, &jj_entries, &default_branch, &args.bookmark, args.title.as_deref(), args.body.as_deref())
-        }
+        Command::Create(args) => pr_dag::cmd_create(
+            &state,
+            &prs,
+            &jj_entries,
+            &default_branch,
+            &args.bookmark,
+            args.title.as_deref(),
+            args.body.as_deref(),
+        ),
         Command::Dump => {
             let fixture = serde_json::json!({
                 "jj_entries": jj_entries,

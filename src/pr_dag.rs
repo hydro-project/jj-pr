@@ -275,7 +275,10 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
         .unwrap_or_else(|cycle| {
             panic!(
                 "bug: cycle detected in node DAG: {:?}",
-                cycle.iter().map(|&nk| repo_state.nodes.get(nk).unwrap()).collect::<Vec<_>>()
+                cycle
+                    .iter()
+                    .map(|&nk| repo_state.nodes.get(nk).unwrap())
+                    .collect::<Vec<_>>()
             )
         });
 
@@ -300,9 +303,12 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
             };
 
             // Propagates: true if this node or an ancestor has push/rebase.
-            let ancestor_propagates = repo_state.node_preds.get(nk).unwrap().iter().any(|&pred_nk| {
-                repo_state.needs_sync.get(pred_nk).copied() == Some(true)
-            });
+            let ancestor_propagates = repo_state
+                .node_preds
+                .get(nk)
+                .unwrap()
+                .iter()
+                .any(|&pred_nk| repo_state.needs_sync.get(pred_nk).copied() == Some(true));
 
             if needs_push_or_rebase || ancestor_propagates {
                 // true = propagates to children.
@@ -405,7 +411,10 @@ fn decide(
 fn decide_combine_child_nodes(child_nodes: SparseSecondaryMap<NodeKey, &Node>) -> (Option<Node>, Option<NodeKey>) {
     // Merge multiple children together.
     let mut node_and_nk = None;
-    #[expect(clippy::disallowed_methods, reason = "iteration order doesn't affect result — merging into sets")]
+    #[expect(
+        clippy::disallowed_methods,
+        reason = "iteration order doesn't affect result — merging into sets"
+    )]
     for (next_nk, &next_node) in child_nodes.iter() {
         let Some((prev_node, prev_nk)) = &mut node_and_nk else {
             // Simple/initial case: inherit from one child:
@@ -489,7 +498,10 @@ impl RepoState {
         let parent_prs: Vec<_> = preds
             .iter()
             .filter_map(|&pred_nk| match self.nodes.get(pred_nk)? {
-                Node::Pr(parent_pr) => prs.get(parent_pr).filter(|p| p.state == gh::PrState::Open).map(|p| &p.head_ref_name),
+                Node::Pr(parent_pr) => prs
+                    .get(parent_pr)
+                    .filter(|p| p.state == gh::PrState::Open)
+                    .map(|p| &p.head_ref_name),
                 _ => None,
             })
             .collect();
@@ -569,18 +581,13 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                     line1.push_str(&format!(" (trailer: {})", trailer_strs.join(", ")));
                 }
                 let has_shared = branch_prs.len() > 1;
-                let has_trailer_mismatch =
-                    !trailer_prs.is_empty() && trailer_prs != branch_prs;
+                let has_trailer_mismatch = !trailer_prs.is_empty() && trailer_prs != branch_prs;
                 let line2 = match (has_shared, has_trailer_mismatch) {
-                    (true, true) => crate::style::dim(
-                        "(restructure PRs to resolve, and edit commit trailers to fix PR: tags)",
-                    ),
-                    (true, false) => crate::style::dim(
-                        "(restructure PRs to resolve — stack one on the other)",
-                    ),
-                    (false, true) => crate::style::dim(
-                        "(edit commit description to fix PR: trailer)",
-                    ),
+                    (true, true) => {
+                        crate::style::dim("(restructure PRs to resolve, and edit commit trailers to fix PR: tags)")
+                    }
+                    (true, false) => crate::style::dim("(restructure PRs to resolve — stack one on the other)"),
+                    (false, true) => crate::style::dim("(edit commit description to fix PR: trailer)"),
                     (false, false) => panic!("bug: ambiguous node with no shared commits and no trailer mismatch"),
                 };
                 let message = format!("{line1}\n{line2}");
@@ -654,10 +661,7 @@ pub fn render_log(
                             crate::style::pr_num(pr_id.get(), Some(&pr.url)),
                             crate::style::status(pr.state, pr.is_draft),
                         ),
-                        None => format!(
-                            "{}{sync_indicator}",
-                            crate::style::pr_num(pr_id.get(), None),
-                        ),
+                        None => format!("{}{sync_indicator}", crate::style::pr_num(pr_id.get(), None),),
                     };
                     line1_parts.push(pr_str);
                 }
@@ -730,7 +734,11 @@ pub enum SyncAction {
     /// Push bookmarks that differ from remote.
     Push { bookmarks: Vec<(PrNum, String)> },
     /// Update a PR's base branch on GitHub.
-    UpdateBase { pr: PrNum, bookmark: String, new_base: String },
+    UpdateBase {
+        pr: PrNum,
+        bookmark: String,
+        new_base: String,
+    },
 }
 
 impl fmt::Display for SyncAction {
@@ -778,8 +786,12 @@ pub fn plan_sync(
     // 1. Stamp missing trailers.
     for jj_entry in jj_entries {
         let cid = &*jj_entry.commit.commit_id;
-        let Some(&nk) = state.commit_node.get(cid) else { continue };
-        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else { continue };
+        let Some(&nk) = state.commit_node.get(cid) else {
+            continue;
+        };
+        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
+            continue;
+        };
         let existing_trailer = jj::parse_pr_trailer(&jj_entry.commit.description);
         if existing_trailer != Some(*pr_num) {
             actions.push(SyncAction::StampTrailer {
@@ -791,9 +803,13 @@ pub fn plan_sync(
 
     // 2 & 3. Rebase children + abandon for merged PRs.
     for &nk in &state.topo_order {
-        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else { continue };
+        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
+            continue;
+        };
         let Some(gh_pr) = prs.get(pr_num) else { continue };
-        if gh_pr.state != gh::PrState::Merged { continue; }
+        if gh_pr.state != gh::PrState::Merged {
+            continue;
+        }
         let has_children = state.node_succs.get(nk).is_some_and(|succs| !succs.is_empty());
         if has_children {
             actions.push(SyncAction::RebaseChildren {
@@ -811,23 +827,41 @@ pub fn plan_sync(
     {
         let mut push_bookmarks = Vec::new();
         for &nk in &state.topo_order {
-            if !state.needs_sync.contains_key(nk) { continue; }
-            let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else { continue };
+            if !state.needs_sync.contains_key(nk) {
+                continue;
+            }
+            let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
+                continue;
+            };
             let Some(gh_pr) = prs.get(pr_num) else { continue };
-            assert!(gh_pr.state != gh::PrState::Merged, "bug: merged PR {} in needs_sync", pr_num);
+            assert!(
+                gh_pr.state != gh::PrState::Merged,
+                "bug: merged PR {} in needs_sync",
+                pr_num
+            );
             push_bookmarks.push((*pr_num, gh_pr.head_ref_name.clone()));
         }
         if !push_bookmarks.is_empty() {
-            actions.push(SyncAction::Push { bookmarks: push_bookmarks });
+            actions.push(SyncAction::Push {
+                bookmarks: push_bookmarks,
+            });
         }
     }
 
     // 5. Update GitHub base branches.
     for &nk in &state.topo_order {
-        if !state.needs_sync.contains_key(nk) { continue; }
-        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else { continue };
+        if !state.needs_sync.contains_key(nk) {
+            continue;
+        }
+        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
+            continue;
+        };
         let Some(gh_pr) = prs.get(pr_num) else { continue };
-        assert!(gh_pr.state != gh::PrState::Merged, "bug: merged PR {} in needs_sync", pr_num);
+        assert!(
+            gh_pr.state != gh::PrState::Merged,
+            "bug: merged PR {} in needs_sync",
+            pr_num
+        );
         let expected = state.expected_base(nk, prs, default_branch);
         if gh_pr.base_ref_name != expected {
             actions.push(SyncAction::UpdateBase {
@@ -875,7 +909,11 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 eprintln!(
                     "Pushing {} bookmark(s): {}",
                     bookmarks.len(),
-                    bookmarks.iter().map(|(_, b)| crate::style::bookmark(b)).collect::<Vec<_>>().join(", "),
+                    bookmarks
+                        .iter()
+                        .map(|(_, b)| crate::style::bookmark(b))
+                        .collect::<Vec<_>>()
+                        .join(", "),
                 );
                 let refs: Vec<&str> = bookmarks.iter().map(|(_, s)| s.as_str()).collect();
                 jj::git_push_bookmarks(&refs)?;
@@ -909,7 +947,10 @@ fn find_base_branch(
 ) -> String {
     // Find the tip commit for this bookmark.
     let tip_cid = jj_entries.iter().find_map(|e| {
-        e.local_bookmarks.iter().any(|bm| bm.name == bookmark).then_some(&*e.commit.commit_id)
+        e.local_bookmarks
+            .iter()
+            .any(|bm| bm.name == bookmark)
+            .then_some(&*e.commit.commit_id)
     });
     let Some(tip_cid) = tip_cid else {
         return default_branch.to_owned();
@@ -973,7 +1014,12 @@ pub fn cmd_create(
     let tip_entry = jj_entries
         .iter()
         .find(|e| e.local_bookmarks.iter().any(|bm| bm.name == bookmark))
-        .with_context(|| format!("bookmark '{}' not found — create it with `jj bookmark create {}`", bookmark, bookmark))?;
+        .with_context(|| {
+            format!(
+                "bookmark '{}' not found — create it with `jj bookmark create {}`",
+                bookmark, bookmark
+            )
+        })?;
 
     // Verify no PR already exists for this bookmark.
     if let Some(existing) = prs.values().find(|pr| pr.head_ref_name == bookmark) {
@@ -988,11 +1034,15 @@ pub fn cmd_create(
     let base = find_base_branch(state, prs, jj_entries, bookmark, default_branch);
 
     // Determine title.
-    let title = title
-        .map(|s| s.to_owned())
-        .unwrap_or_else(|| {
-            tip_entry.commit.description.lines().next().unwrap_or("untitled").to_owned()
-        });
+    let title = title.map(|s| s.to_owned()).unwrap_or_else(|| {
+        tip_entry
+            .commit
+            .description
+            .lines()
+            .next()
+            .unwrap_or("untitled")
+            .to_owned()
+    });
     let body = body.unwrap_or("");
 
     // Track remote (ignore error — remote bookmark may not exist yet).
@@ -1012,16 +1062,20 @@ pub fn cmd_create(
         crate::style::bookmark(bookmark),
         crate::style::bookmark(&base),
     );
-    let pr_number = gh::create_pr(bookmark, &base, &title, body, true)?;
-    eprintln!("Created {}", crate::style::pr_num(pr_number, None));
+    let (pr_number, pr_url) = gh::create_pr(bookmark, &base, &title, body, true)?;
+    eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
     // Stamp trailers on owned commits.
     let mut stamped = 0;
     for jj_entry in jj_entries {
         let cid = &*jj_entry.commit.commit_id;
-        let Some(&nk) = state.commit_node.get(cid) else { continue };
+        let Some(&nk) = state.commit_node.get(cid) else {
+            continue;
+        };
         let tip_nk = state.commit_node.get(&*tip_entry.commit.commit_id);
-        if Some(&nk) != tip_nk { continue; }
+        if Some(&nk) != tip_nk {
+            continue;
+        }
         if jj::parse_pr_trailer(&jj_entry.commit.description) != PrNum::new(pr_number) {
             let new_desc = jj::set_pr_trailer(&jj_entry.commit.description, pr_number);
             jj::describe_stdin(&jj_entry.commit.change_id, &new_desc)?;
@@ -1029,7 +1083,11 @@ pub fn cmd_create(
         }
     }
     if stamped > 0 {
-        eprintln!("Stamped {} on {} commit(s)", crate::style::pr_num(pr_number, None), stamped);
+        eprintln!(
+            "Stamped {} on {} commit(s)",
+            crate::style::pr_num(pr_number, None),
+            stamped
+        );
     }
 
     Ok(())

@@ -136,7 +136,10 @@ fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>) -> Fixture {
 fn single_pr() {
     let f = fixture(
         vec![
-            with_remote(entry("c2", "ch2", &["c1"], "feat\n\nPR: #1\n", &["feat"], false), "feat"),
+            with_remote(
+                entry("c2", "ch2", &["c1"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
             entry("c1", "ch1", &["c2_parent"], "first\n\nPR: #1\n", &[], false),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
@@ -151,8 +154,14 @@ fn single_pr() {
 fn stacked_prs() {
     let f = fixture(
         vec![
-            with_remote(entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false), "feat-b"),
-            with_remote(entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false), "feat-a"),
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
@@ -181,7 +190,10 @@ fn diamond_ambiguous() {
 fn merged_parent() {
     let f = fixture(
         vec![
-            with_remote(entry("b1", "chb1", &["a1"], "child\n\nPR: #2\n", &["feat-b"], false), "feat-b"),
+            with_remote(
+                entry("b1", "chb1", &["a1"], "child\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
             entry("a1", "cha1", &["trunk"], "parent\n\nPR: #1\n", &["feat-a"], false),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
@@ -209,8 +221,14 @@ fn needs_push() {
 fn base_mismatch() {
     let f = fixture(
         vec![
-            with_remote(entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false), "feat-b"),
-            with_remote(entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false), "feat-a"),
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "main")], // wrong base for #2
@@ -223,7 +241,10 @@ fn base_mismatch() {
 fn nothing_to_sync() {
     let f = fixture(
         vec![
-            with_remote(entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &["feat"], false), "feat"),
+            with_remote(
+                entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat", "main")],
@@ -236,7 +257,10 @@ fn merge_child() {
     // PR #3 merges PR #1 and PR #2.
     let f = fixture(
         vec![
-            with_remote(entry("c1", "chc1", &["a1", "b1"], "merge\n", &["feat-c"], false), "feat-c"),
+            with_remote(
+                entry("c1", "chc1", &["a1", "b1"], "merge\n", &["feat-c"], false),
+                "feat-c",
+            ),
             with_remote(entry("a1", "cha1", &["trunk"], "a\n", &["feat-a"], false), "feat-a"),
             with_remote(entry("b1", "chb1", &["trunk"], "b\n", &["feat-b"], false), "feat-b"),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),

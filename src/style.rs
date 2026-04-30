@@ -23,11 +23,9 @@ const BOOKMARK: Style = Style::new()
 const CHANGE_ID: Style = Style::new()
     .fg_color(Some(anstyle::Color::Ansi(AnsiColor::Magenta)))
     .effects(Effects::BOLD);
-const COMMIT_ID: Style = Style::new()
-    .fg_color(Some(anstyle::Color::Ansi(AnsiColor::Blue)));
+const COMMIT_ID: Style = Style::new().fg_color(Some(anstyle::Color::Ansi(AnsiColor::Blue)));
 const DESCRIPTION: Style = Style::new();
-const EMPTY: Style = Style::new()
-    .fg_color(Some(anstyle::Color::Ansi(AnsiColor::Green)));
+const EMPTY: Style = Style::new().fg_color(Some(anstyle::Color::Ansi(AnsiColor::Green)));
 
 const DRAFT: Style = Style::new().fg_color(Some(anstyle::Color::Ansi(AnsiColor::Yellow)));
 const READY: Style = Style::new().fg_color(Some(anstyle::Color::Ansi(AnsiColor::Green)));

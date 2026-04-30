@@ -71,7 +71,7 @@ pub fn load_prs() -> Result<Vec<GhPr>> {
     Ok(prs)
 }
 
-pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<u64> {
+pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(u64, String)> {
     let mut args = vec![
         "pr".to_owned(),
         "create".to_owned(),
@@ -100,8 +100,7 @@ pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -
     }
 
     // gh pr create prints the URL, extract PR number from it.
-    let url = String::from_utf8_lossy(&output.stdout);
-    let url = url.trim();
+    let url = String::from_utf8_lossy(&output.stdout).trim().to_owned();
     // URL format: https://github.com/owner/repo/pull/123
     let pr_number = url
         .rsplit('/')
@@ -109,7 +108,7 @@ pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -
         .and_then(|s| s.parse::<u64>().ok())
         .with_context(|| format!("Could not parse PR number from gh output: {url}"))?;
 
-    Ok(pr_number)
+    Ok((pr_number, url))
 }
 
 pub fn edit_base(pr_number: u64, base: &str) -> Result<()> {
@@ -129,7 +128,14 @@ pub fn edit_base(pr_number: u64, base: &str) -> Result<()> {
 /// Get the default branch name for the current GitHub repo.
 pub fn default_branch() -> Result<String> {
     let output = Command::new("gh")
-        .args(["repo", "view", "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"])
+        .args([
+            "repo",
+            "view",
+            "--json",
+            "defaultBranchRef",
+            "--jq",
+            ".defaultBranchRef.name",
+        ])
         .output()
         .context("Failed to run `gh repo view`")?;
 
