@@ -293,9 +293,12 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
                         || repo_state.node_preds.get(nk).unwrap().iter().any(|&pred_nk| {
                             matches!(repo_state.nodes.get(pred_nk), Some(Node::Pr(parent_pr)) if prs.get(parent_pr).is_some_and(|p| p.state == gh::PrState::Merged))
                         });
+                    // Base mismatch (only for open PRs — can't change base of closed PRs).
                     let base_update = prs.get(pr_num).is_some_and(|gh_pr| {
-                        let expected = repo_state.expected_base(nk, prs, default_branch);
-                        gh_pr.base_ref_name != expected
+                        gh_pr.state == gh::PrState::Open && {
+                            let expected = repo_state.expected_base(nk, prs, default_branch);
+                            gh_pr.base_ref_name != expected
+                        }
                     });
                     (push_or_rebase, base_update)
                 }
@@ -848,7 +851,7 @@ pub fn plan_sync(
         }
     }
 
-    // 5. Update GitHub base branches.
+    // 5. Update GitHub base branches (open PRs only — can't change base of closed PRs).
     for &nk in &state.topo_order {
         if !state.needs_sync.contains_key(nk) {
             continue;
@@ -862,6 +865,7 @@ pub fn plan_sync(
             "bug: merged PR {} in needs_sync",
             pr_num
         );
+        if gh_pr.state != gh::PrState::Open { continue; }
         let expected = state.expected_base(nk, prs, default_branch);
         if gh_pr.base_ref_name != expected {
             actions.push(SyncAction::UpdateBase {

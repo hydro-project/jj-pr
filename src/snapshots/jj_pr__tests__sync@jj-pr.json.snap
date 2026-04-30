@@ -7,4 +7,3 @@ stamp #4 trailer on pvmxnwquyyoq
 rebase children of #3 (mingwei/pull-parent-pr-out-of-child) onto trunk()
 abandon merged #3 (mingwei/pull-parent-pr-out-of-child)
 push: #7 (mingwei/pull-parent-pr-out-of-child), #5 (mingwei/clickable-pr), #4 (mingwei/confirm)
-update #7 (mingwei/pull-parent-pr-out-of-child) base -> main
