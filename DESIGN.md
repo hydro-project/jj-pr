@@ -8,7 +8,7 @@ Core philosophy:
 - **jj owns structure** (DAG of changes)
 - **GitHub owns presentation** (PR titles, descriptions, review state)
 - **No hidden state** — everything is derived at runtime from `jj`, `gh`, and commit trailers
-- **Robust to invalid states** — ambiguities and inconsistencies are surfaced, never crash
+- **Robust to invalid states** — ambiguities and inconsistencies are surfaced as `Ambiguous` nodes with user-facing hints, rather than hard errors. Internal invariant violations (e.g., DAG cycles) panic with `bug:` messages.
 
 ## Data Model
 
@@ -24,18 +24,17 @@ Three readonly data sources, loaded once per invocation:
 
 The unified derived view, built once from the three inputs. Immutable after construction.
 
-```rust
-pub struct RepoState {
-    pub nodes: SlotMap<NodeKey, Node>,
-    pub root_node: NodeKey,
-    pub node_preds: SecondaryMap<NodeKey, Vec<NodeKey>>,
-    pub node_succs: SecondaryMap<NodeKey, Vec<NodeKey>>,
-    pub topo_order: Vec<NodeKey>,
-    pub commit_node: HashMap<CommitId, NodeKey>,
-    pub needs_push: HashSet<PrNum>,
-    pub needs_sync: SparseSecondaryMap<NodeKey, ()>,
-    pub bookmarks_conflicted: HashSet<String>,
-}
+```
+RepoState:
+  nodes:                Map<NodeKey, Node>       -- all nodes in the DAG
+  root_node:            NodeKey                  -- synthetic boundary below trunk
+  node_preds:           Map<NodeKey, [NodeKey]>  -- node -> parent nodes
+  node_succs:           Map<NodeKey, [NodeKey]>  -- node -> child nodes
+  topo_order:           [NodeKey]                -- topological order (parents before children)
+  commit_node:          Map<CommitId, NodeKey>   -- commit -> owning node
+  pr_needs_push:        Set<PrNum>               -- PRs with local != remote bookmark
+  node_needs_sync:      Map<NodeKey, bool>       -- nodes needing sync; true = propagates
+  bookmarks_conflicted: Set<String>              -- bookmarks with conflicting targets
 ```
 
 ### Node

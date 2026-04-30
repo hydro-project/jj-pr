@@ -31,11 +31,11 @@ pub struct RepoState {
     /// Graph-computed: commit_id -> owning node.
     pub commit_node: HashMap<CommitId, NodeKey>,
     /// PRs whose local bookmark points to a different commit than the remote bookmark.
-    pub needs_push: HashSet<PrNum>,
+    pub pr_needs_push: HashSet<PrNum>,
     /// Nodes that have any pending sync action (push, rebase, base update), including
     /// transitive descendants of nodes that need rebase.
     /// Value: `true` = propagates to children (push/rebase), `false` = local only (base mismatch).
-    pub needs_sync: SparseSecondaryMap<NodeKey, bool>,
+    pub node_needs_sync: SparseSecondaryMap<NodeKey, bool>,
 
     /// Bookmarks with conflicting targets (user must resolve with `jj bookmark`).
     pub bookmarks_conflicted: BTreeSet<String>,
@@ -71,7 +71,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
     let mut node_preds = SecondaryMap::new();
     node_preds.insert(root_node, Vec::new()); // `root()` has no parent nodes.
 
-    let (node_succs, commit_node, needs_push, needs_sync, bookmarks_conflicted) = Default::default();
+    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_conflicted) = Default::default();
     let mut repo_state = RepoState {
         nodes,
         root_node,
@@ -79,8 +79,8 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
         node_succs,
         topo_order: Vec::new(),
         commit_node,
-        needs_push,
-        needs_sync,
+        pr_needs_push,
+        node_needs_sync,
         bookmarks_conflicted,
     };
 
@@ -118,9 +118,9 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
         (cid_pr_tip, pr_local)
     };
 
-    // Compute needs_push: compare local vs remote bookmark targets for PR bookmarks.
+    // Compute pr_needs_push: compare local vs remote bookmark targets for PR bookmarks.
     // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.
-    let needs_push = {
+    {
         let mut local_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
         let mut remote_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
         for jj_entry in jj_entries.iter() {
@@ -134,18 +134,15 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
                 }
             }
         }
-        let mut needs_push = HashSet::new();
         for gh_pr in prs.values() {
             let bookmark = &*gh_pr.head_ref_name;
             let local = local_targets.get(bookmark);
             let remote = remote_targets.get(bookmark);
             if local != remote {
-                needs_push.insert(gh_pr.number);
+                repo_state.pr_needs_push.insert(gh_pr.number);
             }
         }
-        needs_push
-    };
-    repo_state.needs_push = needs_push;
+    }
 
     // First pass: compute membership.
     {
@@ -262,7 +259,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
         }
     }
 
-    // Third pass: topo sort and compute needs_sync.
+    // Third pass: topo sort and compute node_needs_sync.
     {
         let _scope = tracing::info_span!("topo_sync").entered();
 
@@ -284,43 +281,35 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
             )
         });
 
-        // Forward pass (parents before children) to propagate needs_sync.
-        for &nk in &repo_state.topo_order {
-            let (needs_push_or_rebase, needs_base_update) = match repo_state.nodes.get(nk).unwrap() {
-                Node::Pr(pr_num) if !prs.get(pr_num).is_some_and(|p| p.state == gh::PrState::Merged) => {
+        // Forward pass (parents before children) to propagate node_needs_sync.
+        for &nk in repo_state.topo_order.iter() {
+            let (needs_push_or_rebase, needs_base_update) = if let Some(Node::Pr(pr_num)) = repo_state.nodes.get(nk) {
+                let gh_pr = prs.get(pr_num).expect("bug: PR node without GH PR data");
+                if gh_pr.state == gh::PrState::Merged {
+                    (false, false)
+                } else {
                     let push_or_rebase =
-                        // Needs push.
-                        repo_state.needs_push.contains(pr_num)
-                        // Has merged parent.
+                        repo_state.pr_needs_push.contains(pr_num)
                         || repo_state.node_preds.get(nk).unwrap().iter().any(|&pred_nk| {
                             matches!(repo_state.nodes.get(pred_nk), Some(Node::Pr(parent_pr)) if prs.get(parent_pr).is_some_and(|p| p.state == gh::PrState::Merged))
                         });
                     // Base mismatch (only for open PRs — can't change base of closed PRs).
-                    let base_update = prs.get(pr_num).is_some_and(|gh_pr| {
-                        gh_pr.state == gh::PrState::Open && {
-                            let expected = repo_state.expected_base(nk, prs, default_branch);
-                            gh_pr.base_ref_name != expected
-                        }
-                    });
+                    let base_update = gh_pr.state == gh::PrState::Open && {
+                        let expected = repo_state.expected_base(nk, prs, default_branch);
+                        gh_pr.base_ref_name != expected
+                    };
                     (push_or_rebase, base_update)
                 }
-                _ => (false, false),
+            } else {
+                (false, false)
             };
 
-            // Propagates: true if this node or an ancestor has push/rebase.
-            let ancestor_propagates = repo_state
-                .node_preds
-                .get(nk)
-                .unwrap()
-                .iter()
-                .any(|&pred_nk| repo_state.needs_sync.get(pred_nk).copied() == Some(true));
+            let propagates = needs_push_or_rebase
+                || repo_state.node_preds.get(nk).unwrap().iter()
+                    .any(|&pred_nk| repo_state.node_needs_sync.get(pred_nk).copied() == Some(true));
 
-            if needs_push_or_rebase || ancestor_propagates {
-                // true = propagates to children.
-                repo_state.needs_sync.insert(nk, true);
-            } else if needs_base_update {
-                // false = local only, does not propagate.
-                repo_state.needs_sync.insert(nk, false);
+            if propagates || needs_base_update {
+                repo_state.node_needs_sync.insert(nk, propagates);
             }
         }
     }
@@ -502,23 +491,21 @@ impl RepoState {
         // If there's exactly one parent that is an open PR, use its branch.
         let parent_prs: Vec<_> = preds
             .iter()
-            .filter_map(|&pred_nk| match self.nodes.get(pred_nk)? {
-                Node::Pr(parent_pr) => prs
-                    .get(parent_pr)
-                    .filter(|p| p.state == gh::PrState::Open)
-                    .map(|p| &p.head_ref_name),
-                _ => None,
+            .filter_map(|&pred_nk| {
+                if let Some(Node::Pr(parent_pr)) = self.nodes.get(pred_nk) {
+                    prs.get(parent_pr)
+                        .filter(|p| p.state == gh::PrState::Open)
+                        .map(|p| &p.head_ref_name)
+                } else {
+                    None
+                }
             })
             .collect();
-        match parent_prs.as_slice() {
-            [single] => (*single).clone(),
-            _ => default_branch.to_owned(),
+        if let [single] = parent_prs.as_slice() {
+            (*single).clone()
+        } else {
+            default_branch.to_owned()
         }
-    }
-
-    /// Returns `true` if a node has any pending sync action.
-    pub fn node_needs_sync(&self, nk: NodeKey) -> bool {
-        self.needs_sync.contains_key(nk)
     }
 }
 
@@ -551,7 +538,7 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
             }
             Node::Pr(pr_id) => {
                 let gh_pr = prs.get(pr_id).unwrap();
-                let sync_indicator = if state.node_needs_sync(node_key) { "*" } else { "" };
+                let sync_indicator = if state.node_needs_sync.contains_key(node_key) { "*" } else { "" };
                 let message = format!(
                     "{}{sync_indicator}  {}  {}\n{}",
                     crate::style::pr_num(pr_id.get(), Some(&gh_pr.url)),
@@ -565,7 +552,7 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                 branch_prs,
                 trailer_prs,
             } => {
-                let sync_indicator = if state.node_needs_sync(node_key) { "*" } else { "" };
+                let sync_indicator = if state.node_needs_sync.contains_key(node_key) { "*" } else { "" };
                 let pr_links: Vec<String> = branch_prs
                     .iter()
                     .map(|pr_id| {
@@ -659,7 +646,7 @@ pub fn render_log(
                 }
                 Node::Pr(pr_id) => {
                     let gh_pr = prs.get(pr_id);
-                    let sync_indicator = if state.node_needs_sync(node_key) { "*" } else { "" };
+                    let sync_indicator = if state.node_needs_sync.contains_key(node_key) { "*" } else { "" };
                     let pr_str = match gh_pr {
                         Some(pr) => format!(
                             "{}{sync_indicator} {}",
@@ -671,7 +658,7 @@ pub fn render_log(
                     line1_parts.push(pr_str);
                 }
                 Node::Ambiguous { branch_prs, .. } => {
-                    let sync_indicator = if state.node_needs_sync(node_key) { "*" } else { "" };
+                    let sync_indicator = if state.node_needs_sync.contains_key(node_key) { "*" } else { "" };
                     let pr_strs: Vec<String> = branch_prs
                         .iter()
                         .map(|pr_id| crate::style::pr_num(pr_id.get(), None))
@@ -807,7 +794,7 @@ pub fn plan_sync(
     }
 
     // 2 & 3. Rebase children + abandon for merged PRs.
-    for &nk in &state.topo_order {
+    for &nk in state.topo_order.iter() {
         let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
             continue;
         };
@@ -838,8 +825,8 @@ pub fn plan_sync(
     // 4. Push — collect all PR bookmarks that need pushing.
     {
         let mut push_bookmarks = Vec::new();
-        for &nk in &state.topo_order {
-            if !state.needs_sync.contains_key(nk) {
+        for &nk in state.topo_order.iter() {
+            if !state.node_needs_sync.contains_key(nk) {
                 continue;
             }
             let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
@@ -849,7 +836,7 @@ pub fn plan_sync(
             assert_ne!(
                 gh::PrState::Merged,
                 gh_pr.state,
-                "bug: merged PR {pr_num} in needs_sync",
+                "bug: merged PR {pr_num} in node_needs_sync",
             );
             push_bookmarks.push((*pr_num, gh_pr.head_ref_name.clone()));
         }
@@ -861,8 +848,8 @@ pub fn plan_sync(
     }
 
     // 5. Update GitHub base branches (open PRs only — can't change base of closed PRs).
-    for &nk in &state.topo_order {
-        if !state.needs_sync.contains_key(nk) {
+    for &nk in state.topo_order.iter() {
+        if !state.node_needs_sync.contains_key(nk) {
             continue;
         }
         let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
@@ -872,7 +859,7 @@ pub fn plan_sync(
         assert_ne!(
             gh::PrState::Merged,
             gh_pr.state,
-            "bug: merged PR {pr_num} in needs_sync",
+            "bug: merged PR {pr_num} in node_needs_sync",
         );
         if gh_pr.state != gh::PrState::Open {
             continue;
@@ -1054,7 +1041,19 @@ pub fn cmd_create(
             .unwrap_or("untitled")
             .to_owned()
     });
-    let body = body.unwrap_or("");
+    let default_body;
+    let body = match body {
+        Some(b) => b,
+        None => {
+            // Default body: description body (everything after the first line).
+            default_body = tip_entry.commit.description
+                .lines()
+                .skip(1)
+                .collect::<Vec<_>>()
+                .join("\n");
+            default_body.trim()
+        }
+    };
 
     // Track remote (ignore error — remote bookmark may not exist yet).
     // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.

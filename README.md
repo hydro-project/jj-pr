@@ -16,127 +16,81 @@ cargo install --path .
 
 Requires `jj` and `gh` (GitHub CLI) on your PATH.
 
-## Workflow
+## Example Workflow
 
-### View the PR DAG
+### 1. Fetch latest changes
+
+```sh
+jj git fetch
+```
+
+Note: `jj-pr` does not fetch for you — always fetch first to get the latest remote state.
+
+### 2. View the PR DAG
 
 ```sh
 jj-pr          # or: jj-pr show
 ```
 
 ```
-○  PR #12  Draft  mingwei/delete-subgraph-id
-│  cleanup: remove SubgraphId, simplify StateLifespan
-├─╮
-│ ○  PR #10  Draft  mingwei/delete-metrics-slotvec
-│ │  refactor: use slotmap SecondaryMap for metrics
-○ │  PR #11  Draft  mingwei/delete-schedule-subgraph-args
-├─╯  refactor: remove SubgraphId argument
-○    PR #1   Draft  mingwei/delete-state-api-usage
-│    refactor: operators capture local state
-◆  trunk()
+○  PR #2804  Ready  mingwei/fix-inline-tasks
+│  fix(dfir_rs): defer `_counter` task spawning via `Context::request_task` buffer
+│ ○  PR #2746  Ready  mingwei/sqs-rebase
+├─╯  feat(hydro_test): add example of AWS + SQS support
+│ ◆  trunk()
+├─╯
+│ ○    PR #2812*  Draft  mingwei/delete-subgraph-id
+│ ├─╮  refactor(dfir_rs): remove SubgraphId, simplify StateLifespan
+│ │ ○  PR #2811*  Draft  mingwei/delete-schedule-subgraph-args
+│ ○ │  PR #2810*  Draft  mingwei/delete-metrics-slotvec
+│ ├─╯  refactor(dfir_rs): use slotmap SecondaryMap for metrics
+│ ○  PR #2801*  Draft  mingwei/delete-state-api-usage
+╭─┤  refactor(dfir_lang): operators capture local state
+│ ○  PR #2798  Ready  mingwei/delete-intermediate-subgraph
+├─╯  refactor(dfir_lang): remove intermediate subgraphs
+◆  root()::
 ```
 
-PR numbers are clickable hyperlinks in supported terminals. A `*` after the PR number indicates pending sync actions.
+PR numbers are clickable hyperlinks in supported terminals. A `*` after the PR number means `sync` has pending actions for that PR — this propagates transitively, so if a parent needs rebase, all descendants are marked too.
 
-### View individual commits
+If there are ambiguous commits (shared between multiple PRs), they show up as warnings with hints:
+
+```
+⚠  ambiguous* shared between PR #4, PR #5
+│  (restructure PRs to resolve — stack one on the other)
+```
+
+### 3. Diagnose and fix issues
+
+Use `jj-pr log` to see individual commits and their PR associations — this is mainly useful for diagnosing ambiguous commits:
 
 ```sh
 jj-pr log          # commits associated with PRs
-jj-pr log --all    # all commits including unassociated ones
+jj-pr log --all    # include commits not in any PR
 ```
 
-### Sync with GitHub
+Fix ambiguities by restructuring with `jj` (e.g., `jj rebase` to stack one PR on the other).
+
+### 4. Sync with GitHub
 
 ```sh
-jj-pr sync              # stamp, rebase, push, update bases
-jj-pr sync --dry-run    # preview only
+jj-pr sync
 ```
 
-Handles the full lifecycle:
-1. Stamps missing `PR: #N` trailers on commits
-2. Rebases children of merged PRs onto `trunk()`
-3. Abandons merged PR commits
-4. Pushes affected bookmarks
-5. Updates GitHub base branches to match the DAG
+This stamps missing trailers, rebases children of merged PRs onto `trunk()`, abandons merged commits, pushes affected bookmarks, and updates GitHub base branches. You'll be prompted before any changes are applied.
 
-Blocks if any bookmarks have conflicts (resolve with `jj bookmark` first).
-
-### Create a new PR
+### 5. Create a new PR
 
 ```sh
 jj bookmark create my-feature    # first create the bookmark in jj
 jj-pr create my-feature          # then create a draft PR for it
-jj-pr create my-feature -t "title"  # with custom title
 ```
 
-The base branch is auto-detected by walking the parent graph. New PRs are always created as drafts.
+The base branch is auto-detected by walking the parent graph. New PRs are always created as drafts. Use `-t "title"` to set a custom title (defaults to the first line of the tip commit's description).
 
 ## How It Works
 
-### PR membership
-
-Computed from the graph, not from trailers:
-
-```
-owned(bookmark) = ancestors(bookmark) & ~ancestors(other_bookmarks | trunk())
-```
-
-Each commit belongs to the PR whose bookmark is its nearest descendant. Trailers (`PR: #N`) are written as a safety net and used for recovery when merged PR branches are deleted.
-
-### Ambiguous commits
-
-Commits shared between multiple PRs (e.g., diamond shapes) or with mismatched trailers are shown as ambiguous nodes with context-sensitive hints:
-
-```
-⚠  ambiguous shared between PR #1, PR #2
-│  (restructure PRs to resolve — stack one on the other)
-```
-
-### Sync indicator
-
-Nodes marked with `*` have pending sync actions. This propagates transitively — if a parent needs rebase, all descendants are marked too.
-
-## Development
-
-### Project structure
-
-```
-src/
-├── main.rs              # CLI entry point
-├── cli.rs               # clap argument definitions
-├── jj.rs                # jj CLI interaction, trailer parsing
-├── gh.rs                # GitHub CLI interaction, PrNum newtype
-├── pr_dag.rs            # Core: RepoState, build, rendering, sync, create
-├── graph_algorithms.rs  # Generic topo sort and DFS
-├── style.rs             # Terminal styling (ANSI colors, OSC 8 hyperlinks)
-├── ui.rs                # Confirmation prompts
-└── tests.rs             # Snapshot tests (insta)
-```
-
-### Key types
-
-- **`PrNum`** — newtype around `NonZeroU64` for PR numbers
-- **`NodeKey`** — slotmap key for nodes in the DAG
-- **`Node`** — `Root`, `TrunkTip`, `Pr(PrNum)`, or `Ambiguous`
-- **`RepoState`** — immutable world view built from jj + GitHub state
-- **`SyncAction`** — planned mutation for sync
-
-### Dependencies
-
-- `slotmap` — arena-allocated node DAG
-- `sapling-renderdag` — graph rendering (same as jj)
-- `clap` — CLI
-- `serde` / `serde_json` — JSON parsing
-- `anstyle` / `anstream` — terminal colors
-
-### Running tests
-
-```sh
-cargo test
-```
-
-### Design document
+PR membership is determined from the jj DAG structure: each commit belongs to the PR whose bookmark is its nearest descendant. Commits shared between multiple PRs become ambiguous nodes. Trailers (`PR: #N`) are stamped by the tool as a safety net and are used to identify commits from merged PRs whose branches have been deleted. See the `decide()` function in `pr_dag.rs` for the full membership algorithm.
 
 See [DESIGN.md](DESIGN.md) for the full design rationale.
 
