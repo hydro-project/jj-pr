@@ -912,11 +912,8 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 jj::rebase(&format!("commit_id({tip_commit_id})+"), "trunk()")?;
             }
             SyncAction::AbandonMerged { tip_commit_id, pr } => {
-                eprintln!(
-                    "Abandoning merged {}",
-                    crate::style::pr_num(pr.get(), None),
-                );
-                let revset = format!("ancestors(commit_id({tip_commit_id})) & ~ancestors(trunk())");
+                eprintln!("Abandoning merged {}", crate::style::pr_num(pr.get(), None),);
+                let revset = format!("trunk()..commit_id({tip_commit_id})");
                 jj::abandon(&revset)?;
             }
             SyncAction::Push { bookmarks } => {

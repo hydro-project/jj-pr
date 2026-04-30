@@ -20,7 +20,9 @@ fn dump_state_on_error(jj_entries: &[jj::JjLogEntry], prs: &BTreeMap<gh::PrNum, 
         "prs": prs.values().collect::<Vec<_>>(),
         "default_branch": default_branch,
     });
-    let Ok(json) = serde_json::to_string_pretty(&fixture) else { return };
+    let Ok(json) = serde_json::to_string_pretty(&fixture) else {
+        return;
+    };
     write_dump(&json);
 }
 
@@ -63,9 +65,7 @@ fn run() -> Result<()> {
     let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
     let result = match command {
         Command::Show(_args) => pr_dag::render_show(&state, &prs, &mut std::io::stdout()),
-        Command::Log(args) => {
-            pr_dag::render_log(&state, &prs, &jj_entries, args.all, &mut std::io::stdout())
-        }
+        Command::Log(args) => pr_dag::render_log(&state, &prs, &jj_entries, args.all, &mut std::io::stdout()),
         Command::Sync(args) => {
             let actions = pr_dag::plan_sync(&state, &prs, &jj_entries, &default_branch)?;
             if actions.is_empty() {
