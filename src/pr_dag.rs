@@ -837,10 +837,10 @@ pub fn plan_sync(
                 continue;
             };
             let Some(gh_pr) = prs.get(pr_num) else { continue };
-            assert!(
-                gh_pr.state != gh::PrState::Merged,
-                "bug: merged PR {} in needs_sync",
-                pr_num
+            assert_ne!(
+                gh::PrState::Merged,
+                gh_pr.state,
+                "bug: merged PR {pr_num} in needs_sync",
             );
             push_bookmarks.push((*pr_num, gh_pr.head_ref_name.clone()));
         }
@@ -860,12 +860,14 @@ pub fn plan_sync(
             continue;
         };
         let Some(gh_pr) = prs.get(pr_num) else { continue };
-        assert!(
-            gh_pr.state != gh::PrState::Merged,
-            "bug: merged PR {} in needs_sync",
-            pr_num
+        assert_ne!(
+            gh::PrState::Merged,
+            gh_pr.state,
+            "bug: merged PR {pr_num} in needs_sync",
         );
-        if gh_pr.state != gh::PrState::Open { continue; }
+        if gh_pr.state != gh::PrState::Open {
+            continue;
+        }
         let expected = state.expected_base(nk, prs, default_branch);
         if gh_pr.base_ref_name != expected {
             actions.push(SyncAction::UpdateBase {
