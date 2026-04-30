@@ -43,10 +43,12 @@ fn main() -> Result<()> {
 fn dump_input(input: &InputData) {
     let dir = std::env::temp_dir();
     let path = dir.join(format!("jj-pr-dump-{}.json", std::process::id()));
-    if let Ok(file) = std::fs::File::create(&path)
-        && serde_json::to_writer(file, input).is_ok()
-    {
-        eprintln!("State dumped to: {}", path.display());
+    match std::fs::File::create(&path) {
+        Ok(file) => match serde_json::to_writer(file, input) {
+            Ok(()) => eprintln!("State dumped to: {}", path.display()),
+            Err(e) => eprintln!("Failed to serialize state dump: {e}"),
+        },
+        Err(e) => eprintln!("Failed to create state dump file: {e}"),
     }
 }
 
