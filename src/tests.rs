@@ -122,6 +122,19 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
     }
 }
 
+fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
+    use crate::gh::PrState;
+    GhPr {
+        number: PrNum::new(number).unwrap(),
+        head_ref_name: head.to_owned(),
+        base_ref_name: base.to_owned(),
+        state: PrState::Closed,
+        is_draft: false,
+        url: format!("https://github.com/test/repo/pull/{number}"),
+        title: format!("PR #{number}"),
+    }
+}
+
 fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>) -> Fixture {
     Fixture {
         jj_entries: entries,
@@ -235,6 +248,26 @@ fn base_mismatch() {
     );
     insta::assert_snapshot!("base_mismatch_show", render_show(&f));
     insta::assert_snapshot!("base_mismatch_sync", plan_sync(&f));
+}
+
+#[test]
+fn closed_pr_base_mismatch_skips_update() {
+    // Closed PR #2 stacked on #1 with wrong base — should NOT get a base update.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr_closed(2, "feat-b", "main")], // wrong base, but closed
+    );
+    insta::assert_snapshot!("closed_pr_base_mismatch_sync", plan_sync(&f));
 }
 
 #[test]
