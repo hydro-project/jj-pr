@@ -653,8 +653,7 @@ pub fn render_log(
         };
 
         // Build the glyph.
-        let is_current = jj_entry.is_working_copy;
-        let glyph = if is_current {
+        let glyph = if jj_entry.is_working_copy {
             crate::style::glyph_current()
         } else {
             match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
