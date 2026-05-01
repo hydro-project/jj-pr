@@ -550,7 +550,7 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                 };
                 let message = format!(
                     "{}{sync_indicator}  {}  {}\n{}",
-                    crate::style::pr_num(pr_id.get(), Some(&gh_pr.url)),
+                    crate::style::pr_num(*pr_id, Some(&gh_pr.url)),
                     crate::style::status(gh_pr.state, gh_pr.is_draft),
                     crate::style::bookmark(&gh_pr.head_ref_name),
                     gh_pr.title,
@@ -570,7 +570,7 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                     .iter()
                     .map(|pr_id| {
                         let url = prs.get(pr_id).map(|p| p.url.as_str());
-                        crate::style::pr_num(pr_id.get(), url)
+                        crate::style::pr_num(*pr_id, url)
                     })
                     .collect();
                 let mut line1 = format!(
@@ -581,7 +581,7 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                 if !trailer_prs.is_empty() {
                     let trailer_strs: Vec<String> = trailer_prs
                         .iter()
-                        .map(|pr_id| crate::style::pr_num(pr_id.get(), None))
+                        .map(|pr_id| crate::style::pr_num(*pr_id, None))
                         .collect();
                     line1.push_str(&format!(" (trailer: {})", trailer_strs.join(", ")));
                 }
@@ -594,7 +594,9 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                     (true, false) => crate::style::dim("(restructure PRs to resolve — stack one on the other)"),
                     (false, true) => crate::style::dim("(edit commit description to fix PR: trailer)"),
                     // Same PR claimed by multiple sources (branch + orphan trailer, or multiple orphan trailers).
-                    (false, false) => crate::style::dim("(multiple sources for same PR — abandon stale commits or restructure)"),
+                    (false, false) => {
+                        crate::style::dim("(multiple sources for same PR — abandon stale commits or restructure)")
+                    }
                 };
                 let message = format!("{line1}\n{line2}");
                 (message, crate::style::warn(crate::style::GLYPH_WARNING))
@@ -668,10 +670,10 @@ pub fn render_log(
                     let pr_str = match gh_pr {
                         Some(pr) => format!(
                             "{}{sync_indicator} {}",
-                            crate::style::pr_num(pr_id.get(), Some(&pr.url)),
+                            crate::style::pr_num(*pr_id, Some(&pr.url)),
                             crate::style::status(pr.state, pr.is_draft),
                         ),
-                        None => format!("{}{sync_indicator}", crate::style::pr_num(pr_id.get(), None),),
+                        None => format!("{}{sync_indicator}", crate::style::pr_num(*pr_id, None),),
                     };
                     line1_parts.push(pr_str);
                 }
@@ -683,7 +685,7 @@ pub fn render_log(
                     };
                     let pr_strs: Vec<String> = branch_prs
                         .iter()
-                        .map(|pr_id| crate::style::pr_num(pr_id.get(), None))
+                        .map(|pr_id| crate::style::pr_num(*pr_id, None))
                         .collect();
                     line1_parts.push(format!(
                         "{}{sync_indicator} {}{}{}",
@@ -906,7 +908,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
             SyncAction::StampTrailer { change_id, pr } => {
                 eprintln!(
                     "Stamping {} on {}",
-                    crate::style::pr_num(pr.get(), None),
+                    crate::style::pr_num(*pr, None),
                     crate::style::change_id(change_id),
                 );
                 let desc = jj::read_description(change_id)?;
@@ -914,14 +916,11 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 jj::describe_stdin(change_id, &new_desc)?;
             }
             SyncAction::RebaseChildren { tip_commit_id, pr } => {
-                eprintln!(
-                    "Rebasing children of {} onto trunk()",
-                    crate::style::pr_num(pr.get(), None),
-                );
+                eprintln!("Rebasing children of {} onto trunk()", crate::style::pr_num(*pr, None),);
                 jj::rebase(&format!("commit_id({tip_commit_id})+"), "trunk()")?;
             }
             SyncAction::AbandonMerged { tip_commit_id, pr } => {
-                eprintln!("Abandoning merged {}", crate::style::pr_num(pr.get(), None),);
+                eprintln!("Abandoning merged {}", crate::style::pr_num(*pr, None),);
                 let revset = format!("trunk()..commit_id({tip_commit_id})");
                 jj::abandon(&revset)?;
             }
@@ -941,7 +940,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
             SyncAction::UpdateBase { pr, bookmark, new_base } => {
                 eprintln!(
                     "Updating {} ({}) base -> {}",
-                    crate::style::pr_num(pr.get(), None),
+                    crate::style::pr_num(*pr, None),
                     crate::style::bookmark(bookmark),
                     crate::style::bookmark(new_base),
                 );
@@ -1097,7 +1096,7 @@ pub fn cmd_create(
         crate::style::bookmark(&base),
     );
     let (pr_number, pr_url) = gh::create_pr(bookmark, &base, &title, body, true)?;
-    eprintln!("Created {}", crate::style::pr_num(pr_number.get(), Some(&pr_url)));
+    eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
     // Stamp trailers on owned commits.
     let mut stamped = 0;
@@ -1119,7 +1118,7 @@ pub fn cmd_create(
     if stamped > 0 {
         eprintln!(
             "Stamped {} on {} commit(s)",
-            crate::style::pr_num(pr_number.get(), None),
+            crate::style::pr_num(pr_number, None),
             stamped
         );
     }
