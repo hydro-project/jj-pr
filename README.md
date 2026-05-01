@@ -14,9 +14,14 @@ A CLI tool that syncs [Jujutsu (jj)](https://github.com/jj-vcs/jj) bookmarks wit
 
 ```sh
 cargo install --git https://github.com/hydro-project/jj-pr --locked
+jj config set --user aliases.pr '["util", "exec", "--", "jj-pr"]'
 ```
+The second line adds `jj pr` as an alias to `jj-pr`.
 
-Also requires `jj` and `gh` (GitHub CLI) on your PATH.
+
+### Dependencies
+
+Requires `jj` (of course) and `gh` (GitHub CLI) on your PATH.
 
 To install `jj`:
 ```sh
@@ -39,7 +44,7 @@ Note: `jj-pr` does not fetch for you — fetch first to update the local repo to
 ### 2. View the PR DAG
 
 ```sh
-jj-pr          # or: jj-pr show
+jj pr          # or: jj-pr show
 ```
 
 ```apl
@@ -77,10 +82,10 @@ If there are ambiguous commits, they show up as warnings with hints.
 
 ### 3. Diagnose and fix issues
 
-Use `jj-pr log` to see individual commits and their PR associations.
+Use `jj pr log` to see individual commits and their PR associations.
 ```sh
-jj-pr log          # commits associated with PRs
-jj-pr log --all    # include commits not in any PR
+jj pr log          # commits associated with PRs
+jj pr log --all    # include commits not in any PR
 ```
 
 This is mainly useful for diagnosing ambiguous commits.
@@ -102,7 +107,7 @@ Fix ambiguities by restructuring with `jj` (e.g., `jj rebase` to stack one PR on
 ### 4. Sync with GitHub
 
 ```sh
-jj-pr sync
+jj pr sync
 ```
 
 This stamps missing trailers, rebases children of merged PRs onto `trunk()`, abandons merged commits, pushes affected
@@ -122,7 +127,7 @@ Pushing 1 bookmark(s): my-feature-a
 
 ```sh
 jj bookmark create my-feature-b  # first create the bookmark in jj
-jj-pr create my-feature-b        # then create a draft PR for it
+jj pr create my-feature-b        # then create a draft PR for it
 ```
 
 The base branch is auto-detected by walking the parent graph.
