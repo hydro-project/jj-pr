@@ -1,51 +1,30 @@
-use std::collections::BTreeMap;
-
-use serde::Deserialize;
-
+use super::InputData;
 use crate::gh::{GhPr, PrNum};
 use crate::jj::{CommitId, JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
 
-/// Test fixture matching the `jj-pr dump` output format.
-#[derive(Debug, Deserialize)]
-struct Fixture {
-    jj_entries: Vec<JjLogEntry>,
-    prs: Vec<GhPr>,
-    default_branch: String,
-}
-
-impl Fixture {
-    fn prs_map(&self) -> BTreeMap<PrNum, GhPr> {
-        self.prs.iter().map(|pr| (pr.number, pr.clone())).collect()
-    }
-}
-
-fn load_fixture(json: &str) -> Fixture {
-    serde_json::from_str(json).expect("failed to parse fixture JSON")
-}
-
-fn render_show(fixture: &Fixture) -> String {
+fn render_show(input: &InputData) -> String {
     crate::style::set_force_color(true);
-    let prs = fixture.prs_map();
-    let state = pr_dag::build(&fixture.jj_entries, &prs, &fixture.default_branch).unwrap();
+    let prs = input.prs_map();
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
     let mut buf = Vec::new();
     pr_dag::render_show(&state, &prs, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
-fn render_log(fixture: &Fixture, show_all: bool) -> String {
+fn render_log(input: &InputData, show_all: bool) -> String {
     crate::style::set_force_color(true);
-    let prs = fixture.prs_map();
-    let state = pr_dag::build(&fixture.jj_entries, &prs, &fixture.default_branch).unwrap();
+    let prs = input.prs_map();
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
     let mut buf = Vec::new();
-    pr_dag::render_log(&state, &prs, &fixture.jj_entries, show_all, &mut buf).unwrap();
+    pr_dag::render_log(&state, &prs, &input.jj_entries, show_all, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
-fn plan_sync(fixture: &Fixture) -> String {
-    let prs = fixture.prs_map();
-    let state = pr_dag::build(&fixture.jj_entries, &prs, &fixture.default_branch).unwrap();
-    match pr_dag::plan_sync(&state, &prs, &fixture.jj_entries, &fixture.default_branch) {
+fn plan_sync(input: &InputData) -> String {
+    let prs = input.prs_map();
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    match pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch) {
         Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
         Err(e) => format!("ERROR: {e}"),
     }
@@ -55,9 +34,12 @@ fn plan_sync(fixture: &Fixture) -> String {
 
 #[test]
 fn fixture_files() {
-    insta::glob!("fixtures/*.json", |path| {
-        let json = std::fs::read_to_string(path).unwrap();
-        let f = load_fixture(&json);
+    insta::glob!("fixtures/*.json.gz", |path| {
+        let file = std::fs::File::open(path).unwrap();
+        let mut decoder = flate2::read::GzDecoder::new(file);
+        let mut json = String::new();
+        std::io::Read::read_to_string(&mut decoder, &mut json).unwrap();
+        let f: InputData = serde_json::from_str(&json).expect("failed to parse fixture JSON");
         insta::assert_snapshot!("show", render_show(&f));
         insta::assert_snapshot!("log", render_log(&f, false));
         insta::assert_snapshot!("sync", plan_sync(&f));
@@ -144,8 +126,8 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
     }
 }
 
-fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>) -> Fixture {
-    Fixture {
+fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>) -> InputData {
+    InputData {
         jj_entries: entries,
         prs,
         default_branch: "main".to_owned(),

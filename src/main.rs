@@ -14,14 +14,21 @@ use std::sync::OnceLock;
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Command};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// Raw input data loaded from jj and gh, before any derived state is computed.
-#[derive(Serialize)]
-struct InputData {
-    jj_entries: Vec<jj::JjLogEntry>,
-    prs: BTreeMap<gh::PrNum, gh::GhPr>,
-    default_branch: String,
+/// Also used as the test fixture format (matches `jj-pr dump` output).
+#[derive(Debug, Deserialize, Serialize)]
+pub(crate) struct InputData {
+    pub(crate) jj_entries: Vec<jj::JjLogEntry>,
+    pub(crate) prs: Vec<gh::GhPr>,
+    pub(crate) default_branch: String,
+}
+
+impl InputData {
+    pub(crate) fn prs_map(&self) -> BTreeMap<gh::PrNum, gh::GhPr> {
+        self.prs.iter().map(|pr| (pr.number, pr.clone())).collect()
+    }
 }
 
 /// Global input data, set once after loading. Accessible from panic hook.
@@ -65,10 +72,7 @@ fn run() -> Result<()> {
     let yes = cli.yes;
 
     let jj_entries = jj::load_entries()?;
-    let prs = gh::load_prs()?
-        .into_iter()
-        .map(|pr| (pr.number, pr))
-        .collect::<BTreeMap<_, _>>();
+    let prs = gh::load_prs()?;
     let default_branch = gh::default_branch()?;
 
     // Store input data globally for panic/error dump.
@@ -87,15 +91,14 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
-    let state = pr_dag::build(&input.jj_entries, &input.prs, &input.default_branch)?;
+    let prs = input.prs_map();
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch)?;
 
     let result = match command {
-        Command::Show(_args) => pr_dag::render_show(&state, &input.prs, &mut std::io::stdout()),
-        Command::Log(args) => {
-            pr_dag::render_log(&state, &input.prs, &input.jj_entries, args.all, &mut std::io::stdout())
-        }
+        Command::Show(_args) => pr_dag::render_show(&state, &prs, &mut std::io::stdout()),
+        Command::Log(args) => pr_dag::render_log(&state, &prs, &input.jj_entries, args.all, &mut std::io::stdout()),
         Command::Sync(args) => {
-            let actions = pr_dag::plan_sync(&state, &input.prs, &input.jj_entries, &input.default_branch)?;
+            let actions = pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch)?;
             if actions.is_empty() {
                 eprintln!("Nothing to sync.");
                 return Ok(());
@@ -114,7 +117,7 @@ fn run() -> Result<()> {
         }
         Command::Create(args) => pr_dag::cmd_create(
             &state,
-            &input.prs,
+            &prs,
             &input.jj_entries,
             &input.default_branch,
             &args.bookmark,

@@ -1,7 +1,7 @@
 ---
 source: src/tests.rs
 expression: render_show(&f)
-input_file: src/fixtures/hydro-3.json
+input_file: src/fixtures/hydro-3.json.gz
 ---
 ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2804PR #2804]8;;[0m  [32mReady[0m  [1m[35mmingwei/fix-inline-tasks[0m
 │  fix(dfir_rs): defer `_counter` task spawning via `Context::request_task` buffer

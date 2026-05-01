@@ -1,7 +1,7 @@
 ---
 source: src/tests.rs
 expression: plan_sync(&f)
-input_file: src/fixtures/hydro-before.json
+input_file: src/fixtures/hydro-before.json.gz
 ---
 stamp #2810 trailer on skzzksouynsz
 stamp #2811 trailer on uxksyklwwwzn
