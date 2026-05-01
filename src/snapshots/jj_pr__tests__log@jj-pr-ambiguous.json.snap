@@ -9,7 +9,7 @@ input_file: src/fixtures/jj-pr-ambiguous.json
 │ │  Add confirmation prompts to sync, import, and track create
 │ ○  [1m[35mwkusrytxnoxt[0m [34m563c00e0fa0d[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/4PR #4]8;;[0m* [31mClosed[0m
 ├─╯  Make y/yes confirmation case-insensitive
-[33m⚠[0m  [1m[35mpvmxnwquyyoq[0m [34m19313a696d81[0m [33mambiguous[0m* [33m[[0m[1m[36mPR #4[0m, [1m[36mPR #5[0m[33m][0m
+[33m⚠[0m  [1m[35mpvmxnwquyyoq[0m [34m19313a696d81[0m [33mambiguous[0m* [33m[[0m[1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/4PR #4]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/5PR #5]8;;[0m[33m][0m
 │  Add -y/--yes global flag and confirmation prompt for reclaiming
 ○  [1m[35muxllmtmpypns[0m [34m609c28f0194e[0m [1m[35mmingwei/pull-parent-pr-out-of-child[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/7PR #7]8;;[0m* [31mClosed[0m
 │  Fix reclaim mode: only activate when tip is foreign-stamped

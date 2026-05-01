@@ -581,7 +581,10 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                 if !trailer_prs.is_empty() {
                     let trailer_strs: Vec<String> = trailer_prs
                         .iter()
-                        .map(|pr_id| crate::style::pr_num(*pr_id, None))
+                        .map(|pr_id| {
+                            let url = prs.get(pr_id).map(|p| p.url.as_str());
+                            crate::style::pr_num(*pr_id, url)
+                        })
                         .collect();
                     line1.push_str(&format!(" (trailer: {})", trailer_strs.join(", ")));
                 }
@@ -685,7 +688,10 @@ pub fn render_log(
                     };
                     let pr_strs: Vec<String> = branch_prs
                         .iter()
-                        .map(|pr_id| crate::style::pr_num(*pr_id, None))
+                        .map(|pr_id| {
+                            let url = prs.get(pr_id).map(|p| p.url.as_str());
+                            crate::style::pr_num(*pr_id, url)
+                        })
                         .collect();
                     line1_parts.push(format!(
                         "{}{sync_indicator} {}{}{}",
