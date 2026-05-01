@@ -1,415 +1,179 @@
-# JJ → GitHub PR Sync Tool
+# JJ-PR Design (v3)
 
 ## Overview
 
-This tool provides a minimal, predictable way to map a Jujutsu (jj) change graph onto GitHub Pull Requests (PRs).
+jj-pr maps a Jujutsu (jj) change graph onto GitHub Pull Requests.
 
-The core philosophy is:
+Core philosophy:
+- **jj owns structure** (DAG of changes)
+- **GitHub owns presentation** (PR titles, descriptions, review state)
+- **No hidden state** — everything is derived at runtime from `jj`, `gh`, and commit trailers
+- **Robust to invalid states** — ambiguities and inconsistencies are surfaced as `Ambiguous` nodes with user-facing hints, rather than hard errors. Internal invariant violations (e.g., DAG cycles) panic with `bug:` messages.
 
-- **JJ owns structure (DAG of changes)**
-- **GitHub owns presentation (branch/bookmark names, PR UI, title, description, review state)**
-- **This tool synchronizes the two with no external hidden state beyond JJ descriptions and GitHub PR metadata**
+## Data Model
 
----
+### Inputs
 
-## Goals
+Three readonly data sources, loaded once per invocation:
 
-### Primary Goals
+1. **`jj_entries: Vec<JjLogEntry>`** — raw commit data from `jj log` over `trunk().. | trunk()`, including commit/change IDs, parents, descriptions, local/remote bookmarks, and trunk membership.
+2. **`prs: BTreeMap<PrNum, GhPr>`** — GitHub PR metadata from `gh pr list --state all`, including number, head/base ref names, state (Open/Closed/Merged), draft status, URL, and title.
+3. **`default_branch: String`** — the GitHub repo's default branch name from `gh repo view`, used as the base for top-level PRs.
 
-- Each PR corresponds to a **jj bookmark**
-- Each PR may contain **multiple commits**
-- Not all bookmarks should be PRs
-- No setup required for reviewers (GitHub UI only)
-- Simple, predictable CLI
-- Must support a DAG of PRs, not just a linear stack
-- Maintains a linear GitHub target branch history (assume rebase or squash merges)
-- Does not require a linear GitHub target branch history to work
-- PRs IDs may be created in any order, and merged in any order that respects the PR DAG ordering
+### RepoState
 
-### Secondary Goals (Nice-to-Have)
-
-- Automatically mark PRs as ready when parent PRs are merged
-- Display a JJ-style graph annotated with PR state
-- Optionally embed graph visualization in PRs
-- Handle agent-driven workflows (e.g., Agents or users editing GitHub PR metadata, Copilot suggested changes commits on PRs)
-
----
-
-## Non-Goals (v1)
-
-- Full workflow management (no rebase commands, no stack editing)
-- Complex state tracking or caching
-- Automatic handling/resolution of invalid state/errors
-- Perfect handling of all edge cases
-- Multi-forge support (GitHub only)
-
----
-
-## Core Concepts
-
-### Bookmark = PR Unit
-
-Each PR corresponds 1:1 with a jj bookmark.
-
-Example:
+The unified derived view, built once from the three inputs. Immutable after construction.
 
 ```
-pr/feature-a
-pr/feature-b
+RepoState:
+  nodes:                Map<NodeKey, Node>       -- all nodes in the DAG
+  root_node:            NodeKey                  -- synthetic boundary below trunk
+  node_preds:           Map<NodeKey, [NodeKey]>  -- node -> parent nodes
+  node_succs:           Map<NodeKey, [NodeKey]>  -- node -> child nodes
+  topo_order:           [NodeKey]                -- topological order (parents before children)
+  commit_node:          Map<CommitId, NodeKey>   -- commit -> owning node
+  pr_needs_push:        Set<PrNum>               -- PRs with local != remote bookmark
+  node_needs_sync:      Map<NodeKey, bool>       -- nodes needing sync; true = propagates
+  bookmarks_conflicted: Set<String>              -- bookmarks with conflicting targets
 ```
 
----
+### Node
 
-### PR Identification
+Each node represents a contiguous group of commits in the DAG:
 
-The changes within a PR will be updated to contain the PR number as metadata in each description:
-
-```
-PR: #1234
-```
-
-This provides:
-- Stable identity
-- Recovery after rebases
-- No external state file required
-
----
-
-### PR Eligibility
-
-A bookmark is a PR if it is the source of a PR on github.
-
-If this proves to be too noisy, we may enforce a particular bookmark name format.
-
-Approach:
-- v1: User is expected to manually create the PR once the bookmark is tracked and pushed.
-- Later: Provide a sub-command to create a PR with a specified branch name (or generated branch name).
-
----
-
-### DAG Structure
-
-PR DAG is derived from the jj graph:
-
-- For a bookmark, find all nearest ancestors are from a different PR (or the trunk branch main)
-- Those become the **parent PRs**
-
----
-
-## CLI Design
-
-### Commands (v1)
-
-#### `jj pr log`
-
-Displays PRs as a graph:
-
-```
-@   feature-c   PR #125  (draft)
-├─╮
-│ ○ feature-a   PR #126  (ready)
-│ │
-○ │ feature-b   PR #124  (ready)
-├─╯
-○  main
+```rust
+pub enum Node {
+    Root,                    // synthetic boundary below trunk
+    TrunkTip,                // tip of trunk()
+    Pr(PrNum),               // a single PR
+    Ambiguous {              // commits with unclear ownership
+        branch_prs: BTreeSet<PrNum>,
+        trailer_prs: BTreeSet<PrNum>,
+    },
+}
 ```
 
-Purpose:
-- Primary visualization tool
-- Helps understand DAG structure and status
+## PR Membership
 
----
+### Algorithm
 
-#### `jj pr sync`
+PR membership is computed from bookmark positions and the jj DAG in a single reverse-topological pass (children → parents):
 
-Reconciles local jj state with GitHub.
+1. Collect PR bookmark tip commits (local bookmark name matches a GitHub PR's `headRefName`).
+2. For each commit, the `decide()` function determines its node based on:
+   - Whether it's the trunk tip
+   - Whether it's the tip of one or more PR bookmarks
+   - What node(s) its children belong to (inherited downward)
+   - Its `PR: #N` trailer, if any
+3. Commits with a single clear owner join that PR's node.
+4. Commits with multiple possible owners become `Ambiguous` nodes.
+5. Commits with a trailer for a PR that has no local bookmark (e.g., merged and branch deleted) use the trailer as the primary source.
 
-Responsibilities:
-- Find all PR bookmarks (via `gh` cli) that also exist (and track the remote) locally.
-- Push changed PR bookmarks
-- Detect merged PRs
-- Rebase children onto merged parents
-- Update draft/ready status
+### Node DAG
 
-Optional flags:
+A second pass computes edges between nodes. If a commit's parent belongs to a different node, an edge is added. Parents not in any node map to `root_node`.
+
+A third pass topologically sorts the node DAG (panics on cycle — would be a bug) and computes `needs_sync` via forward propagation.
+
+### Examples
+
+**Simple stack:**
+```
+trunk <- a <- b (feat-b, PR #2) <- c (feat-c, PR #1)
+```
+- PR #1 owns `{c}`, PR #2 owns `{a, b}`.
+
+**Diamond (ambiguous):**
+```
+trunk <- xyz <- a1 (feat-a, PR #1)
+            <- b1 (feat-b, PR #2)
+```
+- PR #1 owns `{a1}`, PR #2 owns `{b1}`, `xyz` is ambiguous.
+
+## Trailers
+
+Trailers (`PR: #N`) in commit descriptions serve two roles:
+
+1. **Validation** — when bookmarks exist, trailers are written by the tool to match graph membership. Mismatches produce `Ambiguous` nodes.
+2. **Recovery** — when a PR is merged and its branch deleted, the trailer is the primary source for identifying the merged PR's commits.
+
+## needs_sync
+
+Computed during `build()` via a single forward pass over the topo order. A node is in `needs_sync` if:
+
+- It's a non-Merged PR that needs push (local ≠ remote bookmark target)
+- It has a merged parent (needs rebase)
+- Its GitHub base branch doesn't match the expected base from the DAG
+- Any of its ancestor nodes is in `needs_sync` (transitive propagation)
+
+Merged PR nodes are never in `needs_sync` — they are the trigger for sync actions on their descendants, not targets themselves.
+
+Nodes in `needs_sync` display a `*` indicator in both `show` and `log` views.
+
+## Commands
+
+### `jj-pr` / `jj-pr show`
+
+Renders the node DAG as a graph. Shows PR number, state (Draft/Ready/Closed/Merged), bookmark name, title, and `*` sync indicator. Ambiguous nodes show context-sensitive hints:
+- Shared commits → "restructure PRs"
+- Wrong trailer → "edit commit description"
+- Both → mentions both fixes
+
+### `jj-pr log`
+
+Renders individual jj commits with their PR associations. Shows change ID, commit ID, bookmarks, PR info, and `*` sync indicator. `--all` includes commits not associated with any PR.
+
+### `jj-pr sync`
+
+Reconciles local + remote state. Actions in order:
+
+1. **Stamp missing trailers** — for commits owned by a PR node whose description lacks the correct `PR: #N` trailer. Uses `change_id` (stable across rewrites) for `jj describe`.
+2. **Rebase children of merged PRs** — `jj rebase -s <bookmark>+ -d trunk()` for each merged PR with children.
+3. **Abandon merged PR commits** — `jj abandon <bookmark>`.
+4. **Push** — single `jj git push --bookmark ...` for all affected bookmarks (Open and Closed, not Merged).
+5. **Update GitHub base branches** — `gh pr edit --base` for PRs whose base doesn't match the DAG.
+
+Blocks if `bookmarks_conflicted` is non-empty. Supports `--dry-run` and `[Y/n]` confirmation (skippable with `-y`).
+
+### `jj-pr create <bookmark>`
+
+Creates a new draft PR for an existing bookmark:
+
+1. Verify bookmark exists and has no existing PR.
+2. Walk parent graph to determine base branch (nearest ancestor PR's bookmark, or `default_branch`).
+3. Track remote bookmark (`jj bookmark track`, hardcoded to `origin`).
+4. Push (`jj git push --bookmark`).
+5. Create draft PR (`gh pr create --draft`).
+6. Stamp `PR: #N` trailers on owned commits.
+
+Title defaults to the first line of the tip commit's description. Override with `-t`.
+
+## Project Structure
 
 ```
---dry-run
---verbose
+src/
+├── main.rs              # CLI entry, loads inputs, dispatches commands
+├── cli.rs               # clap argument definitions
+├── jj.rs                # jj CLI interaction, trailer parsing
+├── gh.rs                # GitHub CLI interaction, PrNum newtype
+├── pr_dag.rs            # Core: RepoState, build, rendering, sync, create
+├── graph_algorithms.rs  # Generic topo sort and DFS
+├── style.rs             # Terminal styling (ANSI colors, OSC 8 hyperlinks)
+├── ui.rs                # Confirmation prompts
+└── tests.rs             # Snapshot tests (insta)
 ```
 
-#### `jj pr create`
-
-Responsibilities:
-- Creates a new bookmark if an existing bookmark is not specified
-- Ensures the bookmark tracks the remote
-- Finds all changes in the PR
-- Updates the change description with `PR: #1234` meta
-- Creates a deterministic title + description from the changes in the PR, or uses the user supplied title/description
-- Creates a github PR
-
----
-
-## State Architecture
-
-### Source of Truth
-
-- JJ graph → structure
-- GitHub → PR metadata (title, description, branch/bookmark inclusion)
-- JJ change description (`PR: #1234`) → PR membership for the change
-
-### Bookmark PR membership
-
-A bookmark is considered a PR if all of the following are true:
-* The bookmark tracks a remote branch
-* The remote branch it is tracking has the same name
-* The remote branch it is tracking is the source (HEAD) of an open PR
-
-### Change PR membership
-
-A change is included in a PR if both of the following are true:
-* The change has a line `PR: #1234` matching the PR id
-* One of:
-  * The bookmark for the PR is pointing at the change
-  * At least one child of the change is a member of the same PR.
-
-It is considered an invalid state to have the former (`PR: 1234` tag) without one of the later, and an error should be logged if this is encountered.
-
-### PR parent PRs
-
-We model PRs as forming a DAG, not just a simple stack, so it may have multiple parents.
-A parent is either a different PR or `trunk()` (usually `main`).
-
-A change is parent of a PR if it is not a member of the PR, and if any child change is a member of a PR.
-A parent change should be a member of another "parent" PR, or `trunk()`. The child PR is in an invalid
-state if a parent change is not one of these.
-
----
-
-### Data Flow
-
-1. Read local jj graph (`jj log --json`), extract PR numbers from descriptions
-2. Query GitHub `gh` CLI for PR bookmarks, state (pending, ready, merged)
-3. Compute list of changes to make
-4. Apply changes (if not `--dry-run`)
-
-1 and 2 may be done concurrently.
-
-Note that there is a external race condition between reading from GitHub (step 2) and writing to GitHub (step 4). Fine for v1.
-
----
-
-## Sync Algorithm
-
-### Step 1: Discover Local State
-
-- Parse jj graph
-- Identify PR bookmarks
-- Extract:
-  - bookmark name
-  - commit range
-  - PR number (if exists)
-
----
-
-### Step 2: Load GitHub State
-
-For each PR:
-- PR number
-- status (open, merged)
-- source (head) branch
-- destination (base) branch
-
----
-
-### Step 3.1: Handle Merged PRs
-
-PRs are expected to merged via the GitHub website, using squash or rebase.
-PR branches are expected to be deleted by GitHub, so we don't delete them ourselves (for v1).
-
-For each merged PR, if the merged change is different from the local branch's changes, compute changes: forget the old branch bookmark & abandon the changes
-
----
-
-### Step 3.2: Draft / Ready State
-
-Rule:
-
-- Draft if parent PR is not merged
-- Ready if all ancestors are merged
-
-Compute changes: change PR to ready or draft
-
----
-
-### Step 3.3: Rebase Children
-
-All PRs that are children of at least one merged PR must be rebased.
-All PRs that are children of `trunk()` must be rebased when `trunk()` changes.
-
-Each PR to be rebased should be rebased upon all its parents. However note
-that if multiple of its parents are rebased to `trunk()`, then they combine
-into a single `trunk()` parent.
-
-```
-jj rebase -s <child> -o <parent_commit> [-o <other_parent_commits>]
-```
-
-Note that due to the way `jj` works (specifically with `-s`),
-only the direct children need to be updated, not the whole DAG.
-
----
-
-## PR Metadata Handling
-
-### Title & Description
-
-- GitHub is the source of truth
-- Tool does NOT overwrite
-
-This allows:
-- Manual edits in UI
-- Agent-driven updates via MCP
-
----
-
-### Philosophy (v1)
-
-- No automatic recovery or correction of invalid states
-- Tool should be transparent and predictable
-- Errors should be logged clearly to the user, with enough context for manual resolution
-
----
-
-### Missing PR Metadata
-
-If `PR: #` is missing:
-- Log error (as above)
-- Skip bookmark
-
-Also applies to failure to compute the start change of the PR.
-
-### PR force-pushes
-
-When a PR is force-pushed, or updated locally and remotely separately, the branch may end up in a divergent state.
-This is considered an invalid state, and should be logged, but it is up to the user to manually resolve the issue.
-
----
-
-### Idempotency
-
-`jj pr sync` should be safe to run repeatedly, and result in no additional changes after the first run (if nothing else changes).
-
----
-
-## Implementation Details
-
-### Language & Dependencies
-
-Rust standalone binary. Key dependencies:
-- `sapling-renderdag` — graph rendering (same renderer jj uses)
-- `serde` / `serde_json` — parse jj and gh CLI output
-- `clap` — CLI argument parsing
-
-No jj library dependency. All jj interaction is via CLI.
-
-### Reading JJ State
-
-Single `jj log` call with a composite template producing JSONL (one JSON object per line):
-
-```
-jj log --no-graph -r '<revset>' -T '
-  "{\"commit\": " ++ json(self)
-  ++ ", \"local_bookmarks\": " ++ json(local_bookmarks)
-  ++ ", \"immutable\": " ++ json(self.immutable())
-  ++ "}\n"
-'
-```
-
-Each line yields:
-- `commit.commit_id`, `commit.change_id`, `commit.parents` (commit_id strings), `commit.description`
-- `local_bookmarks` — array of `{name, target}` for bookmarks pointing at this commit
-- `immutable` — boolean
-
-The revset should cover all mutable changes plus trunk as an anchor, e.g. `trunk().. | trunk()`.
-
-### Reading GitHub State
-
-Shell out to `gh pr list --json number,headRefName,baseRefName,state,isDraft,url` to get all open PRs in one call.
-
-### PR Trailer Handling
-
-The `PR: #1234` metadata is a git-style trailer in the commit description.
-
-**Reading:** Parse the `description` field from `json(self)` in Rust. jj's template engine has
-`trailers()` support but `Trailer` is not `Serialize`, so it cannot be included in JSON output.
-Parsing in Rust is trivial and keeps all trailer logic in one place.
-
-**Writing:** Read current description, update/append the `PR:` trailer in Rust, write back via
-`jj describe <rev> --stdin`.
-
-### Writing JJ State
-
-All mutations via CLI:
-- `jj describe <rev> --stdin` — update descriptions (PR trailers)
-- `jj bookmark set <name> -r <rev>` / `jj bookmark track <name>@origin` — manage bookmarks
-- `jj rebase -s <child> -d <parent> [-d <other_parent>]` — rebase after merges
-- `jj git push --bookmark <name>` — push PR bookmarks
-
-### Writing GitHub State
-
-All mutations via `gh` CLI:
-- `gh pr create --head <bookmark> --base <parent_bookmark_or_main>` — create PRs
-- `gh pr edit <number> --base <branch>` — update base branch
-- `gh pr ready <number>` / `gh pr ready <number> --undo` — toggle draft/ready
-
----
-
-## Implementation Plan
-
-### Phase 1 (v1)
-
-- Scaffold Rust project with clap CLI (`jj-pr log`, `jj-pr sync`, `jj-pr create`)
-- Parse jj graph via `jj log` JSONL template
-- Parse GitHub PR state via `gh pr list --json`
-- Build in-memory PR DAG (bookmark → changes, parent PRs)
-- Extract/write PR trailers from descriptions
-- Implement `jj-pr log` — graph rendering via `sapling-renderdag`
-- Implement `jj-pr sync`:
-  - push changed PR bookmarks
-  - update base branches (DAG-aware)
-  - validate mapping (error if missing PR metadata)
-- Implement `jj-pr create`:
-  - create bookmark, push, create GitHub PR with correct base branch
-  - stamp `PR: #N` trailer on all changes in the PR
-
----
-
-### Phase 2
-
-- Draft/ready automation (based on parent PR merge state)
-- Merge detection via `gh` CLI
-- Rebase children onto merged parents (`jj rebase -s`)
-- Cleanup merged PRs (forget bookmark, abandon changes)
-- `--dry-run` and `--verbose` flags
-
----
-
-### Phase 3
-
-- Graph visualization improvements
-- PR description should have link to the diff view with only PR's changes/commits selected
-- PR comments (mermaid graphs)
-- Better error handling
-
----
-
-## Summary
-
-This tool intentionally prioritizes:
-
-- Simplicity, predictability
-- Alignment with jj workflows
-- Statelessness, using external sources of truth that are user-visible and manually fixable
-
-By keeping state minimal and explicit, it avoids the complexity and fragility seen in more ambitious tools while still solving the core problem of managing multiple PRs.
+## Key Design Decisions
+
+- **SlotMap-based DAG** — nodes are arena-allocated with `SlotMap<NodeKey, Node>`, edges in `SecondaryMap`. This avoids lifetime issues and allows O(1) node lookup.
+- **No hidden state files** — everything derived from `jj` + `gh` + trailers at runtime. No `.jj-pr/` directory or config.
+- **Ambiguous instead of error** — invalid states (shared commits, wrong trailers) produce `Ambiguous` nodes with user-facing hints rather than hard errors.
+- **Merged PRs excluded from needs_sync** — they trigger actions on descendants but are not sync targets themselves. Enforced by `assert!` in plan_sync.
+- **Closed treated as Open** — closed PRs are pushed and have bases updated, since the user may re-open them.
+- **`default_branch` from GitHub** — uses `gh repo view` to get the actual default branch name instead of hardcoding `main`.
+
+## Known Limitations
+
+- **Remote hardcoded to `origin`** — `bookmark_track` and `needs_push` assume the PR remote is `origin`. Fork-based workflows (e.g., `origin` = upstream, `fork` = user's fork) will not work correctly. Fix requires detecting which remote `gh` uses for PRs.
+- **Multiple PRs per bookmark** — if multiple PRs (e.g., Open + Closed/Merged) share the same `headRefName`, one is silently dropped during `build()`. Needs priority-based resolution.
+- **`gh pr list --limit 200`** — may miss PRs in repos with many PRs.

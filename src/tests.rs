@@ -1,350 +1,336 @@
-use crate::gh::{GhPr, PrState};
-use crate::jj::{JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark, JjState};
+use std::collections::BTreeMap;
+
+use serde::Deserialize;
+
+use crate::gh::{GhPr, PrNum};
+use crate::jj::{CommitId, JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
 
-/// Helper to build a JjLogEntry.
-fn entry(
-    commit_id: &str,
-    change_id: &str,
-    parents: &[&str],
-    description: &str,
-    local_bookmarks: &[&str],
-    immutable: bool,
-) -> JjLogEntry {
-    JjLogEntry {
-        commit: JjCommit {
-            commit_id: commit_id.to_owned(),
-            change_id: change_id.to_owned(),
-            parents: parents.iter().map(|s| (*s).to_owned()).collect(),
-            description: description.to_owned(),
-        },
-        local_bookmarks: local_bookmarks
-            .iter()
-            .map(|name| JjBookmark {
-                name: (*name).to_owned(),
-                target: vec![commit_id.to_owned()],
-            })
-            .collect(),
-        remote_bookmarks: vec![],
-        immutable,
+/// Test fixture matching the `jj-pr dump` output format.
+#[derive(Debug, Deserialize)]
+struct Fixture {
+    jj_entries: Vec<JjLogEntry>,
+    prs: Vec<GhPr>,
+    default_branch: String,
+}
+
+impl Fixture {
+    fn prs_map(&self) -> BTreeMap<PrNum, GhPr> {
+        self.prs.iter().map(|pr| (pr.number, pr.clone())).collect()
     }
 }
 
-/// Helper to add remote bookmarks to an entry.
-fn with_remote(mut entry: JjLogEntry, name: &str, remote: &str) -> JjLogEntry {
-    entry.remote_bookmarks.push(JjRemoteBookmark {
-        name: name.to_owned(),
-        remote: Some(remote.to_owned()),
-        target: vec![entry.commit.commit_id.clone()],
+fn load_fixture(json: &str) -> Fixture {
+    serde_json::from_str(json).expect("failed to parse fixture JSON")
+}
+
+fn render_show(fixture: &Fixture) -> String {
+    crate::style::set_force_color(true);
+    let prs = fixture.prs_map();
+    let state = pr_dag::build(&fixture.jj_entries, &prs, &fixture.default_branch).unwrap();
+    let mut buf = Vec::new();
+    pr_dag::render_show(&state, &prs, &mut buf).unwrap();
+    String::from_utf8(buf).unwrap()
+}
+
+fn render_log(fixture: &Fixture, show_all: bool) -> String {
+    crate::style::set_force_color(true);
+    let prs = fixture.prs_map();
+    let state = pr_dag::build(&fixture.jj_entries, &prs, &fixture.default_branch).unwrap();
+    let mut buf = Vec::new();
+    pr_dag::render_log(&state, &prs, &fixture.jj_entries, show_all, &mut buf).unwrap();
+    String::from_utf8(buf).unwrap()
+}
+
+fn plan_sync(fixture: &Fixture) -> String {
+    let prs = fixture.prs_map();
+    let state = pr_dag::build(&fixture.jj_entries, &prs, &fixture.default_branch).unwrap();
+    match pr_dag::plan_sync(&state, &prs, &fixture.jj_entries, &fixture.default_branch) {
+        Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
+        Err(e) => format!("ERROR: {e}"),
+    }
+}
+
+// --- File-based fixture tests ---
+
+#[test]
+fn fixture_files() {
+    insta::glob!("fixtures/*.json", |path| {
+        let json = std::fs::read_to_string(path).unwrap();
+        let f = load_fixture(&json);
+        insta::assert_snapshot!("show", render_show(&f));
+        insta::assert_snapshot!("log", render_log(&f, false));
+        insta::assert_snapshot!("sync", plan_sync(&f));
     });
-    entry
+}
+
+// --- Fixture helpers ---
+
+fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str], is_trunk_tip: bool) -> JjLogEntry {
+    JjLogEntry {
+        commit: JjCommit {
+            commit_id: CommitId(cid.to_owned()),
+            change_id: chid.to_owned(),
+            parents: parents.iter().map(|s| CommitId(s.to_string())).collect(),
+            description: desc.to_owned(),
+        },
+        local_bookmarks: bookmarks
+            .iter()
+            .map(|name| JjBookmark {
+                name: name.to_string(),
+                target: vec![Some(CommitId(cid.to_owned()))],
+            })
+            .collect(),
+        remote_bookmarks: vec![],
+        immutable: is_trunk_tip,
+        is_trunk_tip,
+    }
+}
+
+fn with_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
+    e.remote_bookmarks.push(JjRemoteBookmark {
+        name: name.to_owned(),
+        remote: Some("origin".to_owned()),
+        target: vec![Some(e.commit.commit_id.clone())],
+    });
+    e
+}
+
+fn with_git_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
+    e.remote_bookmarks.push(JjRemoteBookmark {
+        name: name.to_owned(),
+        remote: Some("git".to_owned()),
+        target: vec![Some(e.commit.commit_id.clone())],
+    });
+    e
 }
 
 fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
+    use crate::gh::PrState;
     GhPr {
-        number,
+        number: PrNum::new(number).unwrap(),
         head_ref_name: head.to_owned(),
         base_ref_name: base.to_owned(),
         state: PrState::Open,
+        is_draft: true,
+        url: format!("https://github.com/test/repo/pull/{number}"),
+        title: format!("PR #{number}"),
+    }
+}
+
+fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
+    use crate::gh::PrState;
+    GhPr {
+        number: PrNum::new(number).unwrap(),
+        head_ref_name: head.to_owned(),
+        base_ref_name: base.to_owned(),
+        state: PrState::Merged,
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
     }
 }
 
-// ---- DAG building tests ----
-
-#[test]
-fn build_single_pr_on_trunk() {
-    // trunk <- c1 (PR #1) <- c2 (PR #1, bookmark: feat)
-    let entries = vec![
-        entry("c2", "ch2", &["c1"], "feat\n\nPR: #1\n", &["feat"], false),
-        entry("c1", "ch1", &["trunk"], "first\n\nPR: #1\n", &[], false),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![gh_pr(1, "feat", "main")];
-
-    let dag = pr_dag::build(&jj, &prs).unwrap();
-    assert_eq!(dag.nodes.len(), 1);
-
-    let node = &dag.nodes[&1];
-    assert_eq!(node.bookmark, "feat");
-    assert_eq!(node.commit_ids.len(), 2);
-    assert!(node.has_trunk_parent);
-    assert!(node.parent_prs.is_empty());
+fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
+    use crate::gh::PrState;
+    GhPr {
+        number: PrNum::new(number).unwrap(),
+        head_ref_name: head.to_owned(),
+        base_ref_name: base.to_owned(),
+        state: PrState::Closed,
+        is_draft: false,
+        url: format!("https://github.com/test/repo/pull/{number}"),
+        title: format!("PR #{number}"),
+    }
 }
 
-#[test]
-fn build_stacked_prs() {
-    // trunk <- a1 (PR #1, bookmark: feat-a) <- b1 (PR #2, bookmark: feat-b)
-    let entries = vec![
-        entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
-        entry(
-            "a1",
-            "cha1",
-            &["trunk"],
-            "a\n\nPR: #1\n",
-            &["feat-a"],
-            false,
-        ),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")];
-
-    let dag = pr_dag::build(&jj, &prs).unwrap();
-    assert_eq!(dag.nodes.len(), 2);
-
-    let node_a = &dag.nodes[&1];
-    assert!(node_a.has_trunk_parent);
-    assert!(node_a.parent_prs.is_empty());
-
-    let node_b = &dag.nodes[&2];
-    assert!(!node_b.has_trunk_parent);
-    assert_eq!(node_b.parent_prs, vec![1]);
+fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>) -> Fixture {
+    Fixture {
+        jj_entries: entries,
+        prs,
+        default_branch: "main".to_owned(),
+    }
 }
 
-#[test]
-fn build_diamond_dag() {
-    // trunk <- a (PR #1) <- c (PR #3, two parents)
-    //       <- b (PR #2) <-/
-    let entries = vec![
-        entry(
-            "c1",
-            "chc1",
-            &["a1", "b1"],
-            "c\n\nPR: #3\n",
-            &["feat-c"],
-            false,
-        ),
-        entry(
-            "a1",
-            "cha1",
-            &["trunk"],
-            "a\n\nPR: #1\n",
-            &["feat-a"],
-            false,
-        ),
-        entry(
-            "b1",
-            "chb1",
-            &["trunk"],
-            "b\n\nPR: #2\n",
-            &["feat-b"],
-            false,
-        ),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![
-        gh_pr(1, "feat-a", "main"),
-        gh_pr(2, "feat-b", "main"),
-        gh_pr(3, "feat-c", "feat-a"),
-    ];
-
-    let dag = pr_dag::build(&jj, &prs).unwrap();
-    assert_eq!(dag.nodes.len(), 3);
-
-    let node_c = &dag.nodes[&3];
-    let mut parents = node_c.parent_prs.clone();
-    parents.sort();
-    assert_eq!(parents, vec![1, 2]);
-}
-
-// ---- Sync planning tests ----
+// --- Snapshot tests ---
 
 #[test]
-fn sync_no_changes_needed() {
-    let entries = vec![
-        with_remote(
-            entry(
-                "c1",
-                "ch1",
-                &["trunk"],
-                "feat\n\nPR: #1\n",
-                &["feat"],
-                false,
+fn single_pr() {
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c2", "ch2", &["c1"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
             ),
-            "feat",
-            "git",
-        ),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![gh_pr(1, "feat", "main")];
-
-    let dag = pr_dag::build(&jj, &prs).unwrap();
-    let actions = pr_dag::plan_sync(&dag, &jj, &prs).unwrap();
-    assert!(actions.is_empty(), "expected no actions, got: {actions:?}");
-}
-
-#[test]
-fn sync_push_needed_when_remote_differs() {
-    // Local bookmark at c2, remote at c1.
-    let entries = vec![
-        entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
-        with_remote(
-            entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false),
-            "feat",
-            "git",
-        ),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![gh_pr(1, "feat", "main")];
-
-    let dag = pr_dag::build(&jj, &prs).unwrap();
-    let actions = pr_dag::plan_sync(&dag, &jj, &prs).unwrap();
-    assert_eq!(actions.len(), 1);
-    assert!(matches!(&actions[0], pr_dag::SyncAction::PushBookmark(name) if name == "feat"));
-}
-
-#[test]
-fn sync_update_base_when_wrong() {
-    // PR #2 based on feat-a, but GitHub says base is "main".
-    let entries = vec![
-        with_remote(
-            entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
-            "feat-b",
-            "git",
-        ),
-        with_remote(
-            entry(
-                "a1",
-                "cha1",
-                &["trunk"],
-                "a\n\nPR: #1\n",
-                &["feat-a"],
-                false,
-            ),
-            "feat-a",
-            "git",
-        ),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![
-        gh_pr(1, "feat-a", "main"),
-        gh_pr(2, "feat-b", "main"), // wrong base
-    ];
-
-    let dag = pr_dag::build(&jj, &prs).unwrap();
-    let actions = pr_dag::plan_sync(&dag, &jj, &prs).unwrap();
-    assert_eq!(actions.len(), 1);
-    assert!(
-        matches!(&actions[0], pr_dag::SyncAction::UpdateBase { pr_number: 2, new_base } if new_base == "feat-a")
+            entry("c1", "ch1", &["c2_parent"], "first\n\nPR: #1\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
     );
-}
-
-// ---- Import planning tests ----
-
-#[test]
-fn import_stamps_unstamped_commits() {
-    let entries = vec![
-        entry("c2", "ch2", &["c1"], "second commit\n", &["feat"], false),
-        entry("c1", "ch1", &["trunk"], "first commit\n", &[], false),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![gh_pr(1, "feat", "main")];
-
-    let plan = pr_dag::plan_import(&jj, &prs);
-    assert_eq!(plan.len(), 2);
-    assert_eq!(plan["ch1"], 1);
-    assert_eq!(plan["ch2"], 1);
+    insta::assert_snapshot!("single_pr_show", render_show(&f));
+    insta::assert_snapshot!("single_pr_log", render_log(&f, false));
+    insta::assert_snapshot!("single_pr_sync", plan_sync(&f));
 }
 
 #[test]
-fn import_skips_already_stamped() {
-    let entries = vec![
-        entry(
-            "c1",
-            "ch1",
-            &["trunk"],
-            "feat\n\nPR: #1\n",
-            &["feat"],
-            false,
-        ),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![gh_pr(1, "feat", "main")];
-
-    let plan = pr_dag::plan_import(&jj, &prs);
-    assert!(plan.is_empty());
+fn stacked_prs() {
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+    );
+    insta::assert_snapshot!("stacked_prs_show", render_show(&f));
+    insta::assert_snapshot!("stacked_prs_log", render_log(&f, false));
+    insta::assert_snapshot!("stacked_prs_sync", plan_sync(&f));
 }
 
 #[test]
-fn import_parent_reclaims_from_child() {
-    // trunk <- a1 (bookmark: feat-a) <- b1 (bookmark: feat-b)
-    // Both unstamped. Child processed first would stamp a1 as PR #2,
-    // but parent should reclaim it as PR #1.
-    let entries = vec![
-        entry("b1", "chb1", &["a1"], "child\n", &["feat-b"], false),
-        entry("a1", "cha1", &["trunk"], "parent\n", &["feat-a"], false),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")];
-
-    let plan = pr_dag::plan_import(&jj, &prs);
-    // a1 should belong to PR #1 (parent reclaims), b1 to PR #2.
-    assert_eq!(plan["cha1"], 1);
-    assert_eq!(plan["chb1"], 2);
+fn diamond_ambiguous() {
+    let f = fixture(
+        vec![
+            with_remote(entry("a1", "cha1", &["xyz"], "a\n", &["feat-a"], false), "feat-a"),
+            with_remote(entry("b1", "chb1", &["xyz"], "b\n", &["feat-b"], false), "feat-b"),
+            entry("xyz", "chxyz", &["trunk"], "shared\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "main")],
+    );
+    insta::assert_snapshot!("diamond_ambiguous_show", render_show(&f));
+    insta::assert_snapshot!("diamond_ambiguous_log", render_log(&f, true));
 }
 
 #[test]
-fn import_parent_reclaims_reverse_order() {
-    // Same as above but PRs listed in reverse order — result should be identical.
-    let entries = vec![
-        entry("b1", "chb1", &["a1"], "child\n", &["feat-b"], false),
-        entry("a1", "cha1", &["trunk"], "parent\n", &["feat-a"], false),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![gh_pr(2, "feat-b", "feat-a"), gh_pr(1, "feat-a", "main")];
-
-    let plan = pr_dag::plan_import(&jj, &prs);
-    assert_eq!(plan["cha1"], 1);
-    assert_eq!(plan["chb1"], 2);
+fn merged_parent() {
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a1"], "child\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            entry("a1", "cha1", &["trunk"], "parent\n\nPR: #1\n", &["feat-a"], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr_merged(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+    );
+    insta::assert_snapshot!("merged_parent_show", render_show(&f));
+    insta::assert_snapshot!("merged_parent_sync", plan_sync(&f));
 }
 
 #[test]
-fn import_three_deep_stack() {
-    // trunk <- a1 (feat-a) <- b1 (feat-b) <- c1 (feat-c)
-    let entries = vec![
-        entry("c1", "chc1", &["b1"], "c\n", &["feat-c"], false),
-        entry("b1", "chb1", &["a1"], "b\n", &["feat-b"], false),
-        entry("a1", "cha1", &["trunk"], "a\n", &["feat-a"], false),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    // Worst case: deepest child first.
-    let prs = vec![
-        gh_pr(3, "feat-c", "feat-b"),
-        gh_pr(2, "feat-b", "feat-a"),
-        gh_pr(1, "feat-a", "main"),
-    ];
-
-    let plan = pr_dag::plan_import(&jj, &prs);
-    assert_eq!(plan["cha1"], 1);
-    assert_eq!(plan["chb1"], 2);
-    assert_eq!(plan["chc1"], 3);
+fn needs_push() {
+    let f = fixture(
+        vec![
+            entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
+            with_remote(entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false), "feat"),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("needs_push_show", render_show(&f));
+    insta::assert_snapshot!("needs_push_sync", plan_sync(&f));
 }
 
 #[test]
-fn import_stops_at_trunk() {
-    let entries = vec![
-        entry("c1", "ch1", &["trunk"], "feat\n", &["feat"], false),
-        entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-    ];
-    let jj = JjState::new(entries);
-    let prs = vec![gh_pr(1, "feat", "main")];
+fn needs_push_git_remote_not_origin() {
+    // Bookmark moved locally — @git matches local but @origin is absent.
+    // Should still detect push needed.
+    let f = fixture(
+        vec![
+            with_git_remote(
+                entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("needs_push_git_not_origin_sync", plan_sync(&f));
+}
 
-    let plan = pr_dag::plan_import(&jj, &prs);
-    assert_eq!(plan.len(), 1);
-    assert_eq!(plan["ch1"], 1);
-    // trunk should NOT be in the plan.
-    assert!(!plan.contains_key("chtrunk"));
+#[test]
+fn base_mismatch() {
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "main")], // wrong base for #2
+    );
+    insta::assert_snapshot!("base_mismatch_show", render_show(&f));
+    insta::assert_snapshot!("base_mismatch_sync", plan_sync(&f));
+}
+
+#[test]
+fn closed_pr_base_mismatch_skips_update() {
+    // Closed PR #2 stacked on #1 with wrong base — should NOT get a base update.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr_closed(2, "feat-b", "main")], // wrong base, but closed
+    );
+    insta::assert_snapshot!("closed_pr_base_mismatch_sync", plan_sync(&f));
+}
+
+#[test]
+fn nothing_to_sync() {
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("nothing_to_sync", plan_sync(&f));
+}
+
+#[test]
+fn merge_child() {
+    // PR #3 merges PR #1 and PR #2.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c1", "chc1", &["a1", "b1"], "merge\n", &["feat-c"], false),
+                "feat-c",
+            ),
+            with_remote(entry("a1", "cha1", &["trunk"], "a\n", &["feat-a"], false), "feat-a"),
+            with_remote(entry("b1", "chb1", &["trunk"], "b\n", &["feat-b"], false), "feat-b"),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![
+            gh_pr(1, "feat-a", "main"),
+            gh_pr(2, "feat-b", "main"),
+            gh_pr(3, "feat-c", "feat-a"),
+        ],
+    );
+    insta::assert_snapshot!("merge_child_show", render_show(&f));
+    insta::assert_snapshot!("merge_child_log", render_log(&f, false));
 }

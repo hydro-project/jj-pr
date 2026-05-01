@@ -1,0 +1,9 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/jj-pr.json
+---
+stamp #4 trailer on pvmxnwquyyoq
+rebase children of #3 onto trunk()
+abandon merged #3
+push: #7 (mingwei/pull-parent-pr-out-of-child), #5 (mingwei/clickable-pr), #4 (mingwei/confirm)

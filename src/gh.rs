@@ -1,20 +1,43 @@
+use std::fmt;
+use std::num::NonZeroU64;
 use std::process::Command;
 
 use anyhow::{Context, Result, bail};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+/// Newtype for GitHub PR numbers.
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[serde(transparent)]
+pub struct PrNum(NonZeroU64);
+
+impl PrNum {
+    pub fn new(n: u64) -> Option<Self> {
+        NonZeroU64::new(n).map(Self)
+    }
+
+    pub fn get(self) -> u64 {
+        self.0.get()
+    }
+}
+
+impl fmt::Display for PrNum {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "#{}", self.0)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PrState {
-    Open,
     Closed,
+    Open,
     Merged,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GhPr {
-    pub number: u64,
+    pub number: PrNum,
     pub head_ref_name: String,
     pub base_ref_name: String,
     pub state: PrState,
@@ -48,7 +71,7 @@ pub fn load_prs() -> Result<Vec<GhPr>> {
     Ok(prs)
 }
 
-pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<u64> {
+pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(PrNum, String)> {
     let mut args = vec![
         "pr".to_owned(),
         "create".to_owned(),
@@ -77,16 +100,16 @@ pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -
     }
 
     // gh pr create prints the URL, extract PR number from it.
-    let url = String::from_utf8_lossy(&output.stdout);
-    let url = url.trim();
+    let url = String::from_utf8_lossy(&output.stdout).trim().to_owned();
     // URL format: https://github.com/owner/repo/pull/123
     let pr_number = url
         .rsplit('/')
         .next()
         .and_then(|s| s.parse::<u64>().ok())
+        .and_then(PrNum::new)
         .with_context(|| format!("Could not parse PR number from gh output: {url}"))?;
 
-    Ok(pr_number)
+    Ok((pr_number, url))
 }
 
 pub fn edit_base(pr_number: u64, base: &str) -> Result<()> {
@@ -101,6 +124,27 @@ pub fn edit_base(pr_number: u64, base: &str) -> Result<()> {
         bail!("gh pr edit {pr_number} --base {base} failed: {stderr}");
     }
     Ok(())
+}
+
+/// Get the default branch name for the current GitHub repo.
+pub fn default_branch() -> Result<String> {
+    let output = Command::new("gh")
+        .args([
+            "repo",
+            "view",
+            "--json",
+            "defaultBranchRef",
+            "--jq",
+            ".defaultBranchRef.name",
+        ])
+        .output()
+        .context("Failed to run `gh repo view`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("gh repo view failed: {stderr}");
+    }
+    Ok(String::from_utf8(output.stdout)?.trim().to_owned())
 }
 
 #[expect(dead_code, reason = "TODO")]

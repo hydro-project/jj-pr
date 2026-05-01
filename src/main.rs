@@ -1,68 +1,131 @@
 mod cli;
 mod gh;
+mod graph_algorithms;
 mod jj;
 mod pr_dag;
 mod style;
 #[cfg(test)]
 mod tests;
+mod ui;
+
+use std::collections::BTreeMap;
+use std::sync::OnceLock;
 
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Command};
+use serde::Serialize;
+
+/// Raw input data loaded from jj and gh, before any derived state is computed.
+#[derive(Serialize)]
+struct InputData {
+    jj_entries: Vec<jj::JjLogEntry>,
+    prs: BTreeMap<gh::PrNum, gh::GhPr>,
+    default_branch: String,
+}
+
+/// Global input data, set once after loading. Accessible from panic hook.
+static INPUT_DATA: OnceLock<InputData> = OnceLock::new();
 
 fn main() -> Result<()> {
-    let cli = Cli::parse();
-    match cli.command {
-        Command::Log => cmd_log(),
-        Command::Sync { dry_run } => cmd_sync(dry_run),
-        Command::Track(args) => cmd_track(args),
-        Command::Import { dry_run } => cmd_import(dry_run),
+    let hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        eprintln!("jj-pr panicked! Dumping input state...");
+        dump_input_on_failure(INPUT_DATA.get());
+        hook(info);
+    }));
+    run()
+}
+
+/// Dump input data as JSON to a temp file for debugging, or print a message if unavailable.
+fn dump_input_on_failure(input: Option<&InputData>) {
+    let Some(input) = input else {
+        eprintln!("Input state was not yet loaded, no dump available.");
+        return;
+    };
+    let dir = std::env::temp_dir();
+    let epoch = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let path = dir.join(format!("jj-pr-dump-{epoch}.json"));
+    match std::fs::OpenOptions::new().write(true).create_new(true).open(&path) {
+        Ok(file) => match serde_json::to_writer(file, input) {
+            Ok(()) => eprintln!("State dumped to: {}", path.display()),
+            Err(e) => eprintln!("Failed to serialize state dump: {e}"),
+        },
+        Err(e) => eprintln!("Failed to create state dump file {}: {e}", path.display()),
     }
 }
 
-fn cmd_log() -> Result<()> {
-    let jj_state = jj::load_state()?;
-    let gh_state = gh::load_prs()?;
-    let dag = pr_dag::build(&jj_state, &gh_state)?;
-    pr_dag::render_log(&dag)?;
-    Ok(())
-}
+fn run() -> Result<()> {
+    tracing_subscriber::fmt::init();
 
-fn cmd_sync(dry_run: bool) -> Result<()> {
-    let jj_state = jj::load_state()?;
-    let gh_state = gh::load_prs()?;
-    let dag = pr_dag::build(&jj_state, &gh_state)?;
-    let actions = pr_dag::plan_sync(&dag, &jj_state, &gh_state)?;
+    let cli = Cli::parse();
+    let yes = cli.yes;
 
-    if actions.is_empty() {
-        eprintln!("Nothing to sync.");
+    let jj_entries = jj::load_entries()?;
+    let prs = gh::load_prs()?
+        .into_iter()
+        .map(|pr| (pr.number, pr))
+        .collect::<BTreeMap<_, _>>();
+    let default_branch = gh::default_branch()?;
+
+    // Store input data globally for panic/error dump.
+    let input = INPUT_DATA.get_or_init(|| InputData {
+        jj_entries,
+        prs,
+        default_branch,
+    });
+
+    let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
+
+    // Handle `dump` before building derived state — it only needs raw input.
+    if let Command::Dump = &command {
+        serde_json::to_writer(std::io::stdout(), input)?;
+        println!();
         return Ok(());
     }
 
-    for action in &actions {
-        eprintln!("{action}");
+    let state = pr_dag::build(&input.jj_entries, &input.prs, &input.default_branch)?;
+
+    let result = match command {
+        Command::Show(_args) => pr_dag::render_show(&state, &input.prs, &mut std::io::stdout()),
+        Command::Log(args) => {
+            pr_dag::render_log(&state, &input.prs, &input.jj_entries, args.all, &mut std::io::stdout())
+        }
+        Command::Sync(args) => {
+            let actions = pr_dag::plan_sync(&state, &input.prs, &input.jj_entries, &input.default_branch)?;
+            if actions.is_empty() {
+                eprintln!("Nothing to sync.");
+                return Ok(());
+            }
+            for action in &actions {
+                eprintln!("  {action}");
+            }
+            if args.dry_run {
+                eprintln!("\n{}", style::warn("Dry run: no changes applied."));
+            } else if !ui::confirm(&format!("Apply {} action(s)?", actions.len()), yes) {
+                anyhow::bail!("Aborted.");
+            } else {
+                pr_dag::execute_sync(&actions)?;
+            }
+            Ok(())
+        }
+        Command::Create(args) => pr_dag::cmd_create(
+            &state,
+            &input.prs,
+            &input.jj_entries,
+            &input.default_branch,
+            &args.bookmark,
+            args.title.as_deref(),
+            args.body.as_deref(),
+        ),
+        Command::Dump => unreachable!("handled above"),
+    };
+
+    if result.is_err() {
+        dump_input_on_failure(INPUT_DATA.get());
     }
-
-    if !dry_run {
-        pr_dag::execute_sync(&actions)?;
-    } else {
-        eprintln!("\n{}", style::warn("Dry run: no changes applied."));
-    }
-
-    Ok(())
-}
-
-fn cmd_track(args: cli::TrackArgs) -> Result<()> {
-    let jj_state = jj::load_state()?;
-    let gh_state = gh::load_prs()?;
-    let dag = pr_dag::build(&jj_state, &gh_state)?;
-    pr_dag::track_pr(&dag, &jj_state, &gh_state, &args)?;
-    Ok(())
-}
-
-fn cmd_import(dry_run: bool) -> Result<()> {
-    let jj_state = jj::load_state()?;
-    let gh_prs = gh::load_prs()?;
-    pr_dag::import_prs(&jj_state, &gh_prs, dry_run)?;
-    Ok(())
+    result
 }

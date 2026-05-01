@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "HNRobert.ansi-viewer", // https://github.com/hnrobert/ansi-viewer/releases/download/v0.1.1/ansi-viewer-v0.1.1.vsix
+    ]
+}

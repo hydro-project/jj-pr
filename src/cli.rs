@@ -3,49 +3,56 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(name = "jj-pr", about = "Sync jj bookmarks with GitHub PRs")]
 pub struct Cli {
+    /// Skip confirmation prompts
+    #[arg(short = 'y', long = "yes", global = true)]
+    pub yes: bool,
+
     #[command(subcommand)]
-    pub command: Command,
+    pub command: Option<Command>,
 }
 
 #[derive(Subcommand)]
 pub enum Command {
-    /// Display PRs as a graph
-    Log,
-    /// Reconcile local jj state with GitHub
-    Sync {
-        /// Show what would be done without doing it
-        #[arg(long)]
-        dry_run: bool,
-    },
-    /// Create a new PR or update an existing one
-    Track(TrackArgs),
-    /// Import existing GitHub PRs by stamping PR trailers on local commits
-    Import {
-        /// Show what would be done without doing it
-        #[arg(long)]
-        dry_run: bool,
-    },
+    /// Display PRs as a graph (default command)
+    #[command(alias = "s")]
+    Show(ShowArgs),
+    /// Display JJ changes and their associated PRs
+    Log(LogArgs),
+    /// Reconcile local jj state with GitHub (push, update bases, rebase merged children)
+    Sync(SyncArgs),
+    /// Create a new PR for an existing bookmark
+    Create(CreateArgs),
+    /// Dump raw state (jj + gh) as JSON for test fixtures
+    Dump,
 }
 
 #[derive(clap::Args, Clone)]
-pub struct TrackArgs {
-    /// Existing PR number to update (omit to create a new PR)
-    #[arg(long, conflicts_with = "bookmark")]
-    pub pr: Option<u64>,
+pub struct ShowArgs {}
 
-    /// Bookmark name (creates one if not specified; incompatible with --pr)
-    #[arg(short, long)]
-    pub bookmark: Option<String>,
+#[derive(clap::Args, Clone)]
+pub struct LogArgs {
+    /// Show JJ changes that are not associated with any PRs
+    #[arg(long)]
+    pub all: bool,
+}
 
-    /// Revision (default: @ or bookmark target if -b is set)
-    #[arg(short, long)]
-    pub revision: Option<String>,
+#[derive(clap::Args, Clone)]
+pub struct SyncArgs {
+    /// Show what would be done without doing it
+    #[arg(long)]
+    pub dry_run: bool,
+}
 
-    /// PR title (used when creating)
+#[derive(clap::Args, Clone)]
+pub struct CreateArgs {
+    /// Bookmark name (must already exist)
+    pub bookmark: String,
+
+    /// PR title (default: first line of tip commit description)
     #[arg(short, long)]
     pub title: Option<String>,
 
-    /// PR description/body (used when creating)
+    /// PR description/body
     #[arg(long)]
     pub body: Option<String>,
 }
