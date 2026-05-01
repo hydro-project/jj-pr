@@ -39,6 +39,9 @@ pub struct RepoState {
 
     /// Bookmarks with conflicting targets (user must resolve with `jj bookmark`).
     pub bookmarks_conflicted: BTreeSet<String>,
+
+    /// The node containing the working copy (`@`), if any.
+    pub current_node: Option<NodeKey>,
 }
 
 /// Represents a contiguous set of changes/commits within the JJ graph, usually for a PR.
@@ -82,6 +85,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         pr_needs_push,
         node_needs_sync,
         bookmarks_conflicted,
+        current_node: None,
     };
 
     let (cid_pr_tip, pr_local) = {
@@ -318,6 +322,12 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         }
     }
 
+    // Set current_node from the working copy entry.
+    repo_state.current_node = jj_entries
+        .iter()
+        .find(|e| e.is_working_copy)
+        .and_then(|e| repo_state.commit_node.get(&*e.commit.commit_id).copied());
+
     Ok(repo_state)
 }
 
@@ -532,15 +542,22 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
             .map(|&dag_node| Ancestor::Parent(dag_node))
             .collect::<Vec<_>>();
 
-        let (message, glyph) = match state.nodes.get(node_key).unwrap() {
-            Node::Root => {
-                let message = crate::style::root();
-                (message, crate::style::GLYPH_IMMUTABLE.to_owned())
+        let is_current = state.current_node == Some(node_key);
+
+        let node = state.nodes.get(node_key).unwrap();
+        let glyph = if is_current {
+            crate::style::glyph_current()
+        } else {
+            match node {
+                Node::Root | Node::TrunkTip => crate::style::glyph_immutable(),
+                Node::Pr(_) => crate::style::GLYPH_MUTABLE.to_owned(),
+                Node::Ambiguous { .. } => crate::style::warn(crate::style::GLYPH_WARNING),
             }
-            Node::TrunkTip => {
-                let message = crate::style::trunk();
-                (message, crate::style::GLYPH_IMMUTABLE.to_owned())
-            }
+        };
+
+        let message = match node {
+            Node::Root => crate::style::root(),
+            Node::TrunkTip => crate::style::trunk(),
             Node::Pr(pr_id) => {
                 let gh_pr = prs.get(pr_id).unwrap();
                 let sync_indicator = if state.node_needs_sync.contains_key(node_key) {
@@ -548,14 +565,13 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
                 } else {
                     ""
                 };
-                let message = format!(
+                format!(
                     "{}{sync_indicator}  {}  {}\n{}",
                     crate::style::pr_num(*pr_id, Some(&gh_pr.url)),
                     crate::style::status(gh_pr.state, gh_pr.is_draft),
                     crate::style::bookmark(&gh_pr.head_ref_name),
                     gh_pr.title,
-                );
-                (message, crate::style::GLYPH_MUTABLE.to_owned())
+                )
             }
             Node::Ambiguous {
                 branch_prs,
@@ -601,8 +617,7 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
                         crate::style::dim("(multiple sources for same PR — abandon stale commits or restructure)")
                     }
                 };
-                let message = format!("{line1}\n{line2}");
-                (message, crate::style::warn(crate::style::GLYPH_WARNING))
+                format!("{line1}\n{line2}")
             }
         };
 
@@ -638,10 +653,14 @@ pub fn render_log(
         };
 
         // Build the glyph.
-        let glyph = match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
-            Some(Node::Root | Node::TrunkTip) => crate::style::GLYPH_IMMUTABLE.to_owned(),
-            Some(Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
-            Some(Node::Pr(_)) | None => crate::style::GLYPH_MUTABLE.to_owned(),
+        let glyph = if jj_entry.is_working_copy {
+            crate::style::glyph_current()
+        } else {
+            match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
+                Some(Node::Root | Node::TrunkTip) => crate::style::glyph_immutable(),
+                Some(Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
+                Some(Node::Pr(_)) | None => crate::style::GLYPH_MUTABLE.to_owned(),
+            }
         };
 
         // First line: change_id commit_id [bookmarks] [PR info]
@@ -736,12 +755,7 @@ pub fn render_log(
     }
 
     // Print root.
-    let row = renderer.next_row(
-        None,
-        Vec::new(),
-        crate::style::GLYPH_IMMUTABLE.to_owned(),
-        crate::style::root(),
-    );
+    let row = renderer.next_row(None, Vec::new(), crate::style::glyph_immutable(), crate::style::root());
     write!(out, "{row}")?;
 
     Ok(())

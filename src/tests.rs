@@ -67,6 +67,7 @@ fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str]
         immutable: is_trunk_tip,
         is_trunk_tip,
         empty: false,
+        is_working_copy: false,
     }
 }
 
@@ -81,6 +82,11 @@ fn with_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
 
 fn with_empty(mut e: JjLogEntry) -> JjLogEntry {
     e.empty = true;
+    e
+}
+
+fn with_working_copy(mut e: JjLogEntry) -> JjLogEntry {
+    e.is_working_copy = true;
     e
 }
 
@@ -158,6 +164,27 @@ fn single_pr() {
     insta::assert_snapshot!("single_pr_show", render_show(&f));
     insta::assert_snapshot!("single_pr_log", render_log(&f, false));
     insta::assert_snapshot!("single_pr_sync", plan_sync(&f));
+}
+
+#[test]
+fn current_change() {
+    // @ is on the tip commit of PR #2 in a stack.
+    let f = fixture(
+        vec![
+            with_working_copy(with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            )),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+    );
+    insta::assert_snapshot!("current_change_show", render_show(&f));
+    insta::assert_snapshot!("current_change_log", render_log(&f, false));
 }
 
 #[test]

@@ -14,6 +14,12 @@ pub const LABEL_ROOT: &str = "root()::";
 // --- Styles ---
 const BOLD: Style = Style::new().effects(Effects::BOLD);
 const DIM: Style = Style::new().effects(Effects::DIMMED);
+const IMMUTABLE: Style = Style::new()
+    .fg_color(Some(anstyle::Color::Ansi(AnsiColor::Cyan)))
+    .effects(Effects::BOLD);
+const CURRENT: Style = Style::new()
+    .fg_color(Some(anstyle::Color::Ansi(AnsiColor::Green)))
+    .effects(Effects::BOLD);
 const PR_NUM: Style = Style::new()
     .fg_color(Some(anstyle::Color::Ansi(AnsiColor::Cyan)))
     .effects(Effects::BOLD);
@@ -121,6 +127,14 @@ pub fn bookmark_label(name: &str) -> String {
 #[expect(dead_code, reason = "available for UI")]
 pub fn bold(text: &str) -> String {
     styled(BOLD, text)
+}
+
+pub fn glyph_immutable() -> String {
+    styled(IMMUTABLE, GLYPH_IMMUTABLE)
+}
+
+pub fn glyph_current() -> String {
+    styled(CURRENT, "@")
 }
 
 pub fn dim(text: &str) -> String {
