@@ -356,7 +356,11 @@ fn decide(
             {
                 // Special case: if `trailer_prs` is set, but the PR is not tracked locally, we use it alone.
                 // TODO(mingwei): maybe this should only be for merged PRs?
-                (Some(Node::Pr(trailer_pr_num)), None)
+                // Reuse an existing child node if it already represents this PR.
+                let existing_child = child_nodes.iter().find_map(|(nk, node)| {
+                    matches!(node, Node::Pr(pr) if *pr == trailer_pr_num).then_some(nk)
+                });
+                (Some(Node::Pr(trailer_pr_num)), existing_child)
             } else {
                 decide_combine_child_nodes(child_nodes)
             }
