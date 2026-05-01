@@ -1,6 +1,5 @@
 ---
 source: src/tests.rs
-assertion_line: 45
 expression: plan_sync(&f)
 input_file: src/fixtures/hydro-merged-many.json.gz
 ---

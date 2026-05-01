@@ -1,6 +1,5 @@
 ---
 source: src/tests.rs
-assertion_line: 43
 expression: render_show(&f)
 input_file: src/fixtures/hydro-merged-many.json.gz
 ---

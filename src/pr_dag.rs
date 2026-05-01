@@ -65,6 +65,21 @@ pub enum Node {
     },
 }
 
+impl Node {
+    /// Whether this node contains the given PR.
+    fn contains_pr(&self, pr_num: PrNum) -> bool {
+        match self {
+            Node::Root => false,
+            Node::TrunkTip => false,
+            Node::Pr(other_pr_num) => *other_pr_num == pr_num,
+            Node::Ambiguous {
+                branch_prs,
+                trailer_prs,
+            } => branch_prs.contains(&pr_num) || trailer_prs.contains(&pr_num),
+        }
+    }
+}
+
 /// Build the repo state from raw jj and GitHub data.
 ///
 /// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
@@ -96,7 +111,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         // TODO(mingwei): handle multiple PRs sharing the same bookmark (e.g. Open + Closed/Merged).
         let head_to_pr: HashMap<&str, &GhPr> = prs.values().map(|&pr| (&*pr.head_ref_name, pr)).collect();
 
-        let mut pr_local = BTreeSet::new();
+        let mut pr_local = HashSet::new();
 
         for jj_entry in jj_entries.iter() {
             for local_bookmark in jj_entry.local_bookmarks.iter() {
@@ -164,6 +179,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         }
 
         // Traverse in reverse topological order (children to parents to `trunk()`).
+        let mut already_found_prs = HashSet::new();
         for jj_entry in jj_entries.iter() {
             let cid = &*jj_entry.commit.commit_id;
             let _cid_scope = tracing::info_span!("commit", %cid).entered();
@@ -177,6 +193,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
             //
             // We also consider global info:
             // - If the trailer PR num has a local branch tracking it.
+            // - If there is already a node for the PR.
             //
             let is_trunk_tip = jj_entry.is_trunk_tip;
             let tip_pr_nums = cid_pr_tip.get(cid).map(Deref::deref).unwrap_or_default();
@@ -193,7 +210,14 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
             let trailer_pr_num = jj::parse_pr_trailer(&jj_entry.commit.description);
 
             // Main logic triggered here: decide how to assign the node.
-            let (node, node_key) = decide(is_trunk_tip, tip_pr_nums, child_nodes, trailer_pr_num, &pr_local);
+            let (node, node_key) = decide(
+                is_trunk_tip,
+                tip_pr_nums,
+                child_nodes,
+                trailer_pr_num,
+                &pr_local,
+                &already_found_prs,
+            );
 
             // Insert or update
             {
@@ -209,10 +233,25 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                     }
                     (Some(new_node), None) => {
                         tracing::debug!("Assigning commit to new node");
+                        if let Node::Pr(pr_num) = new_node {
+                            let new = already_found_prs.insert(pr_num);
+                            assert!(
+                                new,
+                                "bug: attempted to create a new PR node for an already-found PR: {}",
+                                pr_num
+                            );
+                        }
                         repo_state.nodes.insert(new_node)
                     }
                     (Some(updated_node), Some(node_key)) => {
                         tracing::debug!("Assigning commit to existing and updating");
+                        if let Node::Pr(pr_num) = updated_node {
+                            assert!(
+                                already_found_prs.contains(&pr_num),
+                                "bug: attempted to update an *existing* node to a be a *new* PR node: {}",
+                                pr_num
+                            );
+                        }
                         repo_state.nodes[node_key] = updated_node;
                         node_key
                     }
@@ -342,7 +381,8 @@ fn decide(
     tip_pr_nums: &[PrNum],
     child_nodes: SparseSecondaryMap<NodeKey, &Node>,
     trailer_pr_num: Option<PrNum>,
-    pr_local: &BTreeSet<PrNum>,
+    pr_local: &HashSet<PrNum>,
+    already_found_prs: &HashSet<PrNum>,
 ) -> (Option<Node>, Option<NodeKey>) {
     if is_trunk_tip {
         return (Some(Node::TrunkTip), None);
@@ -350,21 +390,7 @@ fn decide(
 
     let (mut node, mut node_key) = match tip_pr_nums {
         // If no tip PR nums, inherit from the children.
-        [] => {
-            if let Some(trailer_pr_num) = trailer_pr_num
-                && !pr_local.contains(&trailer_pr_num)
-            {
-                // Special case: if `trailer_prs` is set, but the PR is not tracked locally, we use it alone.
-                // TODO(mingwei): maybe this should only be for merged PRs?
-                // Reuse an existing child node if it already represents this PR.
-                let existing_child = child_nodes.iter().find_map(|(nk, node)| {
-                    matches!(node, Node::Pr(pr) if *pr == trailer_pr_num).then_some(nk)
-                });
-                (Some(Node::Pr(trailer_pr_num)), existing_child)
-            } else {
-                decide_combine_child_nodes(child_nodes)
-            }
-        }
+        [] => decide_combine_child_nodes(child_nodes),
         // If single tip PR num, use it.
         &[single] => (Some(Node::Pr(single)), None),
         // If there are multiple, ambiguous.
@@ -379,42 +405,61 @@ fn decide(
     };
     // Finally, incorporate the trailer PR num.
     if let Some(trailer_pr_num) = trailer_pr_num {
-        (node, node_key) = if let Some(node) = node {
-            let (node, node_key) = match node {
-                Node::Root => unreachable!(),
-                Node::TrunkTip => unreachable!(),
-                Node::Pr(same_pr_num) if same_pr_num == trailer_pr_num => (node, node_key),
-                Node::Pr(other_pr_num) => (
-                    Node::Ambiguous {
-                        branch_prs: [other_pr_num].into(),
-                        trailer_prs: [trailer_pr_num].into(),
-                    },
-                    None,
-                ),
-                Node::Ambiguous {
-                    branch_prs,
-                    mut trailer_prs,
-                } => {
-                    trailer_prs.insert(trailer_pr_num);
-                    (
-                        Node::Ambiguous {
-                            branch_prs,
-                            trailer_prs,
-                        },
-                        node_key, // Update existing.
-                    )
+        (node, node_key) = 'a: {
+            // Special case: if the `trailer_pr_num` is set but the PR is not tracked locally, try to treat this as the tip
+            // of a merged PR with a deleted branch (needs abandoning).
+            // TODO(mingwei): maybe this should only be for merged PRs?
+            if !pr_local.contains(&trailer_pr_num) {
+                let _maybe_deleted_scope = tracing::info_span!("maybe_deleted", %trailer_pr_num).entered();
+                tracing::debug!("Found trailer PR num for change which may be the tip of a deleted branch");
+
+                if already_found_prs.contains(&trailer_pr_num) {
+                    tracing::debug!("PR num is already tracked, ignoring");
+                } else if node.as_ref().is_some_and(|n| n.contains_pr(trailer_pr_num)) {
+                    tracing::debug!("PR num was already found for this commit otherwise, ignoring");
+                } else {
+                    tracing::debug!("PR num is not tracked, treating as tip of PR");
+                    break 'a (Some(Node::Pr(trailer_pr_num)), None);
                 }
-            };
-            (Some(node), node_key)
-        } else {
-            // A trailer PR num alone is not enough to start a PR node.
-            (
-                Some(Node::Ambiguous {
-                    branch_prs: BTreeSet::new(),
-                    trailer_prs: [trailer_pr_num].into(),
-                }),
-                None,
-            )
+            }
+
+            if let Some(node) = node {
+                let (node, node_key) = match node {
+                    Node::Root => unreachable!(),
+                    Node::TrunkTip => unreachable!(),
+                    Node::Pr(same_pr_num) if same_pr_num == trailer_pr_num => (node, node_key),
+                    Node::Pr(other_pr_num) => (
+                        Node::Ambiguous {
+                            branch_prs: [other_pr_num].into(),
+                            trailer_prs: [trailer_pr_num].into(),
+                        },
+                        None,
+                    ),
+                    Node::Ambiguous {
+                        branch_prs,
+                        mut trailer_prs,
+                    } => {
+                        trailer_prs.insert(trailer_pr_num);
+                        (
+                            Node::Ambiguous {
+                                branch_prs,
+                                trailer_prs,
+                            },
+                            node_key, // Update existing.
+                        )
+                    }
+                };
+                (Some(node), node_key)
+            } else {
+                // A trailer PR num alone is not enough to start a PR node.
+                (
+                    Some(Node::Ambiguous {
+                        branch_prs: BTreeSet::new(),
+                        trailer_prs: [trailer_pr_num].into(),
+                    }),
+                    None,
+                )
+            }
         };
     }
     (node, node_key)
