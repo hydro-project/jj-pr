@@ -708,7 +708,10 @@ pub fn render_log(
         } else {
             String::new()
         };
-        let line2 = format!("{empty_prefix}{}", crate::style::description_first_line(&jj_entry.commit.description));
+        let line2 = format!(
+            "{empty_prefix}{}",
+            crate::style::description_first_line(&jj_entry.commit.description)
+        );
 
         let message = format!("{line1}\n{line2}");
 
