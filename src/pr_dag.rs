@@ -834,7 +834,12 @@ pub enum SyncAction {
     /// Rebase children of a merged PR onto trunk.
     RebaseChildren { tip_commit_id: String, pr: PrNum },
     /// Abandon commits of a merged PR and delete its bookmark if present.
-    AbandonMerged { tip_commit_id: String, pr: PrNum, bookmark: Option<String> },
+    AbandonMerged {
+        tip_commit_id: String,
+        pr: PrNum,
+        bookmark: String,
+        bookmark_exists: bool,
+    },
     /// Push bookmarks that differ from remote.
     Push { bookmarks: Vec<(PrNum, String)> },
     /// Update a PR's base branch on GitHub.
@@ -855,11 +860,11 @@ impl fmt::Display for SyncAction {
             SyncAction::RebaseChildren { pr, .. } => {
                 write!(f, "rebase children of {pr} onto trunk()")
             }
-            SyncAction::AbandonMerged { pr, bookmark, .. } => {
-                if let Some(bm) = bookmark {
-                    write!(f, "abandon merged {pr} ({bm})")
+            SyncAction::AbandonMerged { pr, bookmark, bookmark_exists, .. } => {
+                if *bookmark_exists {
+                    write!(f, "abandon merged {pr} (delete {bookmark})")
                 } else {
-                    write!(f, "abandon merged {pr}")
+                    write!(f, "abandon merged {pr} ({bookmark} already deleted)")
                 }
             }
             SyncAction::Push { bookmarks } => {
@@ -941,7 +946,8 @@ pub fn plan_sync(
         actions.push(SyncAction::AbandonMerged {
             tip_commit_id,
             pr: *pr_num,
-            bookmark: local_bookmark_names.contains(&*gh_pr.head_ref_name).then(|| gh_pr.head_ref_name.clone()),
+            bookmark: gh_pr.head_ref_name.clone(),
+            bookmark_exists: local_bookmark_names.contains(&*gh_pr.head_ref_name),
         });
     }
 
@@ -1018,14 +1024,20 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 eprintln!("Rebasing children of {} onto trunk()", crate::style::pr_num(*pr, None),);
                 jj::rebase(&format!("commit_id({tip_commit_id})+"), "trunk()")?;
             }
-            SyncAction::AbandonMerged { tip_commit_id, pr, bookmark } => {
-                eprintln!(
-                    "Abandoning merged {}{}",
-                    crate::style::pr_num(*pr, None),
-                    bookmark.as_ref().map(|b| format!(" ({})", crate::style::bookmark(b))).unwrap_or_default(),
-                );
-                if let Some(bookmark) = bookmark {
+            SyncAction::AbandonMerged { tip_commit_id, pr, bookmark, bookmark_exists } => {
+                if *bookmark_exists {
+                    eprintln!(
+                        "Abandoning merged {} (delete {})",
+                        crate::style::pr_num(*pr, None),
+                        crate::style::bookmark(bookmark),
+                    );
                     jj::bookmark_delete(bookmark)?;
+                } else {
+                    eprintln!(
+                        "Abandoning merged {} ({} already deleted)",
+                        crate::style::pr_num(*pr, None),
+                        crate::style::bookmark(bookmark),
+                    );
                 }
                 let revset = format!("trunk()..commit_id({tip_commit_id})");
                 jj::abandon(&revset)?;

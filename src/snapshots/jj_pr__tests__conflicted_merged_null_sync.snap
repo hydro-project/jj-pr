@@ -2,4 +2,4 @@
 source: src/tests.rs
 expression: plan_sync(&f)
 ---
-abandon merged #1 (feat)
+abandon merged #1 (delete feat)
