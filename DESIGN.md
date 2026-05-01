@@ -5,9 +5,9 @@
 jj-pr maps a Jujutsu (jj) change graph onto GitHub Pull Requests.
 
 Core philosophy:
+- **No hidden state** — everything is derived at runtime from `jj`, `gh`, and commit trailers
 - **jj owns structure** (DAG of changes)
 - **GitHub owns presentation** (PR titles, descriptions, review state)
-- **No hidden state** — everything is derived at runtime from `jj`, `gh`, and commit trailers
 - **Robust to invalid states** — ambiguities and inconsistencies are surfaced as `Ambiguous` nodes with user-facing hints, rather than hard errors. Internal invariant violations (e.g., DAG cycles) panic with `bug:` messages.
 
 ## Data Model
