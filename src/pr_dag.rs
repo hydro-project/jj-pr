@@ -248,7 +248,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                         if let Node::Pr(pr_num) = updated_node {
                             assert!(
                                 already_found_prs.contains(&pr_num),
-                                "bug: attempted to update an *existing* node to a be a *new* PR node: {}",
+                                "bug: attempted to update an *existing* node to be a *new* PR node: {}",
                                 pr_num
                             );
                         }
