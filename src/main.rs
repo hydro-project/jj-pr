@@ -26,8 +26,8 @@ pub(crate) struct InputData {
 }
 
 impl InputData {
-    pub(crate) fn prs_map(&self) -> BTreeMap<gh::PrNum, gh::GhPr> {
-        self.prs.iter().map(|pr| (pr.number, pr.clone())).collect()
+    pub(crate) fn prs_map(&self) -> BTreeMap<gh::PrNum, &gh::GhPr> {
+        self.prs.iter().map(|pr| (pr.number, pr)).collect()
     }
 }
 
