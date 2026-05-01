@@ -4,5 +4,5 @@ expression: plan_sync(&f)
 input_file: src/fixtures/jj-pr-ambiguous.json.gz
 ---
 rebase children of #3 onto trunk()
-abandon merged #3
+abandon merged #3 (mingwei/pull-parent-pr-out-of-child)
 push: #7 (mingwei/pull-parent-pr-out-of-child), #5 (mingwei/clickable-pr), #4 (mingwei/confirm)

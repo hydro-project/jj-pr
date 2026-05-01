@@ -891,6 +891,12 @@ pub fn plan_sync(
 
     let mut actions = Vec::new();
 
+    // Bookmark names that exist locally (for determining if we need to delete during abandon).
+    let local_bookmark_names: HashSet<&str> = jj_entries
+        .iter()
+        .flat_map(|e| e.local_bookmarks.iter().map(|bm| bm.name.as_str()))
+        .collect();
+
     // 1. Stamp missing trailers.
     for jj_entry in jj_entries {
         let cid = &*jj_entry.commit.commit_id;
@@ -932,15 +938,10 @@ pub fn plan_sync(
                 pr: *pr_num,
             });
         }
-        // Check if the local bookmark still exists (it may already be deleted).
-        let has_local_bookmark = jj_entries.iter().any(|e| {
-            state.commit_node.get(&*e.commit.commit_id) == Some(&nk)
-                && e.local_bookmarks.iter().any(|bm| bm.name == gh_pr.head_ref_name)
-        });
         actions.push(SyncAction::AbandonMerged {
             tip_commit_id,
             pr: *pr_num,
-            bookmark: has_local_bookmark.then(|| gh_pr.head_ref_name.clone()),
+            bookmark: local_bookmark_names.contains(&*gh_pr.head_ref_name).then(|| gh_pr.head_ref_name.clone()),
         });
     }
 
