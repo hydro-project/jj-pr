@@ -592,8 +592,8 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                     }
                     (true, false) => crate::style::dim("(restructure PRs to resolve — stack one on the other)"),
                     (false, true) => crate::style::dim("(edit commit description to fix PR: trailer)"),
-                    // Single branch PR with matching trailer — not truly ambiguous.
-                    (false, false) => crate::style::dim("(commits not at PR tip — use `jj-pr log` for details)"),
+                    // Same PR claimed by both branch and orphan trailer — ambiguous ownership.
+                    (false, false) => crate::style::dim("(multiple sources for same PR — abandon stale commits or restructure)"),
                 };
                 let message = format!("{line1}\n{line2}");
                 (message, crate::style::warn(crate::style::GLYPH_WARNING))
