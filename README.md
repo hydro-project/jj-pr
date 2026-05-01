@@ -3,7 +3,8 @@
 A CLI tool that syncs [Jujutsu (jj)](https://github.com/jj-vcs/jj) bookmarks with GitHub Pull Requests.
 
 **Core philosophy:**
-- **No hidden state** — everything is derived at runtime from `jj`, `gh`, and "PR: #1234" description trailers
+- **No hidden state** — everything is derived at runtime from `jj`, `gh`, and change description trailers like
+  `PR: #1234`
 - **jj owns structure** — the DAG of changes
 - **GitHub owns presentation** — PR titles, descriptions, review state
 - **Invalid states are first class** — ambiguities and inconsistencies are clearly displayed to you and don't halt your
@@ -18,7 +19,7 @@ cargo install --git https://github.com/hydro-project/jj-pr --locked
 Also requires `jj` and `gh` (GitHub CLI) on your PATH.
 
 To install `jj`:
-```
+```sh
 cargo install jj-cli --bin jj --locked
 ```
 
@@ -41,7 +42,7 @@ Note: `jj-pr` does not fetch for you — fetch first to update the local repo to
 jj-pr          # or: jj-pr show
 ```
 
-```
+```apl
 ○  PR #2804  Ready  mingwei/fix-inline-tasks
 │  fix(dfir_rs): defer `_counter` task spawning via `Context::request_task` buffer
 │ ○  PR #2746  Ready  mingwei/sqs-rebase
@@ -107,7 +108,7 @@ jj-pr sync
 This stamps missing trailers, rebases children of merged PRs onto `trunk()`, abandons merged commits, pushes affected
 bookmarks, and updates GitHub base branches. You'll be prompted before any changes are applied.
 
-```sh
+```apl
   stamp #15 trailer on knynvqkoypsy
   stamp #14 trailer on olqtvyvtvzyq
   push: #15 (my-feature-a)
@@ -135,7 +136,7 @@ Created PR #16
 
 PR membership is determined from the jj DAG structure: each commit belongs to the PR whose bookmark is its nearest
 descendant. Commits shared between multiple PRs become ambiguous nodes. Trailers (`PR: #1234`) are appended to change
-descriptions a safety net. See the `decide()` function in `pr_dag.rs` for the full membership algorithm.
+descriptions as a safety net. See the `decide()` function in `pr_dag.rs` for the full membership algorithm.
 
 See [DESIGN.md](DESIGN.md) for the full design rationale.
 
