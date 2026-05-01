@@ -9,7 +9,9 @@ on:
     - cron: "22 04 * * *" # Daily at 9:22 PM PDT, 8:22 PM PST.
   workflow_dispatch:
 
-permissions: {}
+permissions:
+  contents: read
+  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.pull_request.base.sha }}-${{ github.event_name }}
@@ -43,5 +45,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install jj
+        run: cargo install --locked jj-cli
 
       - run: ./check.bash
