@@ -122,7 +122,8 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                         // Conflict! Check if this is a merged PR with a deleted remote
                         // (one side is null). If so, we can auto-resolve by deleting the bookmark.
                         let has_null_side = local_bookmark.target.iter().any(|t| t.is_none());
-                        let is_local_side = local_bookmark.target.first() == Some(&Some(jj_entry.commit.commit_id.clone()));
+                        let is_local_side =
+                            local_bookmark.target.first() == Some(&Some(jj_entry.commit.commit_id.clone()));
                         if has_null_side && is_local_side && pr.state == gh::PrState::Merged {
                             // Treat as the tip of a merged PR — bookmark will be deleted during abandon.
                             cid_pr_tip
@@ -860,7 +861,12 @@ impl fmt::Display for SyncAction {
             SyncAction::RebaseChildren { pr, .. } => {
                 write!(f, "rebase children of {pr} onto trunk()")
             }
-            SyncAction::AbandonMerged { pr, bookmark, bookmark_exists, .. } => {
+            SyncAction::AbandonMerged {
+                pr,
+                bookmark,
+                bookmark_exists,
+                ..
+            } => {
                 if *bookmark_exists {
                     write!(f, "abandon merged {pr} (delete {bookmark})")
                 } else {
@@ -1024,7 +1030,12 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 eprintln!("Rebasing children of {} onto trunk()", crate::style::pr_num(*pr, None),);
                 jj::rebase(&format!("commit_id({tip_commit_id})+"), "trunk()")?;
             }
-            SyncAction::AbandonMerged { tip_commit_id, pr, bookmark, bookmark_exists } => {
+            SyncAction::AbandonMerged {
+                tip_commit_id,
+                pr,
+                bookmark,
+                bookmark_exists,
+            } => {
                 if *bookmark_exists {
                     eprintln!(
                         "Abandoning merged {} (delete {})",
