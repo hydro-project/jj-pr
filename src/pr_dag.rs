@@ -39,6 +39,9 @@ pub struct RepoState {
 
     /// Bookmarks with conflicting targets (user must resolve with `jj bookmark`).
     pub bookmarks_conflicted: BTreeSet<String>,
+
+    /// The node containing the working copy (`@`), if any.
+    pub current_node: Option<NodeKey>,
 }
 
 /// Represents a contiguous set of changes/commits within the JJ graph, usually for a PR.
@@ -65,7 +68,12 @@ pub enum Node {
 /// Build the repo state from raw jj and GitHub data.
 ///
 /// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
-pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> Result<RepoState> {
+pub fn build(
+    jj_entries: &[JjLogEntry],
+    prs: &BTreeMap<PrNum, &GhPr>,
+    default_branch: &str,
+    current_commit: Option<&CommitId<str>>,
+) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
     let mut node_preds = SecondaryMap::new();
@@ -82,6 +90,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         pr_needs_push,
         node_needs_sync,
         bookmarks_conflicted,
+        current_node: None,
     };
 
     let (cid_pr_tip, pr_local) = {
@@ -318,6 +327,9 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         }
     }
 
+    // Set current_node from the working copy commit.
+    repo_state.current_node = current_commit.and_then(|cid| repo_state.commit_node.get(cid).copied());
+
     Ok(repo_state)
 }
 
@@ -532,14 +544,26 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
             .map(|&dag_node| Ancestor::Parent(dag_node))
             .collect::<Vec<_>>();
 
+        let is_current = state.current_node == Some(node_key);
+
         let (message, glyph) = match state.nodes.get(node_key).unwrap() {
             Node::Root => {
                 let message = crate::style::root();
-                (message, crate::style::GLYPH_IMMUTABLE.to_owned())
+                let glyph = if is_current {
+                    crate::style::glyph_current()
+                } else {
+                    crate::style::glyph_immutable()
+                };
+                (message, glyph)
             }
             Node::TrunkTip => {
                 let message = crate::style::trunk();
-                (message, crate::style::GLYPH_IMMUTABLE.to_owned())
+                let glyph = if is_current {
+                    crate::style::glyph_current()
+                } else {
+                    crate::style::glyph_immutable()
+                };
+                (message, glyph)
             }
             Node::Pr(pr_id) => {
                 let gh_pr = prs.get(pr_id).unwrap();
@@ -555,7 +579,12 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
                     crate::style::bookmark(&gh_pr.head_ref_name),
                     gh_pr.title,
                 );
-                (message, crate::style::GLYPH_MUTABLE.to_owned())
+                let glyph = if is_current {
+                    crate::style::glyph_current()
+                } else {
+                    crate::style::GLYPH_MUTABLE.to_owned()
+                };
+                (message, glyph)
             }
             Node::Ambiguous {
                 branch_prs,
@@ -602,7 +631,12 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
                     }
                 };
                 let message = format!("{line1}\n{line2}");
-                (message, crate::style::warn(crate::style::GLYPH_WARNING))
+                let glyph = if is_current {
+                    crate::style::glyph_current()
+                } else {
+                    crate::style::warn(crate::style::GLYPH_WARNING)
+                };
+                (message, glyph)
             }
         };
 
@@ -618,6 +652,7 @@ pub fn render_log(
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     show_all: bool,
+    current_commit: Option<&CommitId<str>>,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
     let known_entries = jj_entries.iter().map(|e| &*e.commit.commit_id).collect::<BTreeSet<_>>();
@@ -638,10 +673,15 @@ pub fn render_log(
         };
 
         // Build the glyph.
-        let glyph = match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
-            Some(Node::Root | Node::TrunkTip) => crate::style::GLYPH_IMMUTABLE.to_owned(),
-            Some(Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
-            Some(Node::Pr(_)) | None => crate::style::GLYPH_MUTABLE.to_owned(),
+        let is_current = current_commit == Some(&*jj_entry.commit.commit_id);
+        let glyph = if is_current {
+            crate::style::glyph_current()
+        } else {
+            match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
+                Some(Node::Root | Node::TrunkTip) => crate::style::glyph_immutable(),
+                Some(Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
+                Some(Node::Pr(_)) | None => crate::style::GLYPH_MUTABLE.to_owned(),
+            }
         };
 
         // First line: change_id commit_id [bookmarks] [PR info]
@@ -736,12 +776,7 @@ pub fn render_log(
     }
 
     // Print root.
-    let row = renderer.next_row(
-        None,
-        Vec::new(),
-        crate::style::GLYPH_IMMUTABLE.to_owned(),
-        crate::style::root(),
-    );
+    let row = renderer.next_row(None, Vec::new(), crate::style::glyph_immutable(), crate::style::root());
     write!(out, "{row}")?;
 
     Ok(())

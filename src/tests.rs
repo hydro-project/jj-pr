@@ -6,7 +6,13 @@ use crate::pr_dag;
 fn render_show(input: &InputData) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.current_commit.as_deref(),
+    )
+    .unwrap();
     let mut buf = Vec::new();
     pr_dag::render_show(&state, &prs, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
@@ -15,15 +21,35 @@ fn render_show(input: &InputData) -> String {
 fn render_log(input: &InputData, show_all: bool) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.current_commit.as_deref(),
+    )
+    .unwrap();
     let mut buf = Vec::new();
-    pr_dag::render_log(&state, &prs, &input.jj_entries, show_all, &mut buf).unwrap();
+    pr_dag::render_log(
+        &state,
+        &prs,
+        &input.jj_entries,
+        show_all,
+        input.current_commit.as_deref(),
+        &mut buf,
+    )
+    .unwrap();
     String::from_utf8(buf).unwrap()
 }
 
 fn plan_sync(input: &InputData) -> String {
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.current_commit.as_deref(),
+    )
+    .unwrap();
     match pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch) {
         Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
         Err(e) => format!("ERROR: {e}"),
@@ -137,6 +163,7 @@ fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>) -> InputData {
         jj_entries: entries,
         prs,
         default_branch: "main".to_owned(),
+        current_commit: None,
     }
 }
 
@@ -158,6 +185,28 @@ fn single_pr() {
     insta::assert_snapshot!("single_pr_show", render_show(&f));
     insta::assert_snapshot!("single_pr_log", render_log(&f, false));
     insta::assert_snapshot!("single_pr_sync", plan_sync(&f));
+}
+
+#[test]
+fn current_change() {
+    // @ is on the tip commit of PR #2 in a stack.
+    let mut f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+    );
+    f.current_commit = Some(CommitId("b1".to_owned()));
+    insta::assert_snapshot!("current_change_show", render_show(&f));
+    insta::assert_snapshot!("current_change_log", render_log(&f, false));
 }
 
 #[test]
