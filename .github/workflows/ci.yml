@@ -40,8 +40,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: pre_job
-    strategy:
-      fail-fast: false
 
     steps:
       - name: Checkout sources
