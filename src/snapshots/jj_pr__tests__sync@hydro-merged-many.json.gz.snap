@@ -1,0 +1,20 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/hydro-merged-many.json.gz
+---
+rebase children of #2801 onto trunk()
+abandon merged #2801
+rebase children of #2801 onto trunk()
+abandon merged #2801
+rebase children of #2801 onto trunk()
+abandon merged #2801
+rebase children of #2801 onto trunk()
+abandon merged #2801
+rebase children of #2801 onto trunk()
+abandon merged #2801
+rebase children of #2801 onto trunk()
+abandon merged #2801
+rebase children of #2801 onto trunk()
+abandon merged #2801
+push: #2829 (mingwei/singleton-refs-dfir), #2811 (mingwei/delete-schedule-subgraph-args), #2810 (mingwei/delete-metrics-slotvec), #2812 (mingwei/delete-subgraph-id)
