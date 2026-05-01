@@ -546,25 +546,20 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
 
         let is_current = state.current_node == Some(node_key);
 
-        let (message, glyph) = match state.nodes.get(node_key).unwrap() {
-            Node::Root => {
-                let message = crate::style::root();
-                let glyph = if is_current {
-                    crate::style::glyph_current()
-                } else {
-                    crate::style::glyph_immutable()
-                };
-                (message, glyph)
+        let node = state.nodes.get(node_key).unwrap();
+        let glyph = if is_current {
+            crate::style::glyph_current()
+        } else {
+            match node {
+                Node::Root | Node::TrunkTip => crate::style::glyph_immutable(),
+                Node::Pr(_) => crate::style::GLYPH_MUTABLE.to_owned(),
+                Node::Ambiguous { .. } => crate::style::warn(crate::style::GLYPH_WARNING),
             }
-            Node::TrunkTip => {
-                let message = crate::style::trunk();
-                let glyph = if is_current {
-                    crate::style::glyph_current()
-                } else {
-                    crate::style::glyph_immutable()
-                };
-                (message, glyph)
-            }
+        };
+
+        let message = match node {
+            Node::Root => crate::style::root(),
+            Node::TrunkTip => crate::style::trunk(),
             Node::Pr(pr_id) => {
                 let gh_pr = prs.get(pr_id).unwrap();
                 let sync_indicator = if state.node_needs_sync.contains_key(node_key) {
@@ -572,19 +567,13 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
                 } else {
                     ""
                 };
-                let message = format!(
+                format!(
                     "{}{sync_indicator}  {}  {}\n{}",
                     crate::style::pr_num(*pr_id, Some(&gh_pr.url)),
                     crate::style::status(gh_pr.state, gh_pr.is_draft),
                     crate::style::bookmark(&gh_pr.head_ref_name),
                     gh_pr.title,
-                );
-                let glyph = if is_current {
-                    crate::style::glyph_current()
-                } else {
-                    crate::style::GLYPH_MUTABLE.to_owned()
-                };
-                (message, glyph)
+                )
             }
             Node::Ambiguous {
                 branch_prs,
@@ -630,13 +619,7 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
                         crate::style::dim("(multiple sources for same PR — abandon stale commits or restructure)")
                     }
                 };
-                let message = format!("{line1}\n{line2}");
-                let glyph = if is_current {
-                    crate::style::glyph_current()
-                } else {
-                    crate::style::warn(crate::style::GLYPH_WARNING)
-                };
-                (message, glyph)
+                format!("{line1}\n{line2}")
             }
         };
 

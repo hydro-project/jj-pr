@@ -8,6 +8,6 @@ expression: "render_log(&f, true)"
 ├─╯  b
 [33m⚠[0m  [1m[35mchxyz[0m [34mxyz[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/test/repo/pull/1PR #1]8;;[0m, [1m[36m]8;;https://github.com/test/repo/pull/2PR #2]8;;[0m[33m][0m
 │  shared
-◆  [1m[35mchtrunk[0m [34mtrunk[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+[1m[36m◆[0m  [1m[35mchtrunk[0m [34mtrunk[0m [1m[35mmain[0m [1m[32mtrunk()[0m
    trunk
-◆  [1m[32mroot()::[0m
+[1m[36m◆[0m  [1m[32mroot()::[0m

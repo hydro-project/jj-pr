@@ -13,8 +13,8 @@ input_file: src/fixtures/jj-pr.json.gz
 ├─╯  Add -y/--yes global flag and confirmation prompt for reclaiming
 ○  [1m[35muxllmtmpypns[0m [34m609c28f0194e[0m [1m[35mmingwei/pull-parent-pr-out-of-child[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/7PR #7]8;;[0m* [31mClosed[0m
 │  Fix reclaim mode: only activate when tip is foreign-stamped
-│ ◆  [1m[35mkwnsklrzwtpr[0m [34mf32f28d8c322[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│ [1m[36m◆[0m  [1m[35mkwnsklrzwtpr[0m [34mf32f28d8c322[0m [1m[35mmain[0m [1m[32mtrunk()[0m
 │ │  feat: handle out-of-order PR creation with mode-based trailer walk (#3)
 ○ │  [1m[35mwqwvxmmuyxlx[0m [34m97ab83d61724[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/3PR #3]8;;[0m [2mMerged[0m
 ├─╯  feat: handle out-of-order PR creation with mode-based trailer walk
-◆  [1m[32mroot()::[0m
+[1m[36m◆[0m  [1m[32mroot()::[0m

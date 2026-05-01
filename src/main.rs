@@ -76,7 +76,9 @@ fn run() -> Result<()> {
     let jj_entries = jj::load_entries()?;
     let prs = gh::load_prs()?;
     let default_branch = gh::default_branch()?;
-    let current_commit = jj::resolve_at().ok();
+    let current_commit = jj::resolve_at()
+        .map_err(|e| tracing::debug!("Failed to resolve current jj commit for '@': {e}"))
+        .ok();
 
     // Store input data globally for panic/error dump.
     let input = INPUT_DATA.get_or_init(|| InputData {

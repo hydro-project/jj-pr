@@ -6,5 +6,5 @@ expression: render_show(&f)
 │  PR #2
 ○  [1m[36m]8;;https://github.com/test/repo/pull/1PR #1]8;;[0m  [2mMerged[0m  [1m[35mfeat-a[0m
 │  PR #1
-◆  [1m[32mtrunk()[0m
-◆  [1m[32mroot()::[0m
+[1m[36m◆[0m  [1m[32mtrunk()[0m
+[1m[36m◆[0m  [1m[32mroot()::[0m

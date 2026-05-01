@@ -7,7 +7,7 @@ input_file: src/fixtures/hydro-3.json.gz
 │  fix(dfir_rs): defer `_counter` task spawning via `Context::request_task` buffer
 │ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m  [32mReady[0m  [1m[35mmingwei/sqs-rebase[0m
 ├─╯  feat(hydro_test): add example of AWS + SQS support
-│ ◆  [1m[32mtrunk()[0m
+│ [1m[36m◆[0m  [1m[32mtrunk()[0m
 ├─╯
 │ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m*  [32mReady[0m  [1m[35mmingwei/delete-intermediate-subgraph[0m
 │ │  refactor(dfir_lang): double-buffer defer_tick handoffs, remove intermediate subgraphs [ci-bench]
@@ -21,4 +21,4 @@ input_file: src/fixtures/hydro-3.json.gz
 ╭─┬─╯  refactor(dfir_lang): operators capture local state instead of using the state API [ci-bench]
 │ [33m⚠[0m  [33mambiguous[0m shared between [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m (trailer: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m)
 ├─╯  [2m(restructure PRs to resolve — stack one on the other)[0m
-◆  [1m[32mroot()::[0m
+[1m[36m◆[0m  [1m[32mroot()::[0m
