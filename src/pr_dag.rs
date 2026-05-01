@@ -1052,22 +1052,28 @@ pub fn cmd_create(
     // Determine base branch.
     let base = find_base_branch(state, prs, jj_entries, bookmark, default_branch);
 
+    // Use the oldest (first) commit in this node for the default title/body.
+    let tip_nk = state
+        .commit_node
+        .get(&*tip_entry.commit.commit_id)
+        .expect("bug: node not found for tip commit");
+    let oldest_entry = jj_entries
+        .iter()
+        .rev()
+        .find(|e| state.commit_node.get(&*e.commit.commit_id) == Some(tip_nk))
+        .unwrap_or(tip_entry);
+
     // Determine title.
-    let title = title.map(|s| s.to_owned()).unwrap_or_else(|| {
-        tip_entry
-            .commit
-            .description
-            .lines()
-            .next()
-            .unwrap_or("untitled")
-            .to_owned()
-    });
+    let title = title
+        .or_else(|| oldest_entry.commit.description.lines().next())
+        .map(str::trim)
+        .unwrap_or_default();
     let default_body;
     let body = match body {
         Some(b) => b,
         None => {
             // Default body: description body (everything after the first line).
-            default_body = tip_entry
+            default_body = oldest_entry
                 .commit
                 .description
                 .lines()
@@ -1091,11 +1097,15 @@ pub fn cmd_create(
     // Create PR.
     eprintln!(
         "Creating PR: {} ({} → {}) [draft]",
-        title,
+        title
+            .is_empty()
+            .then(|| crate::style::warn("(no title)"))
+            .as_deref()
+            .unwrap_or(title),
         crate::style::bookmark(bookmark),
         crate::style::bookmark(&base),
     );
-    let (pr_number, pr_url) = gh::create_pr(bookmark, &base, &title, body, true)?;
+    let (pr_number, pr_url) = gh::create_pr(bookmark, &base, title, body, true)?;
     eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
     // Stamp trailers on owned commits.
