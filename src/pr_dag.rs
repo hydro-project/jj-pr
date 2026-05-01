@@ -68,12 +68,7 @@ pub enum Node {
 /// Build the repo state from raw jj and GitHub data.
 ///
 /// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
-pub fn build(
-    jj_entries: &[JjLogEntry],
-    prs: &BTreeMap<PrNum, &GhPr>,
-    default_branch: &str,
-    current_commit: Option<&CommitId<str>>,
-) -> Result<RepoState> {
+pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
     let mut node_preds = SecondaryMap::new();
@@ -327,8 +322,11 @@ pub fn build(
         }
     }
 
-    // Set current_node from the working copy commit.
-    repo_state.current_node = current_commit.and_then(|cid| repo_state.commit_node.get(cid).copied());
+    // Set current_node from the working copy entry.
+    repo_state.current_node = jj_entries
+        .iter()
+        .find(|e| e.is_working_copy)
+        .and_then(|e| repo_state.commit_node.get(&*e.commit.commit_id).copied());
 
     Ok(repo_state)
 }
@@ -635,7 +633,6 @@ pub fn render_log(
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     show_all: bool,
-    current_commit: Option<&CommitId<str>>,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
     let known_entries = jj_entries.iter().map(|e| &*e.commit.commit_id).collect::<BTreeSet<_>>();
@@ -656,7 +653,7 @@ pub fn render_log(
         };
 
         // Build the glyph.
-        let is_current = current_commit == Some(&*jj_entry.commit.commit_id);
+        let is_current = jj_entry.is_working_copy;
         let glyph = if is_current {
             crate::style::glyph_current()
         } else {

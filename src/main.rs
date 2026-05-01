@@ -23,8 +23,6 @@ pub(crate) struct InputData {
     pub(crate) jj_entries: Vec<jj::JjLogEntry>,
     pub(crate) prs: Vec<gh::GhPr>,
     pub(crate) default_branch: String,
-    #[serde(default)]
-    pub(crate) current_commit: Option<jj::CommitId>,
 }
 
 impl InputData {
@@ -76,16 +74,12 @@ fn run() -> Result<()> {
     let jj_entries = jj::load_entries()?;
     let prs = gh::load_prs()?;
     let default_branch = gh::default_branch()?;
-    let current_commit = jj::resolve_at()
-        .map_err(|e| tracing::debug!("Failed to resolve current jj commit for '@': {e}"))
-        .ok();
 
     // Store input data globally for panic/error dump.
     let input = INPUT_DATA.get_or_init(|| InputData {
         jj_entries,
         prs,
         default_branch,
-        current_commit,
     });
 
     let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
@@ -98,23 +92,11 @@ fn run() -> Result<()> {
     }
 
     let prs = input.prs_map();
-    let state = pr_dag::build(
-        &input.jj_entries,
-        &prs,
-        &input.default_branch,
-        input.current_commit.as_deref(),
-    )?;
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch)?;
 
     let result = match command {
         Command::Show(_args) => pr_dag::render_show(&state, &prs, &mut std::io::stdout()),
-        Command::Log(args) => pr_dag::render_log(
-            &state,
-            &prs,
-            &input.jj_entries,
-            args.all,
-            input.current_commit.as_deref(),
-            &mut std::io::stdout(),
-        ),
+        Command::Log(args) => pr_dag::render_log(&state, &prs, &input.jj_entries, args.all, &mut std::io::stdout()),
         Command::Sync(args) => {
             let actions = pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch)?;
             if actions.is_empty() {

@@ -81,6 +81,8 @@ pub struct JjLogEntry {
     pub is_trunk_tip: bool,
     #[serde(default)]
     pub empty: bool,
+    #[serde(default)]
+    pub is_working_copy: bool,
 }
 
 /// Parsed PR trailer value, e.g. `PR: #1234` → `1234`.
@@ -205,21 +207,8 @@ pub fn load_entries() -> Result<Vec<JjLogEntry>> {
     load_entries_with_revset("trunk().. | trunk()")
 }
 
-/// Resolve `@` (working copy) to its commit_id.
-pub fn resolve_at() -> Result<CommitId> {
-    let output = Command::new("jj")
-        .args(["log", "--no-graph", "-r", "@", "-T", "commit_id"])
-        .output()
-        .context("Failed to resolve @")?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("Failed to resolve @: {stderr}");
-    }
-    Ok(CommitId(String::from_utf8(output.stdout)?.trim().to_owned()))
-}
-
 pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
-    const JJ_TEMPLATE: &str = r#""{\"commit\": " ++ json(self) ++ ", \"local_bookmarks\": " ++ json(local_bookmarks) ++ ", \"remote_bookmarks\": " ++ json(remote_bookmarks) ++ ", \"immutable\": " ++ json(self.immutable()) ++ ", \"is_trunk_tip\": " ++ json(self.contained_in("trunk()")) ++ ", \"empty\": " ++ json(self.empty()) ++ "}\n""#;
+    const JJ_TEMPLATE: &str = r#""{\"commit\": " ++ json(self) ++ ", \"local_bookmarks\": " ++ json(local_bookmarks) ++ ", \"remote_bookmarks\": " ++ json(remote_bookmarks) ++ ", \"immutable\": " ++ json(self.immutable()) ++ ", \"is_trunk_tip\": " ++ json(self.contained_in("trunk()")) ++ ", \"empty\": " ++ json(self.empty()) ++ ", \"is_working_copy\": " ++ json(self.contained_in("@")) ++ "}\n""#;
 
     let output = Command::new("jj")
         .args(["log", "--no-graph", "-r", revset, "-T", JJ_TEMPLATE])
