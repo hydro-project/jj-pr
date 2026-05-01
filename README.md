@@ -149,4 +149,5 @@ See [DESIGN.md](DESIGN.md) for the full design rationale.
 
 - **Remote hardcoded to `origin`** — fork-based workflows where PRs come from a different remote (e.g., `fork`) are not yet supported.
 - **`gh pr list --limit 200`** — may miss PRs in repos with many PRs.
+- **Multiple PRs sharing the same bookmark** — if you have e.g. an open and a closed/merged PR both using the same branch name, only one will be tracked. See the `head_to_pr` TODO in `pr_dag.rs`.
 - Some other things, probably
