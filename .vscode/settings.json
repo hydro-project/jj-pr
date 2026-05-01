@@ -35,4 +35,11 @@
     "evenBetterToml.formatter.crlf": false,
     "evenBetterToml.formatter.indentEntries": false,
     "evenBetterToml.formatter.indentTables": false,
+    "ansiViewer.autoLanguageModeFiles": [
+        "**/*.ans",
+        "**/*.ansi",
+        "**/*.snap"
+    ],
+    "ansiViewer.escapeSequenceDisplay": "hidden",
+
 }

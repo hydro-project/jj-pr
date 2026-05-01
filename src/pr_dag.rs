@@ -345,6 +345,7 @@ fn decide(
                 && !pr_local.contains(&trailer_pr_num)
             {
                 // Special case: if `trailer_prs` is set, but the PR is not tracked locally, we use it alone.
+                // TODO(mingwei): maybe this should only be for merged PRs?
                 (Some(Node::Pr(trailer_pr_num)), None)
             } else {
                 decide_combine_child_nodes(child_nodes)
@@ -392,7 +393,7 @@ fn decide(
             };
             (Some(node), node_key)
         } else {
-            // A trailer PR num alone is not enough to assign to a PR node.
+            // A trailer PR num alone is not enough to start a PR node.
             (
                 Some(Node::Ambiguous {
                     branch_prs: BTreeSet::new(),
@@ -592,7 +593,8 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
                     }
                     (true, false) => crate::style::dim("(restructure PRs to resolve — stack one on the other)"),
                     (false, true) => crate::style::dim("(edit commit description to fix PR: trailer)"),
-                    (false, false) => crate::style::dim("(ambiguous ownership — abandon stale commits or restructure)"),
+                    // Same PR claimed by multiple sources (branch + orphan trailer, or multiple orphan trailers).
+                    (false, false) => crate::style::dim("(multiple sources for same PR — abandon stale commits or restructure)"),
                 };
                 let message = format!("{line1}\n{line2}");
                 (message, crate::style::warn(crate::style::GLYPH_WARNING))
