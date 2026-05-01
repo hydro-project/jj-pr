@@ -84,6 +84,7 @@ fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str]
         remote_bookmarks: vec![],
         immutable: is_trunk_tip,
         is_trunk_tip,
+        empty: false,
     }
 }
 
@@ -93,6 +94,11 @@ fn with_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
         remote: Some("origin".to_owned()),
         target: vec![Some(e.commit.commit_id.clone())],
     });
+    e
+}
+
+fn with_empty(mut e: JjLogEntry) -> JjLogEntry {
+    e.empty = true;
     e
 }
 
@@ -333,4 +339,23 @@ fn merge_child() {
     );
     insta::assert_snapshot!("merge_child_show", render_show(&f));
     insta::assert_snapshot!("merge_child_log", render_log(&f, false));
+}
+
+#[test]
+fn empty_and_no_description() {
+    // Tests all four combinations of empty/non-empty × description/no-description.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c4", "ch4", &["c3"], "has desc\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            with_empty(entry("c3", "ch3", &["c2"], "empty with desc\n\nPR: #1\n", &[], false)),
+            entry("c2", "ch2", &["c1"], "\n\nPR: #1\n", &[], false),
+            with_empty(entry("c1", "ch1", &["trunk"], "\n\nPR: #1\n", &[], false)),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("empty_and_no_description_log", render_log(&f, false));
 }

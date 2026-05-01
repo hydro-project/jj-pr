@@ -104,13 +104,12 @@ pub fn commit_id_short(id: &str) -> String {
 pub fn description_first_line(desc: &str) -> String {
     let line = desc.lines().next().unwrap_or("");
     if line.is_empty() {
-        styled(EMPTY, "(empty)")
+        styled(EMPTY, "(no description set)")
     } else {
         styled(DESCRIPTION, line)
     }
 }
 
-#[expect(dead_code, reason = "available for UI")]
 pub fn empty_marker() -> String {
     styled(EMPTY, "(empty)")
 }
