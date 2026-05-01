@@ -1,0 +1,14 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false)"
+input_file: src/fixtures/jj-pr-diverged-remote-appended-deleted.json.gz
+---
+[1m[36m◆[0m  [1m[35myonwzoryprtw[0m [34m7e9d32275fdf[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│  fix: properly detect deleted (merged) branches that have multuple commits (#24)
+│ ○  [1m[35mxrmxlvwxurxx[0m [34mc87307572736[0m [1m[35mfix-deleted-branches[0m [1m[35mfix-deleted-branchs[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/24PR #24]8;;[0m [2mMerged[0m
+│ │  hand written logic
+│ ○  [1m[35msqotytorswln[0m [34m1c4633506bd7[0m [1m[35msandbox-f488252d-c26e-4373-8582-ecdca311306e[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/24PR #24]8;;[0m [2mMerged[0m
+│ │  Fix merged PR showing as multiple nodes instead of one
+│ ○  [1m[35mlopoulzrkozt[0m [34ma149ea699db5[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/24PR #24]8;;[0m [2mMerged[0m
+├─╯  bug with merging merged
+[1m[36m◆[0m  [1m[32mroot()::[0m

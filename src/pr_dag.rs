@@ -40,6 +40,9 @@ pub struct RepoState {
     /// Bookmarks with conflicting targets (user must resolve with `jj bookmark`).
     pub bookmarks_conflicted: BTreeSet<String>,
 
+    /// Conflicted bookmarks for merged PRs that we can auto-resolve by deleting.
+    pub bookmarks_to_delete: BTreeMap<String, PrNum>,
+
     /// The node containing the working copy (`@`), if any.
     pub current_node: Option<NodeKey>,
 }
@@ -89,7 +92,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
     let mut node_preds = SecondaryMap::new();
     node_preds.insert(root_node, Vec::new()); // `root()` has no parent nodes.
 
-    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_conflicted) = Default::default();
+    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_conflicted, bookmarks_to_delete) = Default::default();
     let mut repo_state = RepoState {
         nodes,
         root_node,
@@ -100,6 +103,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         pr_needs_push,
         node_needs_sync,
         bookmarks_conflicted,
+        bookmarks_to_delete,
         current_node: None,
     };
 
@@ -119,9 +123,21 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                 if let Some(pr) = head_to_pr.get(local_bookmark_name) {
                     // This is a PR bookmark.
                     if 1 < local_bookmark.target.len() {
-                        // Conflict!
-                        // TODO(mingwei): handle conflicts! They can be separate nodes.
-                        repo_state.bookmarks_conflicted.insert(local_bookmark_name.to_owned());
+                        // Conflict! Check if this is a merged PR with a deleted remote
+                        // (one side is null). If so, we can auto-resolve by deleting the bookmark.
+                        let has_null_side = local_bookmark.target.iter().any(|t| t.is_none());
+                        let is_local_side = local_bookmark.target.first() == Some(&Some(jj_entry.commit.commit_id.clone()));
+                        if has_null_side && is_local_side && pr.state == gh::PrState::Merged {
+                            // Treat as the tip of a merged PR — we'll delete the bookmark during sync.
+                            cid_pr_tip
+                                .entry(&*jj_entry.commit.commit_id)
+                                .or_default()
+                                .push(pr.number);
+                            pr_local.insert(pr.number);
+                            repo_state.bookmarks_to_delete.insert(local_bookmark_name.to_owned(), pr.number);
+                        } else {
+                            repo_state.bookmarks_conflicted.insert(local_bookmark_name.to_owned());
+                        }
                     } else {
                         // Note `local_bookmark.target == vec![jj_entry.commit.commit_id]` in the non-conflicted case.
                         cid_pr_tip
@@ -820,6 +836,8 @@ use crate::gh;
 pub enum SyncAction {
     /// Stamp a missing `PR: #N` trailer on a commit.
     StampTrailer { change_id: String, pr: PrNum },
+    /// Delete a conflicted bookmark for a merged PR (resolves the conflict).
+    DeleteBookmark { name: String, pr: PrNum },
     /// Rebase children of a merged PR onto trunk.
     RebaseChildren { tip_commit_id: String, pr: PrNum },
     /// Abandon commits of a merged PR.
@@ -840,6 +858,9 @@ impl fmt::Display for SyncAction {
             SyncAction::StampTrailer { change_id, pr } => {
                 let short = &change_id[..12.min(change_id.len())];
                 write!(f, "stamp {pr} trailer on {short}")
+            }
+            SyncAction::DeleteBookmark { name, pr } => {
+                write!(f, "delete conflicted bookmark {name} ({pr}, merged)")
             }
             SyncAction::RebaseChildren { pr, .. } => {
                 write!(f, "rebase children of {pr} onto trunk()")
@@ -892,6 +913,14 @@ pub fn plan_sync(
                 pr: *pr_num,
             });
         }
+    }
+
+    // 1.5. Delete conflicted bookmarks for merged PRs.
+    for (name, pr) in &state.bookmarks_to_delete {
+        actions.push(SyncAction::DeleteBookmark {
+            name: name.clone(),
+            pr: *pr,
+        });
     }
 
     // 2 & 3. Rebase children + abandon for merged PRs.
@@ -991,6 +1020,14 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 let desc = jj::read_description(change_id)?;
                 let new_desc = jj::set_pr_trailer(&desc, *pr);
                 jj::describe_stdin(change_id, &new_desc)?;
+            }
+            SyncAction::DeleteBookmark { name, pr } => {
+                eprintln!(
+                    "Deleting conflicted bookmark {} ({})",
+                    crate::style::bookmark(name),
+                    crate::style::pr_num(*pr, None),
+                );
+                jj::bookmark_delete(name)?;
             }
             SyncAction::RebaseChildren { tip_commit_id, pr } => {
                 eprintln!("Rebasing children of {} onto trunk()", crate::style::pr_num(*pr, None),);

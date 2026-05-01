@@ -1,0 +1,7 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/jj-pr-diverged-remote-appended-deleted.json.gz
+---
+delete conflicted bookmark fix-deleted-branches (#24, merged)
+abandon merged #24

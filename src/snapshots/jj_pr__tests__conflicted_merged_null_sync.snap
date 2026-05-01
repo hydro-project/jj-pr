@@ -1,0 +1,6 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+---
+delete conflicted bookmark feat (#1, merged)
+abandon merged #1

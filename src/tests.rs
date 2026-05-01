@@ -368,3 +368,65 @@ fn empty_and_no_description() {
     );
     insta::assert_snapshot!("empty_and_no_description_log", render_log(&f, false));
 }
+
+#[test]
+fn conflicted_bookmark_merged_pr_with_null() {
+    // Merged PR whose local bookmark is conflicted: [local_commit, base_commit, null].
+    // This happens when the remote branch was deleted (squash-merge) while the local
+    // side was rebased. Should auto-resolve by deleting the bookmark and abandoning.
+    let mut tip = entry("local", "ch_local", &["trunk"], "my change\n\nPR: #1\n", &["feat"], false);
+    // Set up conflicted target: [local_commit, base_commit, null]
+    tip.local_bookmarks[0].target = vec![
+        Some(CommitId("local".to_owned())),
+        Some(CommitId("base".to_owned())),
+        None,
+    ];
+    let f = fixture(
+        vec![
+            tip,
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr_merged(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("conflicted_merged_null_show", render_show(&f));
+    insta::assert_snapshot!("conflicted_merged_null_sync", plan_sync(&f));
+}
+
+#[test]
+fn conflicted_bookmark_open_pr_blocks_sync() {
+    // Open PR with conflicted bookmark should still block sync.
+    let mut tip = entry("local", "ch_local", &["trunk"], "my change\n\nPR: #1\n", &["feat"], false);
+    tip.local_bookmarks[0].target = vec![
+        Some(CommitId("local".to_owned())),
+        Some(CommitId("base".to_owned())),
+        None,
+    ];
+    let f = fixture(
+        vec![
+            tip,
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("conflicted_open_blocks_sync", plan_sync(&f));
+}
+
+#[test]
+fn conflicted_bookmark_no_null_blocks_sync() {
+    // Conflicted bookmark without null (both sides point to commits) should block sync
+    // even for merged PRs.
+    let mut tip = entry("local", "ch_local", &["trunk"], "my change\n\nPR: #1\n", &["feat"], false);
+    tip.local_bookmarks[0].target = vec![
+        Some(CommitId("local".to_owned())),
+        Some(CommitId("base".to_owned())),
+        Some(CommitId("remote".to_owned())),
+    ];
+    let f = fixture(
+        vec![
+            tip,
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr_merged(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("conflicted_no_null_blocks_sync", plan_sync(&f));
+}
