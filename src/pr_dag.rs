@@ -708,8 +708,16 @@ pub fn render_log(
 
         let line1 = line1_parts.join(" ");
 
-        // Second line: description.
-        let line2 = crate::style::description_first_line(&jj_entry.commit.description);
+        // Second line: description (with empty marker if applicable).
+        let empty_prefix = if jj_entry.empty {
+            format!("{} ", crate::style::empty_marker())
+        } else {
+            String::new()
+        };
+        let line2 = format!(
+            "{empty_prefix}{}",
+            crate::style::description_first_line(&jj_entry.commit.description)
+        );
 
         let message = format!("{line1}\n{line2}");
 
