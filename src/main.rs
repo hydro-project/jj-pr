@@ -11,7 +11,7 @@ mod ui;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use cli::{Cli, Command};
 use serde::{Deserialize, Serialize};
@@ -71,6 +71,15 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
     let yes = cli.yes;
 
+    let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
+
+    // Handle subcommands that don't need jj/gh data.
+    if let Command::Util(util_args) = &command
+        && let cli::UtilCommand::InstallAliases = &util_args.command
+    {
+        return install_aliases();
+    }
+
     let jj_entries = jj::load_entries()?;
     let prs = gh::load_prs()?;
     let default_branch = gh::default_branch()?;
@@ -82,13 +91,16 @@ fn run() -> Result<()> {
         default_branch,
     });
 
-    let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
-
-    // Handle `dump` before building derived state — it only needs raw input.
-    if let Command::Dump = &command {
-        serde_json::to_writer(std::io::stdout(), input)?;
-        println!();
-        return Ok(());
+    // Handle util subcommands that need raw input.
+    if let Command::Util(util_args) = &command {
+        return match &util_args.command {
+            cli::UtilCommand::Dump => {
+                serde_json::to_writer(std::io::stdout(), input)?;
+                println!();
+                Ok(())
+            }
+            cli::UtilCommand::InstallAliases => unreachable!("handled above"),
+        };
     }
 
     let prs = input.prs_map();
@@ -124,11 +136,54 @@ fn run() -> Result<()> {
             args.title.as_deref(),
             args.body.as_deref(),
         ),
-        Command::Dump => unreachable!("handled above"),
+        Command::Util(_) => unreachable!("handled above"),
     };
 
     if result.is_err() {
         dump_input_on_failure(INPUT_DATA.get());
     }
     result
+}
+
+/// Install jj aliases so `jj pr` invokes `jj-pr`.
+fn install_aliases() -> Result<()> {
+    let config_path = {
+        let output = std::process::Command::new("jj")
+            .args(["config", "path", "--user"])
+            .output()
+            .context("failed to run `jj config path --user`")?;
+        anyhow::ensure!(output.status.success(), "jj config path --user failed");
+        String::from_utf8(output.stdout)?.trim().to_owned()
+    };
+
+    let existing = std::fs::read_to_string(&config_path).unwrap_or_default();
+
+    // Check if alias already exists.
+    if existing.contains("[aliases]") {
+        // Parse to check if `pr` is already defined.
+        let table: toml::Value = toml::from_str(&existing).with_context(|| format!("failed to parse {config_path}"))?;
+        if table.get("aliases").and_then(|a| a.get("pr")).is_some() {
+            eprintln!("Alias `pr` already exists in {config_path}");
+            return Ok(());
+        }
+    }
+
+    // Append the alias.
+    use std::io::Write;
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&config_path)
+        .with_context(|| format!("failed to open {config_path}"))?;
+
+    // Add a blank line separator if file is non-empty and doesn't end with newline.
+    if !existing.is_empty() && !existing.ends_with('\n') {
+        writeln!(file)?;
+    }
+
+    writeln!(file, "[aliases]")?;
+    writeln!(file, r#"pr = ["util", "--", "exec", "--", "jj-pr"]"#)?;
+
+    eprintln!("Installed alias `jj pr` -> `jj-pr` in {config_path}");
+    Ok(())
 }

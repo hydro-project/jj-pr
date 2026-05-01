@@ -22,8 +22,22 @@ pub enum Command {
     Sync(SyncArgs),
     /// Create a new PR for an existing bookmark
     Create(CreateArgs),
+    /// Utility commands (dump state, install aliases)
+    Util(UtilArgs),
+}
+
+#[derive(clap::Args, Clone)]
+pub struct UtilArgs {
+    #[command(subcommand)]
+    pub command: UtilCommand,
+}
+
+#[derive(Subcommand, Clone)]
+pub enum UtilCommand {
     /// Dump raw state (jj + gh) as JSON for test fixtures
     Dump,
+    /// Install jj aliases so `jj pr` invokes jj-pr
+    InstallAliases,
 }
 
 #[derive(clap::Args, Clone)]
