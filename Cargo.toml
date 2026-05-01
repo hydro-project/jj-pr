@@ -42,4 +42,5 @@ uninlined_format_args = "allow"
 unused_async = "warn"
 
 [dev-dependencies]
+flate2 = "1.1.1"
 insta = { version = "1.47.2", features = ["json", "glob"] }

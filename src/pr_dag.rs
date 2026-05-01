@@ -65,7 +65,7 @@ pub enum Node {
 /// Build the repo state from raw jj and GitHub data.
 ///
 /// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
-pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_branch: &str) -> Result<RepoState> {
+pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
     let mut node_preds = SecondaryMap::new();
@@ -90,7 +90,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, GhPr>, default_bra
 
         // GH PR head ref name -> GH PR data.
         // TODO(mingwei): handle multiple PRs sharing the same bookmark (e.g. Open + Closed/Merged).
-        let head_to_pr: HashMap<&str, &GhPr> = prs.values().map(|pr| (&*pr.head_ref_name, pr)).collect();
+        let head_to_pr: HashMap<&str, &GhPr> = prs.values().map(|&pr| (&*pr.head_ref_name, pr)).collect();
 
         let mut pr_local = BTreeSet::new();
 
@@ -489,7 +489,7 @@ impl RepoState {
     /// Returns the expected GitHub base branch name for a node, derived from the DAG.
     /// If the parent is another open PR, returns its head_ref_name.
     /// Otherwise returns the default branch name (trunk).
-    pub fn expected_base(&self, nk: NodeKey, prs: &BTreeMap<PrNum, GhPr>, default_branch: &str) -> String {
+    pub fn expected_base(&self, nk: NodeKey, prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> String {
         let Some(preds) = self.node_preds.get(nk) else {
             return default_branch.to_owned();
         };
@@ -517,7 +517,7 @@ impl RepoState {
 // --- Rendering ---
 
 /// Render the PR DAG as a graph.
-pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut impl std::io::Write) -> Result<()> {
+pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut impl std::io::Write) -> Result<()> {
     let mut renderer = GraphRowRenderer::new()
         .output()
         .with_min_row_height(1)
@@ -615,7 +615,7 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, GhPr>, out: &mut imp
 
 pub fn render_log(
     state: &RepoState,
-    prs: &BTreeMap<PrNum, GhPr>,
+    prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     show_all: bool,
     out: &mut impl std::io::Write,
@@ -798,7 +798,7 @@ impl fmt::Display for SyncAction {
 /// Plan sync actions. Returns Err if blocking issues exist.
 pub fn plan_sync(
     state: &RepoState,
-    prs: &BTreeMap<PrNum, GhPr>,
+    prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     default_branch: &str,
 ) -> Result<Vec<SyncAction>> {
@@ -973,7 +973,7 @@ use anyhow::Context;
 /// Returns the head_ref_name of the nearest ancestor PR, or `default_branch` if none.
 fn find_base_branch(
     state: &RepoState,
-    prs: &BTreeMap<PrNum, GhPr>,
+    prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     bookmark: &str,
     default_branch: &str,
@@ -1036,7 +1036,7 @@ fn find_base_branch(
 /// Create a new PR for an existing bookmark.
 pub fn cmd_create(
     state: &RepoState,
-    prs: &BTreeMap<PrNum, GhPr>,
+    prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     default_branch: &str,
     bookmark: &str,
