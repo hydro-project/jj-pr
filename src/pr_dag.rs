@@ -120,18 +120,22 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                     // This is a PR bookmark.
                     if 1 < local_bookmark.target.len() {
                         // Conflict! Check if this is a merged PR with a deleted remote
-                        // (one side is null). If so, we can auto-resolve by deleting the bookmark.
-                        let has_null_side = local_bookmark.target.iter().any(|t| t.is_none());
+                        // (one side is null in an add slot). If so, we can auto-resolve
+                        // by deleting the bookmark.
+                        // Only process on the local side (index 0) to avoid duplicate
+                        // handling — conflicted bookmarks appear on all non-null add commits.
                         let is_local_side =
                             local_bookmark.target.first() == Some(&Some(jj_entry.commit.commit_id.clone()));
-                        if has_null_side && is_local_side && pr.state == gh::PrState::Merged {
+                        let has_null_add = local_bookmark.target.iter().step_by(2).any(|t| t.is_none());
+                        if is_local_side && has_null_add && pr.state == gh::PrState::Merged {
                             // Treat as the tip of a merged PR — bookmark will be deleted during abandon.
                             cid_pr_tip
                                 .entry(&*jj_entry.commit.commit_id)
                                 .or_default()
                                 .push(pr.number);
                             pr_local.insert(pr.number);
-                        } else {
+                        } else if is_local_side {
+                            // Only block on the local side to avoid duplicate insertions.
                             repo_state.bookmarks_blocking.insert(local_bookmark_name.to_owned());
                         }
                     } else {
