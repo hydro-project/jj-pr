@@ -124,8 +124,10 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                         // by deleting the bookmark.
                         // Only process on the local side (index 0) to avoid duplicate
                         // handling — conflicted bookmarks appear on all non-null add commits.
-                        let is_local_side =
-                            local_bookmark.target.first() == Some(&Some(jj_entry.commit.commit_id.clone()));
+                        let is_local_side = local_bookmark
+                            .target
+                            .first()
+                            .is_some_and(|t| t.as_ref() == Some(&jj_entry.commit.commit_id));
                         // Check if any non-local add slot is null, indicating the
                         // remote side deleted the branch. Index 0 (local add) is
                         // checked separately via is_local_side.
