@@ -37,8 +37,8 @@ pub struct RepoState {
     /// Value: `true` = propagates to children (push/rebase), `false` = local only (base mismatch).
     pub node_needs_sync: SparseSecondaryMap<NodeKey, bool>,
 
-    /// Bookmarks with conflicting targets (user must resolve with `jj bookmark`).
-    pub bookmarks_conflicted: BTreeSet<String>,
+    /// Bookmarks with conflicting targets that block sync (user must resolve with `jj bookmark`).
+    pub bookmarks_blocking: BTreeSet<String>,
 
     /// The node containing the working copy (`@`), if any.
     pub current_node: Option<NodeKey>,
@@ -89,7 +89,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
     let mut node_preds = SecondaryMap::new();
     node_preds.insert(root_node, Vec::new()); // `root()` has no parent nodes.
 
-    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_conflicted) = Default::default();
+    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_blocking) = Default::default();
     let mut repo_state = RepoState {
         nodes,
         root_node,
@@ -99,7 +99,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         commit_node,
         pr_needs_push,
         node_needs_sync,
-        bookmarks_conflicted,
+        bookmarks_blocking,
         current_node: None,
     };
 
@@ -119,9 +119,35 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                 if let Some(pr) = head_to_pr.get(local_bookmark_name) {
                     // This is a PR bookmark.
                     if 1 < local_bookmark.target.len() {
-                        // Conflict!
-                        // TODO(mingwei): handle conflicts! They can be separate nodes.
-                        repo_state.bookmarks_conflicted.insert(local_bookmark_name.to_owned());
+                        // Conflict! Check if this is a merged PR with a deleted remote
+                        // (one side is null in an add slot). If so, we can auto-resolve
+                        // by deleting the bookmark.
+                        // Only process on the local side (index 0) to avoid duplicate
+                        // handling — conflicted bookmarks appear on all non-null add commits.
+                        let is_local_side = local_bookmark
+                            .target
+                            .first()
+                            .is_some_and(|t| t.as_ref() == Some(&jj_entry.commit.commit_id));
+                        // Check if any non-local add slot is null, indicating the
+                        // remote side deleted the branch. Index 0 (local add) is
+                        // checked separately via is_local_side.
+                        let has_null_add = local_bookmark
+                            .target
+                            .iter()
+                            .step_by(2) // even indices only (add slots)
+                            .skip(1) // skip index 0 (local add)
+                            .any(|t| t.is_none());
+                        if is_local_side && has_null_add && pr.state == gh::PrState::Merged {
+                            // Treat as the tip of a merged PR — bookmark will be deleted during abandon.
+                            cid_pr_tip
+                                .entry(&*jj_entry.commit.commit_id)
+                                .or_default()
+                                .push(pr.number);
+                            pr_local.insert(pr.number);
+                        } else if is_local_side {
+                            // Only block on the local side to avoid duplicate insertions.
+                            repo_state.bookmarks_blocking.insert(local_bookmark_name.to_owned());
+                        }
                     } else {
                         // Note `local_bookmark.target == vec![jj_entry.commit.commit_id]` in the non-conflicted case.
                         cid_pr_tip
@@ -822,8 +848,13 @@ pub enum SyncAction {
     StampTrailer { change_id: String, pr: PrNum },
     /// Rebase children of a merged PR onto trunk.
     RebaseChildren { tip_commit_id: String, pr: PrNum },
-    /// Abandon commits of a merged PR.
-    AbandonMerged { tip_commit_id: String, pr: PrNum },
+    /// Abandon commits of a merged PR and delete its bookmark if present.
+    AbandonMerged {
+        tip_commit_id: String,
+        pr: PrNum,
+        bookmark: String,
+        bookmark_exists: bool,
+    },
     /// Push bookmarks that differ from remote.
     Push { bookmarks: Vec<(PrNum, String)> },
     /// Update a PR's base branch on GitHub.
@@ -844,8 +875,17 @@ impl fmt::Display for SyncAction {
             SyncAction::RebaseChildren { pr, .. } => {
                 write!(f, "rebase children of {pr} onto trunk()")
             }
-            SyncAction::AbandonMerged { pr, .. } => {
-                write!(f, "abandon merged {pr}")
+            SyncAction::AbandonMerged {
+                pr,
+                bookmark,
+                bookmark_exists,
+                ..
+            } => {
+                if *bookmark_exists {
+                    write!(f, "abandon merged {pr} (delete {bookmark})")
+                } else {
+                    write!(f, "abandon merged {pr} ({bookmark} already deleted)")
+                }
             }
             SyncAction::Push { bookmarks } => {
                 let details: Vec<_> = bookmarks.iter().map(|(pr, bm)| format!("{pr} ({bm})")).collect();
@@ -865,16 +905,22 @@ pub fn plan_sync(
     jj_entries: &[JjLogEntry],
     default_branch: &str,
 ) -> Result<Vec<SyncAction>> {
-    // Block on conflicted bookmarks.
-    if !state.bookmarks_conflicted.is_empty() {
-        let names: Vec<_> = state.bookmarks_conflicted.iter().map(|s| s.as_str()).collect();
+    // Block on unresolvable conflicted bookmarks.
+    if !state.bookmarks_blocking.is_empty() {
+        let names: Vec<_> = state.bookmarks_blocking.iter().map(|s| s.as_str()).collect();
         anyhow::bail!(
-            "Diverged bookmark(s): {}. Resolve with `jj bookmark` before syncing.",
+            "Conflicted bookmark(s): {}. Resolve with `jj bookmark` before syncing.",
             names.join(", ")
         );
     }
 
     let mut actions = Vec::new();
+
+    // Bookmark names that exist locally (for determining if we need to delete during abandon).
+    let local_bookmark_names: HashSet<&str> = jj_entries
+        .iter()
+        .flat_map(|e| e.local_bookmarks.iter().map(|bm| bm.name.as_str()))
+        .collect();
 
     // 1. Stamp missing trailers.
     for jj_entry in jj_entries {
@@ -920,6 +966,8 @@ pub fn plan_sync(
         actions.push(SyncAction::AbandonMerged {
             tip_commit_id,
             pr: *pr_num,
+            bookmark: gh_pr.head_ref_name.clone(),
+            bookmark_exists: local_bookmark_names.contains(&*gh_pr.head_ref_name),
         });
     }
 
@@ -996,8 +1044,26 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 eprintln!("Rebasing children of {} onto trunk()", crate::style::pr_num(*pr, None),);
                 jj::rebase(&format!("commit_id({tip_commit_id})+"), "trunk()")?;
             }
-            SyncAction::AbandonMerged { tip_commit_id, pr } => {
-                eprintln!("Abandoning merged {}", crate::style::pr_num(*pr, None),);
+            SyncAction::AbandonMerged {
+                tip_commit_id,
+                pr,
+                bookmark,
+                bookmark_exists,
+            } => {
+                if *bookmark_exists {
+                    eprintln!(
+                        "Abandoning merged {} (delete {})",
+                        crate::style::pr_num(*pr, None),
+                        crate::style::bookmark(bookmark),
+                    );
+                    jj::bookmark_delete(bookmark)?;
+                } else {
+                    eprintln!(
+                        "Abandoning merged {} ({} already deleted)",
+                        crate::style::pr_num(*pr, None),
+                        crate::style::bookmark(bookmark),
+                    );
+                }
                 let revset = format!("trunk()..commit_id({tip_commit_id})");
                 jj::abandon(&revset)?;
             }

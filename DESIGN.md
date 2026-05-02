@@ -34,7 +34,7 @@ RepoState:
   commit_node:          Map<CommitId, NodeKey>   -- commit -> owning node
   pr_needs_push:        Set<PrNum>               -- PRs with local != remote bookmark
   node_needs_sync:      Map<NodeKey, bool>       -- nodes needing sync; true = propagates
-  bookmarks_conflicted: Set<String>              -- bookmarks with conflicting targets
+  bookmarks_blocking:   Set<String>              -- conflicted bookmarks that block sync
 ```
 
 ### Node
@@ -133,7 +133,7 @@ Reconciles local + remote state. Actions in order:
 4. **Push** — single `jj git push --bookmark ...` for all affected bookmarks (Open and Closed, not Merged).
 5. **Update GitHub base branches** — `gh pr edit --base` for PRs whose base doesn't match the DAG.
 
-Blocks if `bookmarks_conflicted` is non-empty. Supports `--dry-run` and `[Y/n]` confirmation (skippable with `-y`).
+Blocks if `bookmarks_blocking` is non-empty. Supports `--dry-run` and `[Y/n]` confirmation (skippable with `-y`).
 
 ### `jj-pr create <bookmark>`
 

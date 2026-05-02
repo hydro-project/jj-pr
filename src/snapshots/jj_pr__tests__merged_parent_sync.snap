@@ -3,6 +3,6 @@ source: src/tests.rs
 expression: plan_sync(&f)
 ---
 rebase children of #1 onto trunk()
-abandon merged #1
+abandon merged #1 (delete feat-a)
 push: #2 (feat-b)
 update #2 (feat-b) base -> main

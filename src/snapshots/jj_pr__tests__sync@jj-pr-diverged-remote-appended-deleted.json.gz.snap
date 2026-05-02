@@ -1,0 +1,6 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/jj-pr-diverged-remote-appended-deleted.json.gz
+---
+abandon merged #24 (delete fix-deleted-branches)

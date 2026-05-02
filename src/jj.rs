@@ -303,6 +303,20 @@ pub fn bookmark_set(name: &str, revision: &str) -> Result<()> {
     Ok(())
 }
 
+/// Delete a bookmark.
+pub fn bookmark_delete(name: &str) -> Result<()> {
+    let output = Command::new("jj")
+        .args(["bookmark", "delete", name])
+        .output()
+        .context("Failed to run `jj bookmark delete`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj bookmark delete {name} failed: {stderr}");
+    }
+    Ok(())
+}
+
 /// Track a remote bookmark.
 pub fn bookmark_track(name: &str, remote: &str) -> Result<()> {
     let refname = format!("{name}@{remote}");
