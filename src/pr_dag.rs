@@ -126,14 +126,14 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                         // handling — conflicted bookmarks appear on all non-null add commits.
                         let is_local_side =
                             local_bookmark.target.first() == Some(&Some(jj_entry.commit.commit_id.clone()));
-                        // Check if any non-local add slot (even indices 2, 4, ...) is null,
-                        // indicating the remote side deleted the branch.
-                        // Index 0 (local side) is checked separately via is_local_side.
+                        // Check if any non-local add slot is null, indicating the
+                        // remote side deleted the branch. Index 0 (local add) is
+                        // checked separately via is_local_side.
                         let has_null_add = local_bookmark
                             .target
                             .iter()
-                            .skip(2) // skip index 0 (local add) and index 1 (base remove)
-                            .step_by(2) // only check even indices (add slots)
+                            .step_by(2) // even indices only (add slots)
+                            .skip(1) // skip index 0 (local add)
                             .any(|t| t.is_none());
                         if is_local_side && has_null_add && pr.state == gh::PrState::Merged {
                             // Treat as the tip of a merged PR — bookmark will be deleted during abandon.
