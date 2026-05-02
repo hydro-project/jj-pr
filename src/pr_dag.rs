@@ -37,8 +37,8 @@ pub struct RepoState {
     /// Value: `true` = propagates to children (push/rebase), `false` = local only (base mismatch).
     pub node_needs_sync: SparseSecondaryMap<NodeKey, bool>,
 
-    /// Bookmarks with conflicting targets (user must resolve with `jj bookmark`).
-    pub bookmarks_conflicted: BTreeSet<String>,
+    /// Bookmarks with conflicting targets that block sync (user must resolve with `jj bookmark`).
+    pub bookmarks_blocking: BTreeSet<String>,
 
     /// The node containing the working copy (`@`), if any.
     pub current_node: Option<NodeKey>,
@@ -89,7 +89,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
     let mut node_preds = SecondaryMap::new();
     node_preds.insert(root_node, Vec::new()); // `root()` has no parent nodes.
 
-    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_conflicted) = Default::default();
+    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_blocking) = Default::default();
     let mut repo_state = RepoState {
         nodes,
         root_node,
@@ -99,7 +99,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         commit_node,
         pr_needs_push,
         node_needs_sync,
-        bookmarks_conflicted,
+        bookmarks_blocking,
         current_node: None,
     };
 
@@ -132,7 +132,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                                 .push(pr.number);
                             pr_local.insert(pr.number);
                         } else {
-                            repo_state.bookmarks_conflicted.insert(local_bookmark_name.to_owned());
+                            repo_state.bookmarks_blocking.insert(local_bookmark_name.to_owned());
                         }
                     } else {
                         // Note `local_bookmark.target == vec![jj_entry.commit.commit_id]` in the non-conflicted case.
@@ -891,11 +891,11 @@ pub fn plan_sync(
     jj_entries: &[JjLogEntry],
     default_branch: &str,
 ) -> Result<Vec<SyncAction>> {
-    // Block on conflicted bookmarks.
-    if !state.bookmarks_conflicted.is_empty() {
-        let names: Vec<_> = state.bookmarks_conflicted.iter().map(|s| s.as_str()).collect();
+    // Block on unresolvable conflicted bookmarks.
+    if !state.bookmarks_blocking.is_empty() {
+        let names: Vec<_> = state.bookmarks_blocking.iter().map(|s| s.as_str()).collect();
         anyhow::bail!(
-            "Diverged bookmark(s): {}. Resolve with `jj bookmark` before syncing.",
+            "Conflicted bookmark(s): {}. Resolve with `jj bookmark` before syncing.",
             names.join(", ")
         );
     }

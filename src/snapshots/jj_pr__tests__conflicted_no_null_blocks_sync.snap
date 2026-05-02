@@ -2,4 +2,4 @@
 source: src/tests.rs
 expression: plan_sync(&f)
 ---
-ERROR: Diverged bookmark(s): feat. Resolve with `jj bookmark` before syncing.
+ERROR: Conflicted bookmark(s): feat. Resolve with `jj bookmark` before syncing.
