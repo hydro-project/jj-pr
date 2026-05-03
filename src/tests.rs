@@ -1,5 +1,7 @@
+use std::collections::BTreeMap;
+
 use super::InputData;
-use crate::gh::{GhPr, PrNum};
+use crate::gh::{GhPr, PrNum, PrStatus};
 use crate::jj::{CommitId, JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
 
@@ -7,8 +9,9 @@ fn render_show(input: &InputData) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
     let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
     let mut buf = Vec::new();
-    pr_dag::render_show(&state, &prs, &mut buf).unwrap();
+    pr_dag::render_show(&state, &prs, &pr_statuses, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
@@ -16,8 +19,9 @@ fn render_log(input: &InputData, show_all: bool) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
     let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
     let mut buf = Vec::new();
-    pr_dag::render_log(&state, &prs, &input.jj_entries, show_all, &mut buf).unwrap();
+    pr_dag::render_log(&state, &prs, &pr_statuses, &input.jj_entries, show_all, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
@@ -109,8 +113,6 @@ fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: true,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
-        review_decision: None,
-        checks_status: None,
     }
 }
 
@@ -124,8 +126,6 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
-        review_decision: None,
-        checks_status: None,
     }
 }
 
@@ -139,8 +139,6 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
-        review_decision: None,
-        checks_status: None,
     }
 }
 

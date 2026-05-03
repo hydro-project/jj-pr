@@ -59,9 +59,11 @@ pub struct GhPr {
     pub is_draft: bool,
     pub url: String,
     pub title: String,
-    #[serde(default)]
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct PrStatus {
     pub review_decision: Option<ReviewDecision>,
-    #[serde(default)]
     pub checks_status: Option<CheckStatus>,
 }
 
@@ -99,21 +101,16 @@ pub fn load_prs() -> Result<Vec<GhPr>> {
     Ok(prs)
 }
 
-/// Fetch CI and review status for the given open PRs via a single GraphQL query.
-/// Mutates the PRs in-place.
-pub fn load_pr_statuses(prs: &mut [GhPr]) -> Result<()> {
-    let open_prs: Vec<_> = prs
-        .iter()
-        .filter(|pr| pr.state == PrState::Open)
-        .map(|pr| pr.number)
-        .collect();
-    if open_prs.is_empty() {
-        return Ok(());
+/// Fetch CI and review status for the given PRs via a single GraphQL query.
+pub fn load_pr_statuses(pr_nums: &[PrNum]) -> Result<std::collections::BTreeMap<PrNum, PrStatus>> {
+    let mut statuses = std::collections::BTreeMap::new();
+    if pr_nums.is_empty() {
+        return Ok(statuses);
     }
 
     // Build a single GraphQL query with aliases: pr123: pullRequest(number: 123) { ... }
     let fragment = r#"reviewDecision commits(last:1) { nodes { commit { statusCheckRollup { state } } } }"#;
-    let fields: Vec<String> = open_prs
+    let fields: Vec<String> = pr_nums
         .iter()
         .map(|n| format!("pr{}: pullRequest(number: {}) {{ {fragment} }}", n.get(), n.get()))
         .collect();
@@ -146,16 +143,17 @@ pub fn load_pr_statuses(prs: &mut [GhPr]) -> Result<()> {
         serde_json::from_str(&stdout).context("Failed to parse GraphQL status response")?;
     let repo_data = &resp["data"]["repository"];
 
-    for pr in prs.iter_mut().filter(|pr| pr.state == PrState::Open) {
-        let key = format!("pr{}", pr.number.get());
+    for &pr_num in pr_nums {
+        let key = format!("pr{}", pr_num.get());
         let pr_data = &repo_data[key];
         if pr_data.is_null() {
             continue;
         }
 
-        // reviewDecision
+        let mut status = PrStatus::default();
+
         if let Some(rd) = pr_data["reviewDecision"].as_str() {
-            pr.review_decision = match rd {
+            status.review_decision = match rd {
                 "APPROVED" => Some(ReviewDecision::Approved),
                 "CHANGES_REQUESTED" => Some(ReviewDecision::ChangesRequested),
                 "REVIEW_REQUIRED" => Some(ReviewDecision::ReviewRequired),
@@ -163,14 +161,15 @@ pub fn load_pr_statuses(prs: &mut [GhPr]) -> Result<()> {
             };
         }
 
-        // statusCheckRollup.state
         let rollup = &pr_data["commits"]["nodes"][0]["commit"]["statusCheckRollup"]["state"];
         if let Some(state) = rollup.as_str() {
-            pr.checks_status = parse_check_state(state);
+            status.checks_status = parse_check_state(state);
         }
+
+        statuses.insert(pr_num, status);
     }
 
-    Ok(())
+    Ok(statuses)
 }
 
 pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(PrNum, String)> {
