@@ -1244,10 +1244,8 @@ pub fn cmd_create(
     // Stamp trailers on owned commits by walking backwards from the tip.
     // We can't use `state.commit_node` here because `state` was built before
     // this PR existed — the node assignments are stale.
-    let parent_map: HashMap<&CommitId<str>, &JjLogEntry> = jj_entries
-        .iter()
-        .map(|e| (&*e.commit.commit_id, e))
-        .collect();
+    let parent_map: HashMap<&CommitId<str>, &JjLogEntry> =
+        jj_entries.iter().map(|e| (&*e.commit.commit_id, e)).collect();
 
     let mut stamped = 0;
     let mut queue = std::collections::VecDeque::new();
