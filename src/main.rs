@@ -72,8 +72,9 @@ fn run() -> Result<()> {
     let yes = cli.yes;
 
     let jj_entries = jj::load_entries()?;
-    let prs = gh::load_prs()?;
+    let mut prs = gh::load_prs()?;
     let default_branch = gh::default_branch()?;
+    gh::load_pr_statuses(&mut prs)?;
 
     // Store input data globally for panic/error dump.
     let input = INPUT_DATA.get_or_init(|| InputData {
