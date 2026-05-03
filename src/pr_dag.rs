@@ -622,7 +622,12 @@ fn ci_review_indicators(pr_num: PrNum, pr_statuses: &BTreeMap<PrNum, gh::PrStatu
 }
 
 /// Render the PR DAG as a graph.
-pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, pr_statuses: &BTreeMap<PrNum, gh::PrStatus>, out: &mut impl std::io::Write) -> Result<()> {
+pub fn render_show(
+    state: &RepoState,
+    prs: &BTreeMap<PrNum, &GhPr>,
+    pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
+    out: &mut impl std::io::Write,
+) -> Result<()> {
     let mut renderer = GraphRowRenderer::new()
         .output()
         .with_min_row_height(1)

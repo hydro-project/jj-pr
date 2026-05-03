@@ -71,15 +71,22 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
     let yes = cli.yes;
 
-    let (jj_entries, prs, default_branch) = std::thread::scope(|s| {
-        let jj_handle = s.spawn(jj::load_entries);
-        let prs_handle = s.spawn(gh::load_prs);
-        let branch_handle = s.spawn(gh::default_branch);
-        let jj_entries = jj_handle.join().expect("jj log thread panicked")?;
-        let prs = prs_handle.join().expect("gh pr list thread panicked")?;
-        let default_branch = branch_handle.join().expect("gh default_branch thread panicked")?;
-        Ok::<_, anyhow::Error>((jj_entries, prs, default_branch))
-    })?;
+    // Step 1: Load jj entries (the only local I/O).
+    let jj_entries = jj::load_entries()?;
+
+    // Step 2: Extract PR numbers from trailers to know which PRs to fetch.
+    let pr_nums: Vec<gh::PrNum> = {
+        let mut nums = std::collections::BTreeSet::new();
+        for entry in &jj_entries {
+            if let Some(pr_num) = jj::parse_pr_trailer(&entry.commit.description) {
+                nums.insert(pr_num);
+            }
+        }
+        nums.into_iter().collect()
+    };
+
+    // Step 3: Single GraphQL call for PR data + statuses + default branch.
+    let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums)?;
 
     // Store input data globally for panic/error dump.
     let input = INPUT_DATA.get_or_init(|| InputData {
@@ -100,23 +107,16 @@ fn run() -> Result<()> {
     let prs = input.prs_map();
     let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch)?;
 
-    // Fetch CI/review statuses only for open PRs that appear in the DAG.
-    let open_pr_nums: Vec<_> = state
-        .nodes
-        .values()
-        .filter_map(|node| match node {
-            pr_dag::Node::Pr(pr_num) => {
-                let gh_pr = prs.get(pr_num)?;
-                (gh_pr.state == gh::PrState::Open).then_some(*pr_num)
-            }
-            _ => None,
-        })
-        .collect();
-    let pr_statuses = gh::load_pr_statuses(&open_pr_nums)?;
-
     let result = match command {
         Command::Show(_args) => pr_dag::render_show(&state, &prs, &pr_statuses, &mut std::io::stdout()),
-        Command::Log(args) => pr_dag::render_log(&state, &prs, &pr_statuses, &input.jj_entries, args.all, &mut std::io::stdout()),
+        Command::Log(args) => pr_dag::render_log(
+            &state,
+            &prs,
+            &pr_statuses,
+            &input.jj_entries,
+            args.all,
+            &mut std::io::stdout(),
+        ),
         Command::Sync(args) => {
             let actions = pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch)?;
             if actions.is_empty() {
