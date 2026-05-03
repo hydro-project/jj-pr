@@ -65,9 +65,66 @@ pub struct GhPr {
     pub checks_status: Option<CheckStatus>,
 }
 
+const GRAPHQL_QUERY: &str = r#"
+query($owner: String!, $repo: String!, $cursor: String) {
+  repository(owner: $owner, name: $repo) {
+    pullRequests(first: 100, after: $cursor, states: [OPEN, CLOSED, MERGED]) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        number
+        headRefName
+        baseRefName
+        state
+        isDraft
+        url
+        title
+        reviewDecision
+        commits(last: 1) {
+          nodes {
+            commit {
+              statusCheckRollup { state }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+"#;
+
+#[derive(Deserialize)]
+struct GraphQlResponse {
+    data: GraphQlData,
+}
+
+#[derive(Deserialize)]
+struct GraphQlData {
+    repository: GraphQlRepo,
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct RawGhPr {
+struct GraphQlRepo {
+    pull_requests: GraphQlPrConnection,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GraphQlPrConnection {
+    page_info: GraphQlPageInfo,
+    nodes: Vec<GraphQlPr>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GraphQlPageInfo {
+    has_next_page: bool,
+    end_cursor: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GraphQlPr {
     number: PrNum,
     head_ref_name: String,
     base_ref_name: String,
@@ -75,82 +132,105 @@ struct RawGhPr {
     is_draft: bool,
     url: String,
     title: String,
-    #[serde(default)]
-    review_decision: String,
-    #[serde(default)]
-    status_check_rollup: Vec<RawCheckRun>,
+    review_decision: Option<ReviewDecision>,
+    commits: GraphQlCommitConnection,
+}
+
+#[derive(Deserialize)]
+struct GraphQlCommitConnection {
+    nodes: Vec<GraphQlCommitNode>,
+}
+
+#[derive(Deserialize)]
+struct GraphQlCommitNode {
+    commit: GraphQlCommit,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct RawCheckRun {
-    status: String,
-    conclusion: String,
+struct GraphQlCommit {
+    status_check_rollup: Option<GraphQlStatusCheckRollup>,
 }
 
-fn rollup_checks(checks: &[RawCheckRun]) -> Option<CheckStatus> {
-    let mut has_non_skipped = false;
-    for c in checks {
-        if c.status != "COMPLETED" {
-            return Some(CheckStatus::Pending);
-        }
-        match c.conclusion.as_str() {
-            "FAILURE" | "TIMED_OUT" | "CANCELLED" | "ACTION_REQUIRED" | "STARTUP_FAILURE" => {
-                return Some(CheckStatus::Fail);
-            }
-            "SKIPPED" => {}
-            _ => has_non_skipped = true,
-        }
-    }
-    has_non_skipped.then_some(CheckStatus::Pass)
+#[derive(Deserialize)]
+struct GraphQlStatusCheckRollup {
+    state: String,
 }
 
-fn parse_review_decision(s: &str) -> Option<ReviewDecision> {
+fn parse_check_state(s: &str) -> Option<CheckStatus> {
     match s {
-        "APPROVED" => Some(ReviewDecision::Approved),
-        "CHANGES_REQUESTED" => Some(ReviewDecision::ChangesRequested),
-        "REVIEW_REQUIRED" => Some(ReviewDecision::ReviewRequired),
+        "SUCCESS" => Some(CheckStatus::Pass),
+        "FAILURE" | "ERROR" => Some(CheckStatus::Fail),
+        "PENDING" | "EXPECTED" => Some(CheckStatus::Pending),
         _ => None,
     }
 }
 
 pub fn load_prs() -> Result<Vec<GhPr>> {
-    let output = Command::new("gh")
-        .args([
-            "pr",
-            "list",
-            "--json",
-            "number,headRefName,baseRefName,state,isDraft,url,title,reviewDecision,statusCheckRollup",
-            "--limit",
-            "200",
-            "--state",
-            "all",
-        ])
-        .output()
-        .context("Failed to run `gh pr list`")?;
+    let mut all_prs = Vec::new();
+    let mut cursor: Option<String> = None;
 
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("gh pr list failed: {stderr}");
+    loop {
+        let mut args = vec![
+            "api".to_owned(),
+            "graphql".to_owned(),
+            "-f".to_owned(),
+            format!("query={GRAPHQL_QUERY}"),
+            "-F".to_owned(),
+            "owner={owner}".to_owned(),
+            "-F".to_owned(),
+            "repo={repo}".to_owned(),
+        ];
+        if let Some(ref c) = cursor {
+            args.push("-f".to_owned());
+            args.push(format!("cursor={c}"));
+        }
+
+        let str_args: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+        let output = Command::new("gh")
+            .args(&str_args)
+            .output()
+            .context("Failed to run `gh api graphql`")?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            bail!("gh api graphql failed: {stderr}");
+        }
+
+        let stdout = String::from_utf8(output.stdout).context("gh output not UTF-8")?;
+        let resp: GraphQlResponse =
+            serde_json::from_str(&stdout).context("Failed to parse GraphQL response")?;
+        let conn = resp.data.repository.pull_requests;
+
+        for gql_pr in conn.nodes {
+            let checks_status = gql_pr
+                .commits
+                .nodes
+                .first()
+                .and_then(|n| n.commit.status_check_rollup.as_ref())
+                .and_then(|r| parse_check_state(&r.state));
+
+            all_prs.push(GhPr {
+                number: gql_pr.number,
+                head_ref_name: gql_pr.head_ref_name,
+                base_ref_name: gql_pr.base_ref_name,
+                state: gql_pr.state,
+                is_draft: gql_pr.is_draft,
+                url: gql_pr.url,
+                title: gql_pr.title,
+                review_decision: gql_pr.review_decision,
+                checks_status,
+            });
+        }
+
+        if conn.page_info.has_next_page && all_prs.len() < 200 {
+            cursor = conn.page_info.end_cursor;
+        } else {
+            break;
+        }
     }
 
-    let stdout = String::from_utf8(output.stdout).context("gh output not UTF-8")?;
-    let raw_prs: Vec<RawGhPr> = serde_json::from_str(&stdout).context("Failed to parse gh pr list")?;
-    let prs = raw_prs
-        .into_iter()
-        .map(|raw| GhPr {
-            number: raw.number,
-            head_ref_name: raw.head_ref_name,
-            base_ref_name: raw.base_ref_name,
-            state: raw.state,
-            is_draft: raw.is_draft,
-            url: raw.url,
-            title: raw.title,
-            review_decision: parse_review_decision(&raw.review_decision),
-            checks_status: rollup_checks(&raw.status_check_rollup),
-        })
-        .collect();
-    Ok(prs)
+    Ok(all_prs)
 }
 
 pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(PrNum, String)> {
