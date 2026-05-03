@@ -109,6 +109,8 @@ fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: true,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
+        review_decision: None,
+        checks_status: None,
     }
 }
 
@@ -122,6 +124,8 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
+        review_decision: None,
+        checks_status: None,
     }
 }
 
@@ -135,6 +139,8 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
+        review_decision: None,
+        checks_status: None,
     }
 }
 

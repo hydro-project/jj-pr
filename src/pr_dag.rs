@@ -601,6 +601,26 @@ impl RepoState {
 
 // --- Rendering ---
 
+/// Build the CI and review status indicator string for a PR.
+/// Returns empty string for merged/closed PRs or when no status is available.
+fn ci_review_indicators(gh_pr: &GhPr) -> String {
+    if gh_pr.state != gh::PrState::Open {
+        return String::new();
+    }
+    let mut parts = Vec::new();
+    if let Some(cs) = gh_pr.checks_status {
+        parts.push(crate::style::ci_status(cs));
+    }
+    if let Some(rd) = gh_pr.review_decision {
+        parts.push(crate::style::review_status(rd));
+    }
+    if parts.is_empty() {
+        String::new()
+    } else {
+        format!(" {}", parts.join(" "))
+    }
+}
+
 /// Render the PR DAG as a graph.
 pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut impl std::io::Write) -> Result<()> {
     let mut renderer = GraphRowRenderer::new()
@@ -640,8 +660,9 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
                 } else {
                     ""
                 };
+                let ci_review = ci_review_indicators(gh_pr);
                 format!(
-                    "{}{sync_indicator}  {}  {}\n{}",
+                    "{}{sync_indicator}  {}{ci_review}  {}\n{}",
                     crate::style::pr_num(*pr_id, Some(&gh_pr.url)),
                     crate::style::status(gh_pr.state, gh_pr.is_draft),
                     crate::style::bookmark(&gh_pr.head_ref_name),
@@ -765,11 +786,14 @@ pub fn render_log(
                         ""
                     };
                     let pr_str = match gh_pr {
-                        Some(pr) => format!(
-                            "{}{sync_indicator} {}",
-                            crate::style::pr_num(*pr_id, Some(&pr.url)),
-                            crate::style::status(pr.state, pr.is_draft),
-                        ),
+                        Some(pr) => {
+                            let ci_review = ci_review_indicators(pr);
+                            format!(
+                                "{}{sync_indicator} {}{ci_review}",
+                                crate::style::pr_num(*pr_id, Some(&pr.url)),
+                                crate::style::status(pr.state, pr.is_draft),
+                            )
+                        }
                         None => format!("{}{sync_indicator}", crate::style::pr_num(*pr_id, None),),
                     };
                     line1_parts.push(pr_str);

@@ -34,6 +34,21 @@ pub enum PrState {
     Merged,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ReviewDecision {
+    Approved,
+    ChangesRequested,
+    ReviewRequired,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+pub enum CheckStatus {
+    Pass,
+    Fail,
+    Pending,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GhPr {
@@ -44,6 +59,59 @@ pub struct GhPr {
     pub is_draft: bool,
     pub url: String,
     pub title: String,
+    #[serde(default)]
+    pub review_decision: Option<ReviewDecision>,
+    #[serde(default)]
+    pub checks_status: Option<CheckStatus>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawGhPr {
+    number: PrNum,
+    head_ref_name: String,
+    base_ref_name: String,
+    state: PrState,
+    is_draft: bool,
+    url: String,
+    title: String,
+    #[serde(default)]
+    review_decision: String,
+    #[serde(default)]
+    status_check_rollup: Vec<RawCheckRun>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawCheckRun {
+    status: String,
+    conclusion: String,
+}
+
+fn rollup_checks(checks: &[RawCheckRun]) -> Option<CheckStatus> {
+    let mut has_non_skipped = false;
+    for c in checks {
+        if c.status != "COMPLETED" {
+            return Some(CheckStatus::Pending);
+        }
+        match c.conclusion.as_str() {
+            "FAILURE" | "TIMED_OUT" | "CANCELLED" | "ACTION_REQUIRED" | "STARTUP_FAILURE" => {
+                return Some(CheckStatus::Fail);
+            }
+            "SKIPPED" => {}
+            _ => has_non_skipped = true,
+        }
+    }
+    has_non_skipped.then_some(CheckStatus::Pass)
+}
+
+fn parse_review_decision(s: &str) -> Option<ReviewDecision> {
+    match s {
+        "APPROVED" => Some(ReviewDecision::Approved),
+        "CHANGES_REQUESTED" => Some(ReviewDecision::ChangesRequested),
+        "REVIEW_REQUIRED" => Some(ReviewDecision::ReviewRequired),
+        _ => None,
+    }
 }
 
 pub fn load_prs() -> Result<Vec<GhPr>> {
@@ -52,7 +120,7 @@ pub fn load_prs() -> Result<Vec<GhPr>> {
             "pr",
             "list",
             "--json",
-            "number,headRefName,baseRefName,state,isDraft,url,title",
+            "number,headRefName,baseRefName,state,isDraft,url,title,reviewDecision,statusCheckRollup",
             "--limit",
             "200",
             "--state",
@@ -67,7 +135,21 @@ pub fn load_prs() -> Result<Vec<GhPr>> {
     }
 
     let stdout = String::from_utf8(output.stdout).context("gh output not UTF-8")?;
-    let prs: Vec<GhPr> = serde_json::from_str(&stdout).context("Failed to parse gh pr list")?;
+    let raw_prs: Vec<RawGhPr> = serde_json::from_str(&stdout).context("Failed to parse gh pr list")?;
+    let prs = raw_prs
+        .into_iter()
+        .map(|raw| GhPr {
+            number: raw.number,
+            head_ref_name: raw.head_ref_name,
+            base_ref_name: raw.base_ref_name,
+            state: raw.state,
+            is_draft: raw.is_draft,
+            url: raw.url,
+            title: raw.title,
+            review_decision: parse_review_decision(&raw.review_decision),
+            checks_status: rollup_checks(&raw.status_check_rollup),
+        })
+        .collect();
     Ok(prs)
 }
 
