@@ -68,7 +68,7 @@ pub struct GhPr {
 const GRAPHQL_QUERY: &str = r#"
 query($owner: String!, $repo: String!, $cursor: String) {
   repository(owner: $owner, name: $repo) {
-    pullRequests(first: 100, after: $cursor, states: [OPEN, CLOSED, MERGED]) {
+    pullRequests(first: 100, after: $cursor, states: [OPEN, CLOSED, MERGED], orderBy: {field: UPDATED_AT, direction: DESC}) {
       pageInfo { hasNextPage endCursor }
       nodes {
         number
