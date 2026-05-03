@@ -71,9 +71,15 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
     let yes = cli.yes;
 
-    let jj_entries = jj::load_entries()?;
-    let mut prs = gh::load_prs()?;
-    let default_branch = gh::default_branch()?;
+    let (jj_entries, mut prs, default_branch) = std::thread::scope(|s| {
+        let jj_handle = s.spawn(jj::load_entries);
+        let prs_handle = s.spawn(gh::load_prs);
+        let branch_handle = s.spawn(gh::default_branch);
+        let jj_entries = jj_handle.join().expect("jj log thread panicked")?;
+        let prs = prs_handle.join().expect("gh pr list thread panicked")?;
+        let default_branch = branch_handle.join().expect("gh default_branch thread panicked")?;
+        Ok::<_, anyhow::Error>((jj_entries, prs, default_branch))
+    })?;
     gh::load_pr_statuses(&mut prs)?;
 
     // Store input data globally for panic/error dump.
