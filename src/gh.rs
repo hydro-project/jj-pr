@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::fmt;
 use std::num::NonZeroU64;
 use std::process::Command;
@@ -90,7 +90,7 @@ struct GraphQlData {
 struct RepositoryData {
     default_branch_ref: DefaultBranchRef,
     #[serde(flatten)]
-    prs: BTreeMap<String, Option<PrNode>>,
+    extra: BTreeMap<String, serde_json::Value>,
 }
 
 #[derive(Deserialize)]
@@ -154,8 +154,11 @@ impl From<CheckState> for CheckStatus {
 }
 
 /// Fetch PR data + statuses + default branch in a single GraphQL call.
-/// Only fetches PRs for the given PR numbers (extracted from jj trailers).
-pub fn load_prs_and_default_branch(pr_nums: &[PrNum]) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, String)> {
+/// Discovers PRs both by number (from trailers) and by branch name (from local bookmarks).
+pub fn load_prs_and_default_branch(
+    pr_nums: &[PrNum],
+    bookmarks: &[&str],
+) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, String)> {
     let mut pr_fields = String::new();
     for n in pr_nums {
         use std::fmt::Write;
@@ -163,6 +166,15 @@ pub fn load_prs_and_default_branch(pr_nums: &[PrNum]) -> Result<(Vec<GhPr>, BTre
             pr_fields,
             r#" pr{0}: pullRequest(number: {0}) {{ number headRefName baseRefName state isDraft url title reviewDecision commits(last:1) {{ nodes {{ commit {{ statusCheckRollup {{ state }} }} }} }} }}"#,
             n.get()
+        )
+        .unwrap();
+    }
+    // Also look up PRs by branch name for bookmarks not already covered by trailers.
+    for (i, bm) in bookmarks.iter().enumerate() {
+        use std::fmt::Write;
+        write!(
+            pr_fields,
+            r#" br{i}: pullRequests(first:1, headRefName:"{bm}", states:[OPEN,CLOSED,MERGED]) {{ nodes {{ number headRefName baseRefName state isDraft url title reviewDecision commits(last:1) {{ nodes {{ commit {{ statusCheckRollup {{ state }} }} }} }} }} }}"#,
         )
         .unwrap();
     }
@@ -206,34 +218,57 @@ pub fn load_prs_and_default_branch(pr_nums: &[PrNum]) -> Result<(Vec<GhPr>, BTre
 
     let mut prs = Vec::new();
     let mut statuses = BTreeMap::new();
+    let mut seen = HashSet::new();
 
-    for pr_num in pr_nums.iter() {
-        let key = format!("pr{}", pr_num.get());
-        let Some(Some(d)) = repo_data.prs.get(&key) else {
+    // Helper to process a PrNode into our output.
+    let process_pr =
+        |d: PrNode, seen: &mut HashSet<PrNum>, prs: &mut Vec<GhPr>, statuses: &mut BTreeMap<PrNum, PrStatus>| {
+            if !seen.insert(d.number) {
+                return; // Deduplicate (same PR found by number and by branch).
+            }
+            let checks_status = d
+                .commits
+                .nodes
+                .first()
+                .and_then(|n| n.commit.status_check_rollup.as_ref())
+                .map(|rollup| CheckStatus::from(rollup.state));
+            let status = PrStatus {
+                review_decision: d.review_decision,
+                checks_status,
+            };
+            statuses.insert(d.number, status);
+            prs.push(GhPr {
+                number: d.number,
+                head_ref_name: d.head_ref_name,
+                base_ref_name: d.base_ref_name,
+                state: d.state,
+                is_draft: d.is_draft,
+                url: d.url,
+                title: d.title,
+            });
+        };
+
+    for (key, value) in repo_data.extra {
+        if value.is_null() {
             continue;
-        };
-
-        prs.push(GhPr {
-            number: d.number,
-            head_ref_name: d.head_ref_name.clone(),
-            base_ref_name: d.base_ref_name.clone(),
-            state: d.state,
-            is_draft: d.is_draft,
-            url: d.url.clone(),
-            title: d.title.clone(),
-        });
-
-        let checks_status = d
-            .commits
-            .nodes
-            .first()
-            .and_then(|n| n.commit.status_check_rollup.as_ref())
-            .map(|rollup| CheckStatus::from(rollup.state));
-        let status = PrStatus {
-            review_decision: d.review_decision,
-            checks_status,
-        };
-        statuses.insert(*pr_num, status);
+        }
+        if key.starts_with("pr") {
+            // Direct pullRequest(number:) lookup.
+            if let Ok(node) = serde_json::from_value::<PrNode>(value) {
+                process_pr(node, &mut seen, &mut prs, &mut statuses);
+            }
+        } else if key.starts_with("br") {
+            // pullRequests(headRefName:) connection lookup.
+            #[derive(Deserialize)]
+            struct Connection {
+                nodes: Vec<PrNode>,
+            }
+            if let Ok(conn) = serde_json::from_value::<Connection>(value) {
+                for node in conn.nodes {
+                    process_pr(node, &mut seen, &mut prs, &mut statuses);
+                }
+            }
+        }
     }
 
     Ok((prs, statuses, default_branch))
