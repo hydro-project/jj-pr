@@ -72,5 +72,12 @@ pub enum UtilCommand {
     /// Dump raw state (jj + gh) as JSON for test fixtures
     Dump,
     /// Install recommended jj revset aliases for working with PRs
-    InstallAliases,
+    InstallAliases(InstallAliasesArgs),
+}
+
+#[derive(clap::Args, Clone)]
+pub struct InstallAliasesArgs {
+    /// Install to repo config instead of user config
+    #[arg(long)]
+    pub repo: bool,
 }

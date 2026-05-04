@@ -97,8 +97,8 @@ fn run() -> Result<()> {
                 println!();
                 return Ok(());
             }
-            cli::UtilCommand::InstallAliases => {
-                return install_aliases();
+            cli::UtilCommand::InstallAliases(args) => {
+                return install_aliases(args.repo);
             }
         }
     }
@@ -163,8 +163,10 @@ fn run() -> Result<()> {
     result
 }
 
-fn install_aliases() -> Result<()> {
+fn install_aliases(repo: bool) -> Result<()> {
     use std::process::Command as Cmd;
+
+    let scope = if repo { "--repo" } else { "--user" };
 
     let aliases = [
         ("revset-aliases.\"pr(n)\"", r#"description(regex:"PR: #" ++ n)"#),
@@ -173,7 +175,7 @@ fn install_aliases() -> Result<()> {
 
     for (key, value) in &aliases {
         let output = Cmd::new("jj")
-            .args(["config", "set", "--repo", key, value])
+            .args(["config", "set", scope, key, value])
             .output()
             .context("Failed to run `jj config set`")?;
         if !output.status.success() {
@@ -182,12 +184,30 @@ fn install_aliases() -> Result<()> {
         }
     }
 
-    eprintln!("Installed revset aliases:");
-    eprintln!("  pr(n)      — all commits in PR #n");
-    eprintln!("  pr_root(n) — root commit(s) of PR #n");
+    // Install `jj pr` subcommand alias.
+    let output = Cmd::new("jj")
+        .args([
+            "config",
+            "set",
+            scope,
+            "aliases.pr",
+            r#"["util", "exec", "--", "jj-pr"]"#,
+        ])
+        .output()
+        .context("Failed to run `jj config set` for alias")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("jj config set failed for aliases.pr: {stderr}");
+    }
+
+    eprintln!("Installed to {scope} config:");
+    eprintln!("  revset alias: pr(n)      — all commits in PR #n");
+    eprintln!("  revset alias: pr_root(n) — root commit(s) of PR #n");
+    eprintln!("  command alias: jj pr     — runs jj-pr");
     eprintln!();
     eprintln!("Usage:");
     eprintln!("  jj log -r 'pr(\"1234\")'");
     eprintln!("  jj rebase -s 'pr_root(\"1234\")' -d main");
+    eprintln!("  jj pr show");
     Ok(())
 }

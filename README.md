@@ -14,9 +14,9 @@ A CLI tool that syncs [Jujutsu (jj)](https://github.com/jj-vcs/jj) bookmarks wit
 
 ```sh
 cargo install --git https://github.com/hydro-project/jj-pr --locked
-jj config set --user aliases.pr '["util", "exec", "--", "jj-pr"]'
+jj-pr util install-aliases
 ```
-The second line adds `jj pr` as an alias to `jj-pr`.
+The second line installs `jj pr` as a subcommand alias and revset aliases (`pr(n)`, `pr_root(n)`) into your user config.
 
 
 ### Dependencies
