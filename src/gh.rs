@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::fmt;
 use std::num::NonZeroU64;
 use std::process::Command;
@@ -216,28 +216,28 @@ pub fn load_prs_and_default_branch(
 
     let default_branch = repo_data.default_branch_ref.name;
 
-    let mut prs = Vec::new();
+    let mut prs = BTreeMap::<PrNum, GhPr>::new();
     let mut statuses = BTreeMap::new();
-    let mut seen = HashSet::new();
 
     // Helper to process a PrNode into our output.
-    let process_pr =
-        |d: PrNode, seen: &mut HashSet<PrNum>, prs: &mut Vec<GhPr>, statuses: &mut BTreeMap<PrNum, PrStatus>| {
-            if !seen.insert(d.number) {
-                return; // Deduplicate (same PR found by number and by branch).
-            }
-            let checks_status = d
-                .commits
-                .nodes
-                .first()
-                .and_then(|n| n.commit.status_check_rollup.as_ref())
-                .map(|rollup| CheckStatus::from(rollup.state));
-            let status = PrStatus {
-                review_decision: d.review_decision,
-                checks_status,
-            };
-            statuses.insert(d.number, status);
-            prs.push(GhPr {
+    let process_pr = |d: PrNode, prs: &mut BTreeMap<PrNum, GhPr>, statuses: &mut BTreeMap<PrNum, PrStatus>| {
+        if prs.contains_key(&d.number) {
+            return; // Deduplicate (same PR found by number and by branch).
+        }
+        let checks_status = d
+            .commits
+            .nodes
+            .first()
+            .and_then(|n| n.commit.status_check_rollup.as_ref())
+            .map(|rollup| CheckStatus::from(rollup.state));
+        let status = PrStatus {
+            review_decision: d.review_decision,
+            checks_status,
+        };
+        statuses.insert(d.number, status);
+        prs.insert(
+            d.number,
+            GhPr {
                 number: d.number,
                 head_ref_name: d.head_ref_name,
                 base_ref_name: d.base_ref_name,
@@ -245,8 +245,9 @@ pub fn load_prs_and_default_branch(
                 is_draft: d.is_draft,
                 url: d.url,
                 title: d.title,
-            });
-        };
+            },
+        );
+    };
 
     for (key, value) in repo_data.extra {
         if value.is_null() {
@@ -255,7 +256,7 @@ pub fn load_prs_and_default_branch(
         if key.starts_with("pr") {
             // Direct pullRequest(number:) lookup.
             if let Ok(node) = serde_json::from_value::<PrNode>(value) {
-                process_pr(node, &mut seen, &mut prs, &mut statuses);
+                process_pr(node, &mut prs, &mut statuses);
             }
         } else if key.starts_with("br") {
             // pullRequests(headRefName:) connection lookup.
@@ -265,13 +266,13 @@ pub fn load_prs_and_default_branch(
             }
             if let Ok(conn) = serde_json::from_value::<Connection>(value) {
                 for node in conn.nodes {
-                    process_pr(node, &mut seen, &mut prs, &mut statuses);
+                    process_pr(node, &mut prs, &mut statuses);
                 }
             }
         }
     }
 
-    Ok((prs, statuses, default_branch))
+    Ok((prs.into_values().collect(), statuses, default_branch))
 }
 
 pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(PrNum, String)> {
