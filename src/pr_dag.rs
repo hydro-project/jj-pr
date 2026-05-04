@@ -599,10 +599,38 @@ impl RepoState {
     }
 }
 
+/// Extract unique PR numbers from jj log entries' trailers.
+pub fn extract_pr_nums(jj_entries: &[JjLogEntry]) -> Vec<PrNum> {
+    let mut nums = BTreeSet::new();
+    for entry in jj_entries {
+        if let Some(pr_num) = jj::parse_pr_trailer(&entry.commit.description) {
+            nums.insert(pr_num);
+        }
+    }
+    nums.into_iter().collect()
+}
+
 // --- Rendering ---
 
+/// Build the CI and review status indicator string for a PR.
+///
+/// Returns a string with a leading space containing CI and review status indicators.
+fn ci_review_indicators(status: &gh::PrStatus) -> String {
+    let mut parts = Vec::new();
+    if let Some(cs) = status.checks_status {
+        parts.push(crate::style::ci_status(cs));
+    }
+    parts.push(crate::style::review_status(status.review_decision));
+    format!(" {}", parts.join(" "))
+}
+
 /// Render the PR DAG as a graph.
-pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut impl std::io::Write) -> Result<()> {
+pub fn render_show(
+    state: &RepoState,
+    prs: &BTreeMap<PrNum, &GhPr>,
+    pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
+    out: &mut impl std::io::Write,
+) -> Result<()> {
     let mut renderer = GraphRowRenderer::new()
         .output()
         .with_min_row_height(1)
@@ -640,8 +668,9 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
                 } else {
                     ""
                 };
+                let ci_review = pr_statuses.get(pr_id).map(ci_review_indicators).unwrap_or_default();
                 format!(
-                    "{}{sync_indicator}  {}  {}\n{}",
+                    "{}{sync_indicator}  {}{ci_review}  {}\n{}",
                     crate::style::pr_num(*pr_id, Some(&gh_pr.url)),
                     crate::style::status(gh_pr.state, gh_pr.is_draft),
                     crate::style::bookmark(&gh_pr.head_ref_name),
@@ -706,6 +735,7 @@ pub fn render_show(state: &RepoState, prs: &BTreeMap<PrNum, &GhPr>, out: &mut im
 pub fn render_log(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
+    pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
     jj_entries: &[JjLogEntry],
     show_all: bool,
     out: &mut impl std::io::Write,
@@ -765,11 +795,14 @@ pub fn render_log(
                         ""
                     };
                     let pr_str = match gh_pr {
-                        Some(pr) => format!(
-                            "{}{sync_indicator} {}",
-                            crate::style::pr_num(*pr_id, Some(&pr.url)),
-                            crate::style::status(pr.state, pr.is_draft),
-                        ),
+                        Some(pr) => {
+                            let ci_review = pr_statuses.get(pr_id).map(ci_review_indicators).unwrap_or_default();
+                            format!(
+                                "{}{sync_indicator} {}{ci_review}",
+                                crate::style::pr_num(*pr_id, Some(&pr.url)),
+                                crate::style::status(pr.state, pr.is_draft),
+                            )
+                        }
                         None => format!("{}{sync_indicator}", crate::style::pr_num(*pr_id, None),),
                     };
                     line1_parts.push(pr_str);

@@ -152,3 +152,19 @@ pub fn trunk() -> String {
 pub fn root() -> String {
     styled(TRUNK_LABEL, LABEL_ROOT)
 }
+
+pub fn ci_status(status: crate::gh::CheckStatus) -> String {
+    match status {
+        crate::gh::CheckStatus::Pass => styled(READY, "✓CI"),
+        crate::gh::CheckStatus::Fail => styled(CLOSED, "✗CI"),
+        crate::gh::CheckStatus::Pending => styled(DRAFT, "●CI"),
+    }
+}
+
+pub fn review_status(decision: Option<crate::gh::ReviewDecision>) -> String {
+    match decision {
+        Some(crate::gh::ReviewDecision::Approved) => styled(READY, "✓Review"),
+        Some(crate::gh::ReviewDecision::ChangesRequested) => styled(CLOSED, "✗Review"),
+        Some(crate::gh::ReviewDecision::ReviewRequired) | None => styled(DRAFT, "●Review"),
+    }
+}

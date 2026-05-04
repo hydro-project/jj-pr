@@ -71,9 +71,14 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
     let yes = cli.yes;
 
+    // Step 1: Load jj entries (the only local I/O).
     let jj_entries = jj::load_entries()?;
-    let prs = gh::load_prs()?;
-    let default_branch = gh::default_branch()?;
+
+    // Step 2: Extract PR numbers from trailers to know which PRs to fetch.
+    let pr_nums = pr_dag::extract_pr_nums(&jj_entries);
+
+    // Step 3: Single GraphQL call for PR data + statuses + default branch.
+    let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums)?;
 
     // Store input data globally for panic/error dump.
     let input = INPUT_DATA.get_or_init(|| InputData {
@@ -95,8 +100,15 @@ fn run() -> Result<()> {
     let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch)?;
 
     let result = match command {
-        Command::Show(_args) => pr_dag::render_show(&state, &prs, &mut std::io::stdout()),
-        Command::Log(args) => pr_dag::render_log(&state, &prs, &input.jj_entries, args.all, &mut std::io::stdout()),
+        Command::Show(_args) => pr_dag::render_show(&state, &prs, &pr_statuses, &mut std::io::stdout()),
+        Command::Log(args) => pr_dag::render_log(
+            &state,
+            &prs,
+            &pr_statuses,
+            &input.jj_entries,
+            args.all,
+            &mut std::io::stdout(),
+        ),
         Command::Sync(args) => {
             let actions = pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch)?;
             if actions.is_empty() {
