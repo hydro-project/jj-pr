@@ -1409,12 +1409,7 @@ pub fn plan_create(
 }
 
 /// Execute a planned PR creation. Performs side effects: push, create PR, stamp trailers.
-pub fn execute_create(plan: &CreatePlan, push_remote: &str) -> Result<()> {
-    // Track remote (ignore error — remote bookmark may not exist yet).
-    if let Err(e) = jj::bookmark_track(&plan.bookmark, push_remote) {
-        tracing::debug!("bookmark track failed (expected if new): {e:#}");
-    }
-
+pub fn execute_create(plan: &CreatePlan) -> Result<()> {
     eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
     jj::git_push_bookmark(&plan.bookmark)?;
 

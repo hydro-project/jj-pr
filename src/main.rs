@@ -198,7 +198,7 @@ fn run() -> Result<()> {
             } else if !ui::confirm("Create PR?", yes) {
                 anyhow::bail!("Aborted.");
             } else {
-                pr_dag::execute_create(&plan, &push_remote)?;
+                pr_dag::execute_create(&plan)?;
             }
             Ok(())
         }

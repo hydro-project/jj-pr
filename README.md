@@ -145,8 +145,18 @@ descriptions as a safety net. See the `decide()` function in `pr_dag.rs` for the
 
 See [DESIGN.md](DESIGN.md) for the full design rationale.
 
+## Fork Workflows
+
+If you push to a personal fork instead of the upstream repo, configure jj's push remote:
+
+```sh
+jj config set --repo git.push "fork"
+```
+
+jj-pr reads this setting to determine which remote to compare bookmarks against for push detection. `gh pr create`
+automatically handles cross-repo PRs when you push to a fork.
+
 ## Known Limitations
 
-- **Remote hardcoded to `origin`** — fork-based workflows where PRs come from a different remote (e.g., `fork`) are not yet supported.
 - **Multiple PRs sharing the same bookmark** — if you have e.g. an open and a closed/merged PR both using the same branch name, only one will be tracked. See the `head_to_pr` TODO in `pr_dag.rs`.
 - Some other things, probably

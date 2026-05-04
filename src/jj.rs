@@ -339,6 +339,7 @@ pub fn bookmark_delete(name: &str) -> Result<()> {
 }
 
 /// Track a remote bookmark.
+#[expect(dead_code, reason = "may be needed for future workflows")]
 pub fn bookmark_track(name: &str, remote: &str) -> Result<()> {
     let refname = format!("{name}@{remote}");
     let output = Command::new("jj")
