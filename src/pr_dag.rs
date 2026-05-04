@@ -83,7 +83,12 @@ impl Node {
 /// Build the repo state from raw jj and GitHub data.
 ///
 /// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
-pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> Result<RepoState> {
+pub fn build(
+    jj_entries: &[JjLogEntry],
+    prs: &BTreeMap<PrNum, &GhPr>,
+    default_branch: &str,
+    tracked_bookmarks: Option<&HashSet<String>>,
+) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
     let mut node_preds = SecondaryMap::new();
@@ -111,15 +116,6 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         // TODO(mingwei): handle multiple PRs sharing the same bookmark (e.g. Open + Closed/Merged).
         let head_to_pr: HashMap<&str, &GhPr> = prs.values().map(|&pr| (&*pr.head_ref_name, pr)).collect();
 
-        // Collect bookmark names that have a remote tracking relationship on the push remote.
-        // A local bookmark only "claims" a PR if it's tracked on the push remote.
-        let tracked_bookmarks: HashSet<&str> = jj_entries
-            .iter()
-            .flat_map(|e| e.remote_bookmarks.iter())
-            .filter(|bm| bm.remote.as_deref() == Some("origin"))
-            .map(|bm| bm.name.as_str())
-            .collect();
-
         let mut pr_local = HashSet::new();
 
         for jj_entry in jj_entries.iter() {
@@ -127,7 +123,8 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                 let local_bookmark_name = &*local_bookmark.name;
                 if let Some(pr) = head_to_pr.get(local_bookmark_name) {
                     // Only consider this a PR bookmark if it's tracked on the push remote.
-                    if !tracked_bookmarks.contains(local_bookmark_name) {
+                    // `None` means all bookmarks are considered tracked (legacy/old fixtures).
+                    if tracked_bookmarks.is_some_and(|tb| !tb.contains(local_bookmark_name)) {
                         continue;
                     }
                     // This is a PR bookmark.

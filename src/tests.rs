@@ -12,7 +12,13 @@ fn render_show(input: &InputData) -> String {
 fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, PrStatus>) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
     let mut buf = Vec::new();
     pr_dag::render_show(&state, &prs, pr_statuses, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
@@ -21,7 +27,13 @@ fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, Pr
 fn render_log(input: &InputData, show_all: bool) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
     let mut buf = Vec::new();
     pr_dag::render_log(&state, &prs, &pr_statuses, &input.jj_entries, show_all, &mut buf).unwrap();
@@ -30,7 +42,13 @@ fn render_log(input: &InputData, show_all: bool) -> String {
 
 fn plan_sync(input: &InputData) -> String {
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
     match pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch) {
         Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
         Err(e) => format!("ERROR: {e}"),
@@ -39,7 +57,13 @@ fn plan_sync(input: &InputData) -> String {
 
 fn plan_create(input: &InputData, bookmark: &str) -> String {
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
     match pr_dag::plan_create(
         &state,
         &prs,
@@ -167,6 +191,7 @@ fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>) -> InputData {
         jj_entries: entries,
         prs,
         default_branch: "main".to_owned(),
+        tracked_bookmarks: None, // Legacy: all bookmarks considered tracked.
     }
 }
 
@@ -582,12 +607,14 @@ fn create_conflicted_bookmark_rejected() {
 fn bookmark_name_collision_no_remote() {
     // User has a local bookmark "fix-typo" that coincidentally matches someone else's PR.
     // No remote tracking, no trailer. Should NOT plan a push (not our PR).
-    let f = fixture(
-        vec![
+    let f = InputData {
+        jj_entries: vec![
             entry("c1", "ch1", &["trunk"], "my unrelated work\n", &["fix-typo"], false),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
-        vec![gh_pr(42, "fix-typo", "main")],
-    );
+        prs: vec![gh_pr(42, "fix-typo", "main")],
+        default_branch: "main".to_owned(),
+        tracked_bookmarks: Some(std::collections::HashSet::new()), // No bookmarks tracked.
+    };
     insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
 }

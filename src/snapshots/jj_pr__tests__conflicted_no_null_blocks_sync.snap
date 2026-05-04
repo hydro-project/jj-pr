@@ -2,4 +2,4 @@
 source: src/tests.rs
 expression: plan_sync(&f)
 ---
-abandon merged #1 (delete feat)
+ERROR: Conflicted bookmark(s): feat. Resolve with `jj bookmark` before syncing.
