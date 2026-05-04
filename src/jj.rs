@@ -1,5 +1,5 @@
 use std::borrow::Borrow;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::fmt::Display;
 use std::ops::Deref;
 use std::process::Command;
@@ -209,7 +209,7 @@ pub fn load_entries() -> Result<Vec<JjLogEntry>> {
 }
 
 /// Load the set of bookmark names tracked on a given remote.
-pub fn load_tracked_bookmarks(remote: &str) -> Result<HashSet<String>> {
+pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<String>> {
     let template = format!(r#"if(remote == "{remote}", name ++ "\n")"#);
     let output = Command::new("jj")
         .args(["bookmark", "list", "--tracked", "-T", &template])

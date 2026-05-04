@@ -26,7 +26,7 @@ pub(crate) struct InputData {
     /// Bookmark names tracked on the push remote (origin).
     /// `None` means all bookmarks are considered tracked (legacy behavior).
     #[serde(default)]
-    pub(crate) tracked_bookmarks: Option<std::collections::HashSet<String>>,
+    pub(crate) tracked_bookmarks: Option<std::collections::BTreeSet<String>>,
 }
 
 impl InputData {

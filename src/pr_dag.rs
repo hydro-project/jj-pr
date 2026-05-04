@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
 
-use anyhow::{Result, ensure};
+use anyhow::Result;
 use renderdag::{Ancestor, GraphRowRenderer, Renderer};
 use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 
@@ -87,7 +87,7 @@ pub fn build(
     jj_entries: &[JjLogEntry],
     prs: &BTreeMap<PrNum, &GhPr>,
     default_branch: &str,
-    tracked_bookmarks: Option<&HashSet<String>>,
+    tracked_bookmarks: Option<&BTreeSet<String>>,
 ) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
@@ -124,7 +124,8 @@ pub fn build(
                 if let Some(pr) = head_to_pr.get(local_bookmark_name) {
                     // Only consider this a PR bookmark if it's tracked on the push remote.
                     // `None` means all bookmarks are considered tracked (legacy/old fixtures).
-                    if tracked_bookmarks.is_some_and(|tb| !tb.contains(local_bookmark_name)) {
+                    let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains(local_bookmark_name));
+                    if !is_tracked {
                         continue;
                     }
                     // This is a PR bookmark.
@@ -158,12 +159,11 @@ pub fn build(
                             // Only block on the local side to avoid duplicate insertions.
                             repo_state.bookmarks_blocking.insert(local_bookmark_name.to_owned());
                         }
-                    } else {
-                        // Note `local_bookmark.target == vec![jj_entry.commit.commit_id]` in the non-conflicted case.
-                        ensure!(
-                            local_bookmark.target.first().unwrap().as_ref() == Some(&jj_entry.commit.commit_id),
-                            "bug: local bookmark target does not match commit id"
-                        );
+                    } else if local_bookmark
+                        .target
+                        .first()
+                        .is_some_and(|t| t.as_ref() == Some(&jj_entry.commit.commit_id))
+                    {
                         cid_pr_tip
                             .entry(&*jj_entry.commit.commit_id)
                             .or_default()
@@ -178,6 +178,7 @@ pub fn build(
     };
 
     // Compute pr_needs_push: compare local vs remote bookmark targets for PR bookmarks.
+    // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.
     {
         let mut local_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
         let mut remote_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
