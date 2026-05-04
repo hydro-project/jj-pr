@@ -1210,8 +1210,34 @@ fn find_base_branch(
     default_branch.to_owned()
 }
 
-/// Create a new PR for an existing bookmark.
-pub fn cmd_create(
+/// The planned actions for creating a new PR.
+#[derive(Debug)]
+pub struct CreatePlan {
+    pub bookmark: String,
+    pub base: String,
+    pub title: String,
+    pub body: String,
+    /// Change IDs of commits that will be stamped with the PR trailer.
+    pub stamp_change_ids: Vec<String>,
+}
+
+impl fmt::Display for CreatePlan {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "push {}", self.bookmark)?;
+        writeln!(
+            f,
+            "create PR: \"{}\" ({} → {}) [draft]",
+            self.title, self.bookmark, self.base,
+        )?;
+        if !self.stamp_change_ids.is_empty() {
+            writeln!(f, "stamp trailer on {} commit(s)", self.stamp_change_ids.len())?;
+        }
+        Ok(())
+    }
+}
+
+/// Plan the creation of a new PR for an existing bookmark. Pure — no side effects.
+pub fn plan_create(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
@@ -1219,7 +1245,7 @@ pub fn cmd_create(
     bookmark: &str,
     title: Option<&str>,
     body: Option<&str>,
-) -> Result<()> {
+) -> Result<CreatePlan> {
     // Verify bookmark exists.
     let tip_entry = jj_entries
         .iter()
@@ -1231,6 +1257,19 @@ pub fn cmd_create(
             )
         })?;
 
+    // Reject conflicted bookmarks.
+    let bm = tip_entry
+        .local_bookmarks
+        .iter()
+        .find(|bm| bm.name == bookmark)
+        .expect("bookmark must exist — already verified above");
+    anyhow::ensure!(
+        bm.target.len() == 1,
+        "bookmark '{}' is conflicted — resolve with `jj bookmark set {}` before creating a PR",
+        bookmark,
+        bookmark,
+    );
+
     // Verify no PR already exists for this bookmark.
     if let Some(existing) = prs.values().find(|pr| pr.head_ref_name == bookmark) {
         anyhow::bail!(
@@ -1240,10 +1279,8 @@ pub fn cmd_create(
         );
     }
 
-    // Determine base branch.
     let base = find_base_branch(state, prs, jj_entries, bookmark, default_branch);
 
-    // Determine title.
     let title = title.map(|s| s.to_owned()).unwrap_or_else(|| {
         tip_entry
             .commit
@@ -1253,43 +1290,19 @@ pub fn cmd_create(
             .unwrap_or("untitled")
             .to_owned()
     });
-    let default_body;
-    let body = match body {
-        Some(b) => b,
-        None => {
-            // Default body: description body (everything after the first line).
-            default_body = tip_entry
-                .commit
-                .description
-                .lines()
-                .skip(1)
-                .collect::<Vec<_>>()
-                .join("\n");
-            default_body.trim()
-        }
-    };
+    let body = body.map(|s| s.to_owned()).unwrap_or_else(|| {
+        tip_entry
+            .commit
+            .description
+            .lines()
+            .skip(1)
+            .collect::<Vec<_>>()
+            .join("\n")
+            .trim()
+            .to_owned()
+    });
 
-    // Track remote (ignore error — remote bookmark may not exist yet).
-    // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.
-    if let Err(e) = jj::bookmark_track(bookmark, "origin") {
-        tracing::debug!("bookmark track failed (expected if new): {e:#}");
-    }
-
-    // Push.
-    eprintln!("Pushing {}", crate::style::bookmark(bookmark));
-    jj::git_push_bookmark(bookmark)?;
-
-    // Create PR.
-    eprintln!(
-        "Creating PR: {} ({} → {}) [draft]",
-        title,
-        crate::style::bookmark(bookmark),
-        crate::style::bookmark(&base),
-    );
-    let (pr_number, pr_url) = gh::create_pr(bookmark, &base, &title, body, true)?;
-    eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
-
-    // Stamp trailers on owned commits by walking backwards from the tip.
+    // Walk backwards from tip to find commits that need stamping.
     // We can't use `state.commit_node` alone here because `state` was built before
     // this PR existed — the node assignments are stale for the new PR.
     // However, `state` is still authoritative for *existing* PRs/trunk, so we
@@ -1298,7 +1311,7 @@ pub fn cmd_create(
     let parent_map: HashMap<&CommitId<str>, &JjLogEntry> =
         jj_entries.iter().map(|e| (&*e.commit.commit_id, e)).collect();
 
-    let mut stamped = 0;
+    let mut stamp_change_ids = Vec::new();
     let mut queue = std::collections::VecDeque::new();
     let mut visited = HashSet::new();
     queue.push_back(&*tip_entry.commit.commit_id);
@@ -1307,10 +1320,10 @@ pub fn cmd_create(
             continue;
         }
         let Some(entry) = parent_map.get(cid) else {
-            continue; // Beyond revset (trunk boundary).
+            continue;
         };
         if entry.immutable {
-            continue; // Don't stamp trunk.
+            continue;
         }
         // Check if state already assigns this commit to another PR or trunk/root.
         if let Some(&nk) = state.commit_node.get(&*entry.commit.commit_id) {
@@ -1320,23 +1333,53 @@ pub fn cmd_create(
             }
         }
         let existing = jj::parse_pr_trailer(&entry.commit.description);
-        if existing.is_some() && existing != Some(pr_number) {
-            continue; // Owned by a different PR.
+        if existing.is_some() {
+            continue; // Already has a trailer (any PR) — don't overwrite.
         }
-        if existing != Some(pr_number) {
-            let new_desc = jj::set_pr_trailer(&entry.commit.description, pr_number);
-            jj::describe_stdin(&entry.commit.change_id, &new_desc)?;
-            stamped += 1;
-        }
+        stamp_change_ids.push(entry.commit.change_id.clone());
         for parent in &entry.commit.parents {
             queue.push_back(&**parent);
         }
     }
-    if stamped > 0 {
+
+    Ok(CreatePlan {
+        bookmark: bookmark.to_owned(),
+        base,
+        title,
+        body,
+        stamp_change_ids,
+    })
+}
+
+/// Execute a planned PR creation. Performs side effects: push, create PR, stamp trailers.
+pub fn execute_create(plan: &CreatePlan) -> Result<()> {
+    // Track remote (ignore error — remote bookmark may not exist yet).
+    if let Err(e) = jj::bookmark_track(&plan.bookmark, "origin") {
+        tracing::debug!("bookmark track failed (expected if new): {e:#}");
+    }
+
+    eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
+    jj::git_push_bookmark(&plan.bookmark)?;
+
+    eprintln!(
+        "Creating PR: {} ({} → {}) [draft]",
+        plan.title,
+        crate::style::bookmark(&plan.bookmark),
+        crate::style::bookmark(&plan.base),
+    );
+    let (pr_number, pr_url) = gh::create_pr(&plan.bookmark, &plan.base, &plan.title, &plan.body, true)?;
+    eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
+
+    if !plan.stamp_change_ids.is_empty() {
+        for change_id in &plan.stamp_change_ids {
+            let desc = jj::read_description(change_id)?;
+            let new_desc = jj::set_pr_trailer(&desc, pr_number);
+            jj::describe_stdin(change_id, &new_desc)?;
+        }
         eprintln!(
             "Stamped {} on {} commit(s)",
             crate::style::pr_num(pr_number, None),
-            stamped
+            plan.stamp_change_ids.len(),
         );
     }
 

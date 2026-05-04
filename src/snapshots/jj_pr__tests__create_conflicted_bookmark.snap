@@ -1,0 +1,5 @@
+---
+source: src/tests.rs
+expression: "plan_create(&f, \"feat\")"
+---
+ERROR: bookmark 'feat' is conflicted — resolve with `jj bookmark set feat` before creating a PR

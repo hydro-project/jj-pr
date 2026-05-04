@@ -37,6 +37,23 @@ fn plan_sync(input: &InputData) -> String {
     }
 }
 
+fn plan_create(input: &InputData, bookmark: &str) -> String {
+    let prs = input.prs_map();
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    match pr_dag::plan_create(
+        &state,
+        &prs,
+        &input.jj_entries,
+        &input.default_branch,
+        bookmark,
+        None,
+        None,
+    ) {
+        Ok(plan) => plan.to_string(),
+        Err(e) => format!("ERROR: {e}"),
+    }
+}
+
 // --- File-based fixture tests ---
 
 #[test]
@@ -483,4 +500,67 @@ fn ci_review_status_indicators() {
         ),
     ]);
     insta::assert_snapshot!("ci_review_status_show", render_show_with_statuses(&f, &statuses));
+}
+
+#[test]
+fn create_new_pr() {
+    // Bookmark "feat" with two unstamped commits, no existing PR.
+    let f = fixture(
+        vec![
+            entry("c2", "ch2", &["c1"], "second commit\n", &["feat"], false),
+            entry("c1", "ch1", &["trunk"], "first commit\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![],
+    );
+    insta::assert_snapshot!("create_new_pr", plan_create(&f, "feat"));
+}
+
+#[test]
+fn create_stacked_pr() {
+    // Bookmark "feat-b" stacked on existing PR #1 ("feat-a").
+    let f = fixture(
+        vec![
+            entry("b1", "chb1", &["a1"], "child\n", &["feat-b"], false),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "parent\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main")],
+    );
+    insta::assert_snapshot!("create_stacked_pr", plan_create(&f, "feat-b"));
+}
+
+#[test]
+fn create_already_exists() {
+    // Bookmark "feat" already has PR #1 — should error.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("create_already_exists", plan_create(&f, "feat"));
+}
+
+#[test]
+fn create_conflicted_bookmark_rejected() {
+    // Conflicted bookmark should be rejected by plan_create.
+    let mut tip = entry("c1", "ch1", &["trunk"], "feat\n", &["feat"], false);
+    tip.local_bookmarks[0].target = vec![
+        Some(CommitId("c1".to_owned())),
+        Some(CommitId("other".to_owned())),
+        Some(CommitId("remote".to_owned())),
+    ];
+    let f = fixture(
+        vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
+        vec![],
+    );
+    insta::assert_snapshot!("create_conflicted_bookmark", plan_create(&f, "feat"));
 }

@@ -1,0 +1,7 @@
+---
+source: src/tests.rs
+expression: "plan_create(&f, \"feat-b\")"
+---
+push feat-b
+create PR: "child" (feat-b → feat-a) [draft]
+stamp trailer on 1 commit(s)

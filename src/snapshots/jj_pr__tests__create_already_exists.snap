@@ -1,0 +1,5 @@
+---
+source: src/tests.rs
+expression: "plan_create(&f, \"feat\")"
+---
+ERROR: bookmark 'feat' already has #1 — use `jj-pr sync` to update it
