@@ -1230,7 +1230,7 @@ impl fmt::Display for CreatePlan {
             self.title, self.bookmark, self.base,
         )?;
         if !self.stamp_change_ids.is_empty() {
-            write!(f, "stamp trailer on {} commit(s)", self.stamp_change_ids.len())?;
+            writeln!(f, "stamp trailer on {} commit(s)", self.stamp_change_ids.len())?;
         }
         Ok(())
     }
