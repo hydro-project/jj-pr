@@ -564,3 +564,17 @@ fn create_conflicted_bookmark_rejected() {
     );
     insta::assert_snapshot!("create_conflicted_bookmark", plan_create(&f, "feat"));
 }
+
+#[test]
+fn bookmark_name_collision_no_remote() {
+    // User has a local bookmark "fix-typo" that coincidentally matches someone else's PR.
+    // No remote tracking, no trailer. Should NOT plan a push (not our PR).
+    let f = fixture(
+        vec![
+            entry("c1", "ch1", &["trunk"], "my unrelated work\n", &["fix-typo"], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(42, "fix-typo", "main")],
+    );
+    insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
+}

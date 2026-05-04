@@ -1,0 +1,6 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+---
+stamp #42 trailer on ch1
+push: #42 (fix-typo)
