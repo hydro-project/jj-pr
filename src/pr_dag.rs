@@ -1257,6 +1257,19 @@ pub fn plan_create(
             )
         })?;
 
+    // Reject conflicted bookmarks.
+    let bm = tip_entry
+        .local_bookmarks
+        .iter()
+        .find(|bm| bm.name == bookmark)
+        .expect("bookmark must exist — already verified above");
+    anyhow::ensure!(
+        bm.target.len() == 1,
+        "bookmark '{}' is conflicted — resolve with `jj bookmark set {}` before creating a PR",
+        bookmark,
+        bookmark,
+    );
+
     // Verify no PR already exists for this bookmark.
     if let Some(existing) = prs.values().find(|pr| pr.head_ref_name == bookmark) {
         anyhow::bail!(

@@ -548,3 +548,19 @@ fn create_already_exists() {
     );
     insta::assert_snapshot!("create_already_exists", plan_create(&f, "feat"));
 }
+
+#[test]
+fn create_conflicted_bookmark_rejected() {
+    // Conflicted bookmark should be rejected by plan_create.
+    let mut tip = entry("c1", "ch1", &["trunk"], "feat\n", &["feat"], false);
+    tip.local_bookmarks[0].target = vec![
+        Some(CommitId("c1".to_owned())),
+        Some(CommitId("other".to_owned())),
+        Some(CommitId("remote".to_owned())),
+    ];
+    let f = fixture(
+        vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
+        vec![],
+    );
+    insta::assert_snapshot!("create_conflicted_bookmark", plan_create(&f, "feat"));
+}
