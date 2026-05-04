@@ -71,6 +71,18 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
     let yes = cli.yes;
 
+    let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
+
+    // Handle commands that don't need jj/gh state early.
+    if let Command::Util(util_args) = &command {
+        match &util_args.command {
+            cli::UtilCommand::InstallAliases(args) => {
+                return install_aliases(args.repo);
+            }
+            _ => {}
+        }
+    }
+
     // Step 1: Load jj entries (the only local I/O).
     let jj_entries = jj::load_entries()?;
 
@@ -87,9 +99,7 @@ fn run() -> Result<()> {
         default_branch,
     });
 
-    let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
-
-    // Handle util commands before building derived state.
+    // Handle util commands that need input data.
     if let Command::Util(util_args) = &command {
         match &util_args.command {
             cli::UtilCommand::Dump => {
@@ -97,9 +107,7 @@ fn run() -> Result<()> {
                 println!();
                 return Ok(());
             }
-            cli::UtilCommand::InstallAliases(args) => {
-                return install_aliases(args.repo);
-            }
+            _ => {}
         }
     }
 
