@@ -96,9 +96,8 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
-    let push_remote = jj::push_remote()?;
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch, &push_remote)?;
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch)?;
 
     let result = match command {
         Command::Show(_args) => pr_dag::render_show(&state, &prs, &pr_statuses, &mut std::io::stdout()),

@@ -83,12 +83,7 @@ impl Node {
 /// Build the repo state from raw jj and GitHub data.
 ///
 /// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
-pub fn build(
-    jj_entries: &[JjLogEntry],
-    prs: &BTreeMap<PrNum, &GhPr>,
-    default_branch: &str,
-    push_remote: &str,
-) -> Result<RepoState> {
+pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
     let mut node_preds = SecondaryMap::new();
@@ -121,7 +116,7 @@ pub fn build(
         let tracked_bookmarks: HashSet<&str> = jj_entries
             .iter()
             .flat_map(|e| e.remote_bookmarks.iter())
-            .filter(|bm| bm.remote.as_deref() == Some(push_remote))
+            .filter(|bm| bm.remote.as_deref() == Some("origin"))
             .map(|bm| bm.name.as_str())
             .collect();
 
@@ -194,7 +189,8 @@ pub fn build(
                 local_targets.insert(&bm.name, &jj_entry.commit.commit_id);
             }
             for bm in &jj_entry.remote_bookmarks {
-                if bm.remote.as_deref() == Some(push_remote) {
+                // Only consider the push remote, not @git (local tracking ref).
+                if bm.remote.as_deref() == Some("origin") {
                     remote_targets.entry(&bm.name).or_insert(&jj_entry.commit.commit_id);
                 }
             }
