@@ -74,13 +74,8 @@ fn run() -> Result<()> {
     let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
 
     // Handle commands that don't need jj/gh state early.
-    if let Command::Util(util_args) = &command {
-        match &util_args.command {
-            cli::UtilCommand::InstallAliases(args) => {
-                return install_aliases(args.repo);
-            }
-            _ => {}
-        }
+    if let Command::Util(cli::UtilArgs { command: cli::UtilCommand::InstallAliases(args) }) = &command {
+        return install_aliases(args.repo);
     }
 
     // Step 1: Load jj entries (the only local I/O).
@@ -100,15 +95,10 @@ fn run() -> Result<()> {
     });
 
     // Handle util commands that need input data.
-    if let Command::Util(util_args) = &command {
-        match &util_args.command {
-            cli::UtilCommand::Dump => {
-                serde_json::to_writer(std::io::stdout(), input)?;
-                println!();
-                return Ok(());
-            }
-            _ => {}
-        }
+    if let Command::Util(cli::UtilArgs { command: cli::UtilCommand::Dump }) = &command {
+        serde_json::to_writer(std::io::stdout(), input)?;
+        println!();
+        return Ok(());
     }
 
     let prs = input.prs_map();
