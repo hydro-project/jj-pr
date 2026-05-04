@@ -22,8 +22,8 @@ pub enum Command {
     Sync(SyncArgs),
     /// Create a new PR for an existing bookmark
     Create(CreateArgs),
-    /// Dump raw state (jj + gh) as JSON for test fixtures
-    Dump,
+    /// Utility commands
+    Util(UtilArgs),
 }
 
 #[derive(clap::Args, Clone)]
@@ -59,4 +59,18 @@ pub struct CreateArgs {
     /// Show what would be done without doing it
     #[arg(long)]
     pub dry_run: bool,
+}
+
+#[derive(clap::Args, Clone)]
+pub struct UtilArgs {
+    #[command(subcommand)]
+    pub command: UtilCommand,
+}
+
+#[derive(Subcommand, Clone)]
+pub enum UtilCommand {
+    /// Dump raw state (jj + gh) as JSON for test fixtures
+    Dump,
+    /// Install recommended jj revset aliases for working with PRs
+    InstallAliases,
 }

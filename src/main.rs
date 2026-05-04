@@ -11,7 +11,7 @@ mod ui;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use cli::{Cli, Command};
 use serde::{Deserialize, Serialize};
@@ -89,11 +89,18 @@ fn run() -> Result<()> {
 
     let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
 
-    // Handle `dump` before building derived state — it only needs raw input.
-    if let Command::Dump = &command {
-        serde_json::to_writer(std::io::stdout(), input)?;
-        println!();
-        return Ok(());
+    // Handle util commands before building derived state.
+    if let Command::Util(util_args) = &command {
+        match &util_args.command {
+            cli::UtilCommand::Dump => {
+                serde_json::to_writer(std::io::stdout(), input)?;
+                println!();
+                return Ok(());
+            }
+            cli::UtilCommand::InstallAliases => {
+                return install_aliases();
+            }
+        }
     }
 
     let prs = input.prs_map();
@@ -147,11 +154,40 @@ fn run() -> Result<()> {
             }
             Ok(())
         }
-        Command::Dump => unreachable!("handled above"),
+        Command::Util(_) => unreachable!("handled above"),
     };
 
     if result.is_err() {
         dump_input_on_failure(INPUT_DATA.get());
     }
     result
+}
+
+fn install_aliases() -> Result<()> {
+    use std::process::Command as Cmd;
+
+    let aliases = [
+        ("revset-aliases.\"pr(n)\"", r#"description(regex:"PR: #" ++ n)"#),
+        ("revset-aliases.\"pr_root(n)\"", r#"roots(pr(n))"#),
+    ];
+
+    for (key, value) in &aliases {
+        let output = Cmd::new("jj")
+            .args(["config", "set", "--repo", key, value])
+            .output()
+            .context("Failed to run `jj config set`")?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("jj config set failed for {key}: {stderr}");
+        }
+    }
+
+    eprintln!("Installed revset aliases:");
+    eprintln!("  pr(n)      — all commits in PR #n");
+    eprintln!("  pr_root(n) — root commit(s) of PR #n");
+    eprintln!();
+    eprintln!("Usage:");
+    eprintln!("  jj log -r 'pr(\"1234\")'");
+    eprintln!("  jj rebase -s 'pr_root(\"1234\")' -d main");
+    Ok(())
 }
