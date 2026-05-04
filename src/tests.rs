@@ -1,17 +1,20 @@
 use std::collections::BTreeMap;
 
 use super::InputData;
-use crate::gh::{GhPr, PrNum, PrStatus};
+use crate::gh::{CheckStatus, GhPr, PrNum, PrStatus, ReviewDecision};
 use crate::jj::{CommitId, JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
 
 fn render_show(input: &InputData) -> String {
+    render_show_with_statuses(input, &BTreeMap::new())
+}
+
+fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, PrStatus>) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
     let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
-    let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
     let mut buf = Vec::new();
-    pr_dag::render_show(&state, &prs, &pr_statuses, &mut buf).unwrap();
+    pr_dag::render_show(&state, &prs, pr_statuses, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
@@ -445,4 +448,39 @@ fn conflicted_bookmark_no_null_blocks_sync() {
         vec![gh_pr_merged(1, "feat", "main")],
     );
     insta::assert_snapshot!("conflicted_no_null_blocks_sync", plan_sync(&f));
+}
+
+#[test]
+fn ci_review_status_indicators() {
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+    );
+    let statuses = BTreeMap::from([
+        (
+            PrNum::new(1).unwrap(),
+            PrStatus {
+                review_decision: Some(ReviewDecision::Approved),
+                checks_status: Some(CheckStatus::Pass),
+            },
+        ),
+        (
+            PrNum::new(2).unwrap(),
+            PrStatus {
+                review_decision: Some(ReviewDecision::ChangesRequested),
+                checks_status: Some(CheckStatus::Fail),
+            },
+        ),
+    ]);
+    insta::assert_snapshot!("ci_review_status_show", render_show_with_statuses(&f, &statuses));
 }
