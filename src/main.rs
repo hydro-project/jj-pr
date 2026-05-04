@@ -79,9 +79,11 @@ fn run() -> Result<()> {
     let jj_entries = jj::load_entries()?;
 
     // Step 2: Extract PR numbers from trailers and local bookmark names.
+    // Only look up bookmarks by branch name if their tip commit doesn't already have a trailer.
     let pr_nums = pr_dag::extract_pr_nums(&jj_entries);
     let local_bookmarks: Vec<&str> = jj_entries
         .iter()
+        .filter(|e| !e.local_bookmarks.is_empty() && jj::parse_pr_trailer(&e.commit.description).is_none())
         .flat_map(|e| e.local_bookmarks.iter().map(|bm| bm.name.as_str()))
         .collect();
 
