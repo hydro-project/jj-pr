@@ -68,6 +68,9 @@ pub struct PrStatus {
     pub checks_status: Option<CheckStatus>,
 }
 
+/// GraphQL fields for a PR node, used in query construction.
+const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
+
 /// Raw GraphQL response types for serde deserialization.
 #[derive(Deserialize)]
 struct GraphQlResponse {
@@ -89,8 +92,38 @@ struct GraphQlData {
 #[serde(rename_all = "camelCase")]
 struct RepositoryData {
     default_branch_ref: DefaultBranchRef,
-    #[serde(flatten)]
-    extra: BTreeMap<String, serde_json::Value>,
+    /// All `prN` and `brN` aliased fields, collected into a flat list of PrNodes.
+    #[serde(flatten, deserialize_with = "deserialize_pr_nodes")]
+    pr_nodes: Vec<PrNode>,
+}
+
+/// Custom deserializer that extracts PrNode values from the flattened GraphQL aliases.
+/// Handles both `prN: PrNode | null` and `brN: { nodes: [PrNode] }` shapes.
+fn deserialize_pr_nodes<'de, D>(deserializer: D) -> std::result::Result<Vec<PrNode>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let map: BTreeMap<String, serde_json::Value> = BTreeMap::deserialize(deserializer)?;
+    let mut nodes = Vec::new();
+    for (key, value) in map {
+        if value.is_null() {
+            continue;
+        }
+        if key.starts_with("pr") {
+            if let Ok(node) = serde_json::from_value::<PrNode>(value) {
+                nodes.push(node);
+            }
+        } else if key.starts_with("br") {
+            #[derive(Deserialize)]
+            struct Connection {
+                nodes: Vec<PrNode>,
+            }
+            if let Ok(conn) = serde_json::from_value::<Connection>(value) {
+                nodes.extend(conn.nodes);
+            }
+        }
+    }
+    Ok(nodes)
 }
 
 #[derive(Deserialize)]
@@ -164,7 +197,7 @@ pub fn load_prs_and_default_branch(
         use std::fmt::Write;
         write!(
             pr_fields,
-            r#" pr{0}: pullRequest(number: {0}) {{ number headRefName baseRefName state isDraft url title reviewDecision commits(last:1) {{ nodes {{ commit {{ statusCheckRollup {{ state }} }} }} }} }}"#,
+            r#" pr{0}: pullRequest(number: {0}) {{ {PR_NODE_FIELDS} }}"#,
             n.get()
         )
         .unwrap();
@@ -174,7 +207,7 @@ pub fn load_prs_and_default_branch(
         use std::fmt::Write;
         write!(
             pr_fields,
-            r#" br{i}: pullRequests(first:1, headRefName:"{bm}", states:[OPEN,CLOSED,MERGED]) {{ nodes {{ number headRefName baseRefName state isDraft url title reviewDecision commits(last:1) {{ nodes {{ commit {{ statusCheckRollup {{ state }} }} }} }} }} }}"#,
+            r#" br{i}: pullRequests(first:1, headRefName:"{bm}") {{ nodes {{ {PR_NODE_FIELDS} }} }}"#,
         )
         .unwrap();
     }
@@ -219,57 +252,32 @@ pub fn load_prs_and_default_branch(
     let mut prs = BTreeMap::<PrNum, GhPr>::new();
     let mut statuses = BTreeMap::new();
 
-    // Helper to process a PrNode into our output.
-    let process_pr = |d: PrNode, prs: &mut BTreeMap<PrNum, GhPr>, statuses: &mut BTreeMap<PrNum, PrStatus>| {
-        if prs.contains_key(&d.number) {
-            return; // Deduplicate (same PR found by number and by branch).
-        }
+    for d in repo_data.pr_nodes {
+        let std::collections::btree_map::Entry::Vacant(entry) = prs.entry(d.number) else {
+            continue; // Deduplicate (same PR found by number and by branch).
+        };
         let checks_status = d
             .commits
             .nodes
             .first()
             .and_then(|n| n.commit.status_check_rollup.as_ref())
             .map(|rollup| CheckStatus::from(rollup.state));
-        let status = PrStatus {
-            review_decision: d.review_decision,
-            checks_status,
-        };
-        statuses.insert(d.number, status);
-        prs.insert(
+        statuses.insert(
             d.number,
-            GhPr {
-                number: d.number,
-                head_ref_name: d.head_ref_name,
-                base_ref_name: d.base_ref_name,
-                state: d.state,
-                is_draft: d.is_draft,
-                url: d.url,
-                title: d.title,
+            PrStatus {
+                review_decision: d.review_decision,
+                checks_status,
             },
         );
-    };
-
-    for (key, value) in repo_data.extra {
-        if value.is_null() {
-            continue;
-        }
-        if key.starts_with("pr") {
-            // Direct pullRequest(number:) lookup.
-            if let Ok(node) = serde_json::from_value::<PrNode>(value) {
-                process_pr(node, &mut prs, &mut statuses);
-            }
-        } else if key.starts_with("br") {
-            // pullRequests(headRefName:) connection lookup.
-            #[derive(Deserialize)]
-            struct Connection {
-                nodes: Vec<PrNode>,
-            }
-            if let Ok(conn) = serde_json::from_value::<Connection>(value) {
-                for node in conn.nodes {
-                    process_pr(node, &mut prs, &mut statuses);
-                }
-            }
-        }
+        entry.insert(GhPr {
+            number: d.number,
+            head_ref_name: d.head_ref_name,
+            base_ref_name: d.base_ref_name,
+            state: d.state,
+            is_draft: d.is_draft,
+            url: d.url,
+            title: d.title,
+        });
     }
 
     Ok((prs.into_values().collect(), statuses, default_branch))

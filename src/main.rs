@@ -83,7 +83,7 @@ fn run() -> Result<()> {
     let pr_nums = pr_dag::extract_pr_nums(&jj_entries);
     let local_bookmarks: Vec<&str> = jj_entries
         .iter()
-        .filter(|e| !e.local_bookmarks.is_empty() && jj::parse_pr_trailer(&e.commit.description).is_none())
+        .filter(|e| jj::parse_pr_trailer(&e.commit.description).is_none())
         .flat_map(|e| e.local_bookmarks.iter().map(|bm| bm.name.as_str()))
         .collect();
 
