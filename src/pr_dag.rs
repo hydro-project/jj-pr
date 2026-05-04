@@ -83,7 +83,12 @@ impl Node {
 /// Build the repo state from raw jj and GitHub data.
 ///
 /// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
-pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> Result<RepoState> {
+pub fn build(
+    jj_entries: &[JjLogEntry],
+    prs: &BTreeMap<PrNum, &GhPr>,
+    default_branch: &str,
+    push_remote: &str,
+) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
     let mut node_preds = SecondaryMap::new();
@@ -111,12 +116,25 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         // TODO(mingwei): handle multiple PRs sharing the same bookmark (e.g. Open + Closed/Merged).
         let head_to_pr: HashMap<&str, &GhPr> = prs.values().map(|&pr| (&*pr.head_ref_name, pr)).collect();
 
+        // Collect bookmark names that have a remote tracking relationship on the push remote.
+        // A local bookmark only "claims" a PR if it's tracked on the push remote.
+        let tracked_bookmarks: HashSet<&str> = jj_entries
+            .iter()
+            .flat_map(|e| e.remote_bookmarks.iter())
+            .filter(|bm| bm.remote.as_deref() == Some(push_remote))
+            .map(|bm| bm.name.as_str())
+            .collect();
+
         let mut pr_local = HashSet::new();
 
         for jj_entry in jj_entries.iter() {
             for local_bookmark in jj_entry.local_bookmarks.iter() {
                 let local_bookmark_name = &*local_bookmark.name;
                 if let Some(pr) = head_to_pr.get(local_bookmark_name) {
+                    // Only consider this a PR bookmark if it's tracked on the push remote.
+                    if !tracked_bookmarks.contains(local_bookmark_name) {
+                        continue;
+                    }
                     // This is a PR bookmark.
                     if 1 < local_bookmark.target.len() {
                         // Conflict! Check if this is a merged PR with a deleted remote
@@ -168,7 +186,6 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
     };
 
     // Compute pr_needs_push: compare local vs remote bookmark targets for PR bookmarks.
-    // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.
     {
         let mut local_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
         let mut remote_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
@@ -177,8 +194,7 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                 local_targets.insert(&bm.name, &jj_entry.commit.commit_id);
             }
             for bm in &jj_entry.remote_bookmarks {
-                // Only consider the push remote, not @git (local tracking ref).
-                if bm.remote.as_deref() == Some("origin") {
+                if bm.remote.as_deref() == Some(push_remote) {
                     remote_targets.entry(&bm.name).or_insert(&jj_entry.commit.commit_id);
                 }
             }
@@ -187,7 +203,10 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
             let bookmark = &*gh_pr.head_ref_name;
             let local = local_targets.get(bookmark);
             let remote = remote_targets.get(bookmark);
-            if local != remote {
+            // Only mark as needs_push if we have a remote bookmark on the push remote
+            // (meaning we've pushed/tracked before) and it differs from local.
+            // No remote bookmark means we've never pushed this — not our job to push.
+            if remote.is_some() && local != remote {
                 repo_state.pr_needs_push.insert(gh_pr.number);
             }
         }

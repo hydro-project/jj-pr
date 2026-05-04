@@ -12,7 +12,7 @@ fn render_show(input: &InputData) -> String {
 fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, PrStatus>) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch, "origin").unwrap();
     let mut buf = Vec::new();
     pr_dag::render_show(&state, &prs, pr_statuses, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
@@ -21,7 +21,7 @@ fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, Pr
 fn render_log(input: &InputData, show_all: bool) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch, "origin").unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
     let mut buf = Vec::new();
     pr_dag::render_log(&state, &prs, &pr_statuses, &input.jj_entries, show_all, &mut buf).unwrap();
@@ -30,7 +30,7 @@ fn render_log(input: &InputData, show_all: bool) -> String {
 
 fn plan_sync(input: &InputData) -> String {
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch, "origin").unwrap();
     match pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch) {
         Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
         Err(e) => format!("ERROR: {e}"),
@@ -39,7 +39,7 @@ fn plan_sync(input: &InputData) -> String {
 
 fn plan_create(input: &InputData, bookmark: &str) -> String {
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch, "origin").unwrap();
     match pr_dag::plan_create(
         &state,
         &prs,
@@ -279,9 +279,22 @@ fn needs_push() {
 }
 
 #[test]
-fn needs_push_git_remote_not_origin() {
-    // Bookmark moved locally — @git matches local but @origin is absent.
-    // Should still detect push needed.
+fn needs_push_local_ahead_of_origin() {
+    // Bookmark moved locally past the @origin target — should detect push needed.
+    let f = fixture(
+        vec![
+            entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
+            with_remote(entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false), "feat"),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+    );
+    insta::assert_snapshot!("needs_push_local_ahead_of_origin", plan_sync(&f));
+}
+
+#[test]
+fn no_push_when_only_git_remote() {
+    // Bookmark has @git but no @origin — never pushed to origin, should NOT push.
     let f = fixture(
         vec![
             with_git_remote(
@@ -293,7 +306,7 @@ fn needs_push_git_remote_not_origin() {
         ],
         vec![gh_pr(1, "feat", "main")],
     );
-    insta::assert_snapshot!("needs_push_git_not_origin_sync", plan_sync(&f));
+    insta::assert_snapshot!("no_push_when_only_git_remote", plan_sync(&f));
 }
 
 #[test]
