@@ -161,14 +161,10 @@ pub fn ci_status(status: crate::gh::CheckStatus) -> String {
     }
 }
 
-pub fn review_status(decision: crate::gh::ReviewDecision) -> String {
+pub fn review_status(decision: Option<crate::gh::ReviewDecision>) -> String {
     match decision {
-        crate::gh::ReviewDecision::Approved => styled(READY, "✓Review"),
-        crate::gh::ReviewDecision::ChangesRequested => styled(CLOSED, "✗Review"),
-        crate::gh::ReviewDecision::ReviewRequired => styled(DRAFT, "●Review"),
+        Some(crate::gh::ReviewDecision::Approved) => styled(READY, "✓Review"),
+        Some(crate::gh::ReviewDecision::ChangesRequested) => styled(CLOSED, "✗Review"),
+        Some(crate::gh::ReviewDecision::ReviewRequired) | None => styled(DRAFT, "●Review"),
     }
-}
-
-pub fn review_status_none() -> String {
-    styled(DRAFT, "●Review")
 }

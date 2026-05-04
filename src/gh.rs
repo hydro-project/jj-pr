@@ -149,9 +149,7 @@ impl From<CheckState> for CheckStatus {
 
 /// Fetch PR data + statuses + default branch in a single GraphQL call.
 /// Only fetches PRs for the given PR numbers (extracted from jj trailers).
-pub fn load_prs_and_default_branch(
-    pr_nums: &[PrNum],
-) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, String)> {
+pub fn load_prs_and_default_branch(pr_nums: &[PrNum]) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, String)> {
     let mut pr_fields = String::new();
     for n in pr_nums {
         use std::fmt::Write;
@@ -187,8 +185,7 @@ pub fn load_prs_and_default_branch(
     }
 
     let stdout = String::from_utf8(output.stdout).context("gh output not UTF-8")?;
-    let resp: GraphQlResponse =
-        serde_json::from_str(&stdout).context("Failed to parse GraphQL response")?;
+    let resp: GraphQlResponse = serde_json::from_str(&stdout).context("Failed to parse GraphQL response")?;
     let repo_data = resp.data.repository;
 
     let default_branch = repo_data.default_branch_ref.name;
@@ -196,7 +193,7 @@ pub fn load_prs_and_default_branch(
     let mut prs = Vec::new();
     let mut statuses = BTreeMap::new();
 
-    for &pr_num in pr_nums {
+    for pr_num in pr_nums.iter() {
         let key = format!("pr{}", pr_num.get());
         let Some(d) = repo_data.prs.get(&key) else {
             continue;
@@ -222,7 +219,7 @@ pub fn load_prs_and_default_branch(
             review_decision: d.review_decision,
             checks_status,
         };
-        statuses.insert(pr_num, status);
+        statuses.insert(*pr_num, status);
     }
 
     Ok((prs, statuses, default_branch))
