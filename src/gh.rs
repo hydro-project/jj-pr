@@ -103,6 +103,8 @@ fn deserialize_pr_nodes<'de, D>(deserializer: D) -> std::result::Result<Vec<PrNo
 where
     D: serde::Deserializer<'de>,
 {
+    use serde::de::Error;
+
     let map: BTreeMap<String, serde_json::Value> = BTreeMap::deserialize(deserializer)?;
     let mut nodes = Vec::new();
     for (key, value) in map {
@@ -110,17 +112,17 @@ where
             continue;
         }
         if key.starts_with("pr") {
-            if let Ok(node) = serde_json::from_value::<PrNode>(value) {
-                nodes.push(node);
-            }
+            let node = serde_json::from_value::<PrNode>(value)
+                .map_err(|e| D::Error::custom(format!("failed to deserialize `{key}`: {e}")))?;
+            nodes.push(node);
         } else if key.starts_with("br") {
             #[derive(Deserialize)]
             struct Connection {
                 nodes: Vec<PrNode>,
             }
-            if let Ok(conn) = serde_json::from_value::<Connection>(value) {
-                nodes.extend(conn.nodes);
-            }
+            let conn = serde_json::from_value::<Connection>(value)
+                .map_err(|e| D::Error::custom(format!("failed to deserialize `{key}`: {e}")))?;
+            nodes.extend(conn.nodes);
         }
     }
     Ok(nodes)
@@ -205,9 +207,11 @@ pub fn load_prs_and_default_branch(
     // Also look up PRs by branch name for bookmarks not already covered by trailers.
     for (i, bm) in bookmarks.iter().enumerate() {
         use std::fmt::Write;
+        // Escape the bookmark name for safe embedding in a GraphQL string literal.
+        let escaped = bm.replace('\\', "\\\\").replace('"', "\\\"");
         write!(
             pr_fields,
-            r#" br{i}: pullRequests(first:1, headRefName:"{bm}") {{ nodes {{ {PR_NODE_FIELDS} }} }}"#,
+            r#" br{i}: pullRequests(first:1, headRefName:"{escaped}") {{ nodes {{ {PR_NODE_FIELDS} }} }}"#,
         )
         .unwrap();
     }
