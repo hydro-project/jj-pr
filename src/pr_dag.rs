@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
 
-use anyhow::Result;
+use anyhow::{Result, ensure};
 use renderdag::{Ancestor, GraphRowRenderer, Renderer};
 use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 
@@ -150,6 +150,10 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                         }
                     } else {
                         // Note `local_bookmark.target == vec![jj_entry.commit.commit_id]` in the non-conflicted case.
+                        ensure!(
+                            local_bookmark.target.first().unwrap().as_ref() == Some(&jj_entry.commit.commit_id),
+                            "bug: local bookmark target does not match commit id"
+                        );
                         cid_pr_tip
                             .entry(&*jj_entry.commit.commit_id)
                             .or_default()
