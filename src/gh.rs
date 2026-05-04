@@ -82,7 +82,7 @@ struct GraphQlError {
 
 #[derive(Deserialize)]
 struct GraphQlData {
-    repository: RepositoryData,
+    repository: Option<RepositoryData>,
 }
 
 #[derive(Deserialize)]
@@ -196,7 +196,11 @@ pub fn load_prs_and_default_branch(pr_nums: &[PrNum]) -> Result<(Vec<GhPr>, BTre
         let msgs: Vec<_> = errors.iter().map(|e| e.message.as_str()).collect();
         bail!("GraphQL errors: {}", msgs.join("; "));
     }
-    let repo_data = resp.data.context("GraphQL response missing `data`")?.repository;
+    let repo_data = resp
+        .data
+        .context("GraphQL response missing `data`")?
+        .repository
+        .context("GraphQL response missing `repository` (not found or insufficient permissions)")?;
 
     let default_branch = repo_data.default_branch_ref.name;
 
