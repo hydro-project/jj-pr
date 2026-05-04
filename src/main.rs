@@ -74,7 +74,10 @@ fn run() -> Result<()> {
     let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
 
     // Handle commands that don't need jj/gh state early.
-    if let Command::Util(cli::UtilArgs { command: cli::UtilCommand::InstallAliases(args) }) = &command {
+    if let Command::Util(cli::UtilArgs {
+        command: cli::UtilCommand::InstallAliases(args),
+    }) = &command
+    {
         return install_aliases(args.repo);
     }
 
@@ -95,7 +98,10 @@ fn run() -> Result<()> {
     });
 
     // Handle util commands that need input data.
-    if let Command::Util(cli::UtilArgs { command: cli::UtilCommand::Dump }) = &command {
+    if let Command::Util(cli::UtilArgs {
+        command: cli::UtilCommand::Dump,
+    }) = &command
+    {
         serde_json::to_writer(std::io::stdout(), input)?;
         println!();
         return Ok(());
@@ -166,22 +172,6 @@ fn install_aliases(repo: bool) -> Result<()> {
 
     let scope = if repo { "--repo" } else { "--user" };
 
-    let aliases = [
-        ("revset-aliases.\"pr(n)\"", r#"description(regex:"PR: #" ++ n)"#),
-        ("revset-aliases.\"pr_root(n)\"", r#"roots(pr(n))"#),
-    ];
-
-    for (key, value) in &aliases {
-        let output = Cmd::new("jj")
-            .args(["config", "set", scope, key, value])
-            .output()
-            .context("Failed to run `jj config set`")?;
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("jj config set failed for {key}: {stderr}");
-        }
-    }
-
     // Install `jj pr` subcommand alias.
     let output = Cmd::new("jj")
         .args([
@@ -198,14 +188,30 @@ fn install_aliases(repo: bool) -> Result<()> {
         anyhow::bail!("jj config set failed for aliases.pr: {stderr}");
     }
 
+    let aliases = [
+        ("revset-aliases.\"pr(n)\"", r#"description(regex:"PR: #" ++ n)"#),
+        ("revset-aliases.\"pr_root(n)\"", r#"roots(pr(n))"#),
+    ];
+
+    for (key, value) in &aliases {
+        let output = Cmd::new("jj")
+            .args(["config", "set", scope, key, value])
+            .output()
+            .context("Failed to run `jj config set`")?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("jj config set failed for {key}: {stderr}");
+        }
+    }
+
     eprintln!("Installed to {scope} config:");
+    eprintln!("  command alias: jj pr     — runs jj-pr");
     eprintln!("  revset alias: pr(n)      — all commits in PR #n");
     eprintln!("  revset alias: pr_root(n) — root commit(s) of PR #n");
-    eprintln!("  command alias: jj pr     — runs jj-pr");
     eprintln!();
     eprintln!("Usage:");
+    eprintln!("  jj pr show");
     eprintln!("  jj log -r 'pr(\"1234\")'");
     eprintln!("  jj rebase -s 'pr_root(\"1234\")' -d main");
-    eprintln!("  jj pr show");
     Ok(())
 }
