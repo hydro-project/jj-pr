@@ -89,6 +89,7 @@ pub fn build(
     prs: &BTreeMap<PrNum, &GhPr>,
     default_branch: &str,
     tracked_bookmarks: Option<&BTreeSet<String>>,
+    push_remote: &str,
 ) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
@@ -177,7 +178,6 @@ pub fn build(
     };
 
     // Compute pr_needs_push: compare local vs remote bookmark targets for PR bookmarks.
-    // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.
     {
         let mut local_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
         let mut remote_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
@@ -187,7 +187,7 @@ pub fn build(
             }
             for bm in &jj_entry.remote_bookmarks {
                 // Only consider the push remote, not @git (local tracking ref).
-                if bm.remote.as_deref() == Some("origin") {
+                if bm.remote.as_deref() == Some(push_remote) {
                     remote_targets.entry(&bm.name).or_insert(&jj_entry.commit.commit_id);
                 }
             }
@@ -1409,9 +1409,9 @@ pub fn plan_create(
 }
 
 /// Execute a planned PR creation. Performs side effects: push, create PR, stamp trailers.
-pub fn execute_create(plan: &CreatePlan) -> Result<()> {
+pub fn execute_create(plan: &CreatePlan, push_remote: &str) -> Result<()> {
     // Track remote (ignore error — remote bookmark may not exist yet).
-    if let Err(e) = jj::bookmark_track(&plan.bookmark, "origin") {
+    if let Err(e) = jj::bookmark_track(&plan.bookmark, push_remote) {
         tracing::debug!("bookmark track failed (expected if new): {e:#}");
     }
 

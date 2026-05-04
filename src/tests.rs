@@ -18,6 +18,7 @@ fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, Pr
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        "origin",
     )
     .unwrap();
     let mut buf = Vec::new();
@@ -33,6 +34,7 @@ fn render_log(input: &InputData, show_all: bool) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        "origin",
     )
     .unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
@@ -48,6 +50,7 @@ fn plan_sync(input: &InputData) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        "origin",
     )
     .unwrap();
     match pr_dag::plan_sync(
@@ -73,6 +76,7 @@ fn plan_create(input: &InputData, bookmark: &str) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        "origin",
     )
     .unwrap();
     match pr_dag::plan_create(

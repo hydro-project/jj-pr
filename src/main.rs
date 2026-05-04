@@ -135,12 +135,14 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
+    let push_remote = jj::push_remote()?;
     let prs = input.prs_map();
     let state = pr_dag::build(
         &input.jj_entries,
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        &push_remote,
     )?;
 
     let result = match command {
@@ -196,7 +198,7 @@ fn run() -> Result<()> {
             } else if !ui::confirm("Create PR?", yes) {
                 anyhow::bail!("Aborted.");
             } else {
-                pr_dag::execute_create(&plan)?;
+                pr_dag::execute_create(&plan, &push_remote)?;
             }
             Ok(())
         }
