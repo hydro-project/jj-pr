@@ -614,18 +614,14 @@ pub fn extract_pr_nums(jj_entries: &[JjLogEntry]) -> Vec<PrNum> {
 
 /// Build the CI and review status indicator string for a PR.
 ///
-/// Returns a string with a leading space when status is available, or empty string otherwise.
+/// Returns a string with a leading space containing CI and review status indicators.
 fn ci_review_indicators(status: &gh::PrStatus) -> String {
     let mut parts = Vec::new();
     if let Some(cs) = status.checks_status {
         parts.push(crate::style::ci_status(cs));
     }
     parts.push(crate::style::review_status(status.review_decision));
-    if parts.is_empty() {
-        String::new()
-    } else {
-        format!(" {}", parts.join(" "))
-    }
+    format!(" {}", parts.join(" "))
 }
 
 /// Render the PR DAG as a graph.
