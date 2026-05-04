@@ -1,0 +1,7 @@
+---
+source: src/tests.rs
+expression: "plan_create(&f, \"feat\")"
+---
+push feat
+create PR: "second commit" (feat → main) [draft]
+stamp trailer on 2 commit(s)

@@ -55,4 +55,8 @@ pub struct CreateArgs {
     /// PR description/body
     #[arg(long)]
     pub body: Option<String>,
+
+    /// Show what would be done without doing it
+    #[arg(long)]
+    pub dry_run: bool,
 }

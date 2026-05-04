@@ -127,15 +127,26 @@ fn run() -> Result<()> {
             }
             Ok(())
         }
-        Command::Create(args) => pr_dag::cmd_create(
-            &state,
-            &prs,
-            &input.jj_entries,
-            &input.default_branch,
-            &args.bookmark,
-            args.title.as_deref(),
-            args.body.as_deref(),
-        ),
+        Command::Create(args) => {
+            let plan = pr_dag::plan_create(
+                &state,
+                &prs,
+                &input.jj_entries,
+                &input.default_branch,
+                &args.bookmark,
+                args.title.as_deref(),
+                args.body.as_deref(),
+            )?;
+            eprint!("{plan}");
+            if args.dry_run {
+                eprintln!("\n{}", style::warn("Dry run: no changes applied."));
+            } else if !ui::confirm("Create PR?", yes) {
+                anyhow::bail!("Aborted.");
+            } else {
+                pr_dag::execute_create(&plan)?;
+            }
+            Ok(())
+        }
         Command::Dump => unreachable!("handled above"),
     };
 
