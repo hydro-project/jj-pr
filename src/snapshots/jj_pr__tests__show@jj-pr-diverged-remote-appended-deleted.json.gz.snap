@@ -7,4 +7,4 @@ input_file: src/fixtures/jj-pr-diverged-remote-appended-deleted.json.gz
 │  fix: properly detect deleted (merged) branches that have multuple commits
 │ [1m[36m◆[0m  [1m[32mtrunk()[0m
 ├─╯
-[1m[36m◆[0m  [1m[32mroot()::[0m
+[2m~[0m  [2m(elided revisions)[0m

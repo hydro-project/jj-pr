@@ -11,4 +11,4 @@ input_file: src/fixtures/jj-pr-diverged-remote-appended-deleted.json.gz
 │ │  Fix merged PR showing as multiple nodes instead of one
 │ ○  [1m[35mlopoulzrkozt[0m [34ma149ea699db5[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/24PR #24]8;;[0m [2mMerged[0m
 ├─╯  bug with merging merged
-[1m[36m◆[0m  [1m[32mroot()::[0m
+[2m~[0m  [2m(elided revisions)[0m

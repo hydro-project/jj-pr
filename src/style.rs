@@ -9,7 +9,7 @@ pub const GLYPH_WARNING: &str = "⚠";
 
 // --- Labels ---
 pub const LABEL_TRUNK: &str = "trunk()";
-pub const LABEL_ROOT: &str = "root()::";
+pub const LABEL_ROOT: &str = "(elided revisions)";
 
 // --- Styles ---
 const BOLD: Style = Style::new().effects(Effects::BOLD);
@@ -133,6 +133,10 @@ pub fn glyph_immutable() -> String {
     styled(IMMUTABLE, GLYPH_IMMUTABLE)
 }
 
+pub fn glyph_elided() -> String {
+    styled(DIM, "~")
+}
+
 pub fn glyph_current() -> String {
     styled(CURRENT, "@")
 }
@@ -150,5 +154,5 @@ pub fn trunk() -> String {
 }
 
 pub fn root() -> String {
-    styled(TRUNK_LABEL, LABEL_ROOT)
+    styled(DIM, LABEL_ROOT)
 }

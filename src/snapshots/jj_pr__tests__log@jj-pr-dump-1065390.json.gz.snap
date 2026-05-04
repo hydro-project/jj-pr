@@ -57,4 +57,4 @@ input_file: src/fixtures/jj-pr-dump-1065390.json.gz
 ├─╯  add aws, sqs hydro_test
 [1m[36m◆[0m  [1m[35mwvpsunwtuxsk[0m [34ma9a8e584f7bc[0m [1m[32mtrunk()[0m
 │  fix(dfir_rs): defer `_counter` task spawning via `Context::request_task` buffer (#2804)
-[1m[36m◆[0m  [1m[32mroot()::[0m
+[2m~[0m  [2m(elided revisions)[0m

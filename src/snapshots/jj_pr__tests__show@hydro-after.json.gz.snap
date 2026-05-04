@@ -19,4 +19,4 @@ input_file: src/fixtures/hydro-after.json.gz
 ╭─┤  refactor(dfir_lang): operators capture local state instead of using the state API [ci-bench]
 │ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m*  [32mReady[0m  [1m[35mmingwei/delete-intermediate-subgraph[0m
 ├─╯  refactor(dfir_lang): double-buffer defer_tick handoffs, remove intermediate subgraphs [ci-bench]
-[1m[36m◆[0m  [1m[32mroot()::[0m
+[2m~[0m  [2m(elided revisions)[0m
