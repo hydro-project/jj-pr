@@ -4,5 +4,5 @@ expression: plan_sync(&f)
 input_file: src/fixtures/hydro-3.json.gz
 ---
 stamp #2798 trailer on wnkkzpnlkwzt
-push: #2801 (mingwei/delete-state-api-usage)
+push: #2801 (mingwei/delete-state-api-usage), #2812 (mingwei/delete-subgraph-id), #2798 (mingwei/delete-intermediate-subgraph)
 update #2801 (mingwei/delete-state-api-usage) base -> main

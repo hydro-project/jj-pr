@@ -3,7 +3,7 @@ source: src/tests.rs
 expression: "render_log(&f, false)"
 input_file: src/fixtures/hydro-3.json.gz
 ---
-○    [1m[35mmzoyxxzzzpuy[0m [34m4440f788eb39[0m [1m[35mmingwei/delete-subgraph-id[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m [33mDraft[0m
+○    [1m[35mmzoyxxzzzpuy[0m [34m4440f788eb39[0m [1m[35mmingwei/delete-subgraph-id[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m* [33mDraft[0m
 ├─╮  cleanup: remove SubgraphId, SubgraphTag, LoopId, LoopTag, simplify StateLifespan
 │ ○  [1m[35mnupvxxvukuwt[0m [34mdff5ea20292a[0m [1m[35mmingwei/delete-schedule-subgraph-args[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2811PR #2811]8;;[0m [33mDraft[0m
 │ │  cleanups
@@ -27,7 +27,7 @@ input_file: src/fixtures/hydro-3.json.gz
 │  refactor(dfir_lang): add write_tick_end to OperatorWriteOutput
 ○    [1m[35mlqxnymrprnpl[0m [34ma6f5cee01ecb[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m* [33mDraft[0m
 ├─╮  refactor(dfir_lang): add write_tick_end to OperatorWriteOutput, convert fold to inline state
-│ │ ○  [1m[35mwnkkzpnlkwzt[0m [34mca43c533b6f6[0m [1m[35mmingwei/delete-intermediate-subgraph[0m [1m[35msandbox-d11a1381-9aa3-49f8-abf1-16585609c8a6[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m [32mReady[0m
+│ │ ○  [1m[35mwnkkzpnlkwzt[0m [34mca43c533b6f6[0m [1m[35mmingwei/delete-intermediate-subgraph[0m [1m[35msandbox-d11a1381-9aa3-49f8-abf1-16585609c8a6[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m* [32mReady[0m
 │ ├─╯  Address PR #2798 review comments: extract helper methods, fix stale comments
 │ [33m⚠[0m  [1m[35mprupozyltvpz[0m [34mcf49be1b8fc8[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m[33m][0m (trailer: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m)
 │ │  refactor(dfir_lang): double-buffer defer_tick handoffs, remove intermediate subgraphs

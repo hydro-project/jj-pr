@@ -194,12 +194,14 @@ pub fn build(
         }
         for gh_pr in prs.values() {
             let bookmark = &*gh_pr.head_ref_name;
+            // Only consider bookmarks we own (tracked on push remote).
+            let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains(bookmark));
+            if !is_tracked {
+                continue;
+            }
             let local = local_targets.get(bookmark);
             let remote = remote_targets.get(bookmark);
-            // Only mark as needs_push if we have a remote bookmark on the push remote
-            // (meaning we've pushed/tracked before) and it differs from local.
-            // No remote bookmark means we've never pushed this — not our job to push.
-            if remote.is_some() && local != remote {
+            if local != remote {
                 repo_state.pr_needs_push.insert(gh_pr.number);
             }
         }

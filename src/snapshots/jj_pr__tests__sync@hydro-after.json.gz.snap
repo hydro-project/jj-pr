@@ -3,4 +3,4 @@ source: src/tests.rs
 expression: plan_sync(&f)
 input_file: src/fixtures/hydro-after.json.gz
 ---
-
+push: #2798 (mingwei/delete-intermediate-subgraph), #2801 (mingwei/delete-state-api-usage), #2811 (mingwei/delete-schedule-subgraph-args), #2810 (mingwei/delete-metrics-slotvec), #2812 (mingwei/delete-subgraph-id)

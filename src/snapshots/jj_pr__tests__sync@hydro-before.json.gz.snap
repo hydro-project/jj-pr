@@ -13,7 +13,7 @@ stamp #2801 trailer on trlnmrvmuqnt
 stamp #2801 trailer on lqxnymrprnpl
 stamp #2801 trailer on nmqrowzwxvpn
 stamp #2798 trailer on xqxnxvxoyltz
-push: #2801 (mingwei/delete-state-api-usage), #2810 (mingwei/delete-metrics-slotvec), #2811 (mingwei/delete-schedule-subgraph-args)
+push: #2801 (mingwei/delete-state-api-usage), #2810 (mingwei/delete-metrics-slotvec), #2811 (mingwei/delete-schedule-subgraph-args), #2812 (mingwei/delete-subgraph-id)
 update #2801 (mingwei/delete-state-api-usage) base -> mingwei/delete-intermediate-subgraph
 update #2810 (mingwei/delete-metrics-slotvec) base -> mingwei/delete-state-api-usage
 update #2811 (mingwei/delete-schedule-subgraph-args) base -> mingwei/delete-state-api-usage

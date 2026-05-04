@@ -319,9 +319,9 @@ fn needs_push_local_ahead_of_origin() {
 
 #[test]
 fn no_push_when_only_git_remote() {
-    // Bookmark has @git but no @origin — never pushed to origin, should NOT push.
-    let f = fixture(
-        vec![
+    // Bookmark has @git but no @origin — not tracked on origin, should NOT push.
+    let f = InputData {
+        jj_entries: vec![
             with_git_remote(
                 entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
                 "feat",
@@ -329,9 +329,31 @@ fn no_push_when_only_git_remote() {
             entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
-        vec![gh_pr(1, "feat", "main")],
-    );
+        prs: vec![gh_pr(1, "feat", "main")],
+        default_branch: "main".to_owned(),
+        tracked_bookmarks: Some(std::collections::HashSet::new()), // Not tracked on origin.
+    };
     insta::assert_snapshot!("no_push_when_only_git_remote", plan_sync(&f));
+}
+
+#[test]
+fn needs_push_tracked_but_no_origin_in_revset() {
+    // Bookmark is tracked on origin but @origin commit is outside the revset
+    // (e.g. after amending). Should still detect push needed.
+    let f = InputData {
+        jj_entries: vec![
+            with_git_remote(
+                entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![gh_pr(1, "feat", "main")],
+        default_branch: "main".to_owned(),
+        tracked_bookmarks: Some(["feat".to_owned()].into()), // Tracked on origin.
+    };
+    insta::assert_snapshot!("needs_push_tracked_but_no_origin_in_revset", plan_sync(&f));
 }
 
 #[test]
