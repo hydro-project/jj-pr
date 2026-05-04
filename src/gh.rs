@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fmt;
 use std::num::NonZeroU64;
 use std::process::Command;
@@ -61,27 +62,88 @@ pub struct GhPr {
     pub title: String,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct PrStatus {
     pub review_decision: Option<ReviewDecision>,
     pub checks_status: Option<CheckStatus>,
 }
 
-fn parse_check_state(s: &str) -> Option<CheckStatus> {
-    match s {
-        "SUCCESS" => Some(CheckStatus::Pass),
-        "FAILURE" | "ERROR" => Some(CheckStatus::Fail),
-        "PENDING" | "EXPECTED" => Some(CheckStatus::Pending),
-        _ => None,
-    }
+/// Raw GraphQL response types for serde deserialization.
+#[derive(Deserialize)]
+struct GraphQlResponse {
+    data: GraphQlData,
 }
 
-fn parse_review_decision(s: &str) -> Option<ReviewDecision> {
-    match s {
-        "APPROVED" => Some(ReviewDecision::Approved),
-        "CHANGES_REQUESTED" => Some(ReviewDecision::ChangesRequested),
-        "REVIEW_REQUIRED" => Some(ReviewDecision::ReviewRequired),
-        _ => None,
+#[derive(Deserialize)]
+struct GraphQlData {
+    repository: RepositoryData,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RepositoryData {
+    default_branch_ref: DefaultBranchRef,
+    #[serde(flatten)]
+    prs: BTreeMap<String, PrNode>,
+}
+
+#[derive(Deserialize)]
+struct DefaultBranchRef {
+    name: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PrNode {
+    number: PrNum,
+    head_ref_name: String,
+    base_ref_name: String,
+    state: PrState,
+    is_draft: bool,
+    url: String,
+    title: String,
+    review_decision: Option<ReviewDecision>,
+    commits: CommitsConnection,
+}
+
+#[derive(Deserialize)]
+struct CommitsConnection {
+    nodes: Vec<CommitNode>,
+}
+
+#[derive(Deserialize)]
+struct CommitNode {
+    commit: CommitData,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CommitData {
+    status_check_rollup: Option<StatusCheckRollup>,
+}
+
+#[derive(Deserialize)]
+struct StatusCheckRollup {
+    state: CheckState,
+}
+
+#[derive(Clone, Copy, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum CheckState {
+    Success,
+    Failure,
+    Error,
+    Pending,
+    Expected,
+}
+
+impl From<CheckState> for CheckStatus {
+    fn from(s: CheckState) -> Self {
+        match s {
+            CheckState::Success => CheckStatus::Pass,
+            CheckState::Failure | CheckState::Error => CheckStatus::Fail,
+            CheckState::Pending | CheckState::Expected => CheckStatus::Pending,
+        }
     }
 }
 
@@ -89,7 +151,7 @@ fn parse_review_decision(s: &str) -> Option<ReviewDecision> {
 /// Only fetches PRs for the given PR numbers (extracted from jj trailers).
 pub fn load_prs_and_default_branch(
     pr_nums: &[PrNum],
-) -> Result<(Vec<GhPr>, std::collections::BTreeMap<PrNum, PrStatus>, String)> {
+) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, String)> {
     let mut pr_fields = String::new();
     for n in pr_nums {
         use std::fmt::Write;
@@ -125,52 +187,42 @@ pub fn load_prs_and_default_branch(
     }
 
     let stdout = String::from_utf8(output.stdout).context("gh output not UTF-8")?;
-    let resp: serde_json::Value = serde_json::from_str(&stdout).context("Failed to parse GraphQL response")?;
-    let repo_data = &resp["data"]["repository"];
+    let resp: GraphQlResponse =
+        serde_json::from_str(&stdout).context("Failed to parse GraphQL response")?;
+    let repo_data = resp.data.repository;
 
-    let default_branch = repo_data["defaultBranchRef"]["name"]
-        .as_str()
-        .context("missing defaultBranchRef.name")?
-        .to_owned();
+    let default_branch = repo_data.default_branch_ref.name;
 
     let mut prs = Vec::new();
-    let mut statuses = std::collections::BTreeMap::new();
+    let mut statuses = BTreeMap::new();
 
     for &pr_num in pr_nums {
         let key = format!("pr{}", pr_num.get());
-        let d = &repo_data[key];
-        if d.is_null() {
+        let Some(d) = repo_data.prs.get(&key) else {
             continue;
-        }
-
-        let state = match d["state"].as_str() {
-            Some("OPEN") => PrState::Open,
-            Some("MERGED") => PrState::Merged,
-            Some("CLOSED") => PrState::Closed,
-            other => bail!("unexpected PR state: {other:?}"),
         };
 
         prs.push(GhPr {
-            number: pr_num,
-            head_ref_name: d["headRefName"].as_str().unwrap_or_default().to_owned(),
-            base_ref_name: d["baseRefName"].as_str().unwrap_or_default().to_owned(),
-            state,
-            is_draft: d["isDraft"].as_bool().unwrap_or(false),
-            url: d["url"].as_str().unwrap_or_default().to_owned(),
-            title: d["title"].as_str().unwrap_or_default().to_owned(),
+            number: d.number,
+            head_ref_name: d.head_ref_name.clone(),
+            base_ref_name: d.base_ref_name.clone(),
+            state: d.state,
+            is_draft: d.is_draft,
+            url: d.url.clone(),
+            title: d.title.clone(),
         });
 
-        if state == PrState::Open {
-            let mut status = PrStatus::default();
-            if let Some(rd) = d["reviewDecision"].as_str() {
-                status.review_decision = parse_review_decision(rd);
-            }
-            let rollup = &d["commits"]["nodes"][0]["commit"]["statusCheckRollup"]["state"];
-            if let Some(s) = rollup.as_str() {
-                status.checks_status = parse_check_state(s);
-            }
-            statuses.insert(pr_num, status);
-        }
+        let checks_status = d
+            .commits
+            .nodes
+            .first()
+            .and_then(|n| n.commit.status_check_rollup.as_ref())
+            .map(|rollup| CheckStatus::from(rollup.state));
+        let status = PrStatus {
+            review_decision: d.review_decision,
+            checks_status,
+        };
+        statuses.insert(pr_num, status);
     }
 
     Ok((prs, statuses, default_branch))

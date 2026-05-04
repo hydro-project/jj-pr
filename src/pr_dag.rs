@@ -599,14 +599,22 @@ impl RepoState {
     }
 }
 
+/// Extract unique PR numbers from jj log entries' trailers.
+pub fn extract_pr_nums(jj_entries: &[JjLogEntry]) -> Vec<PrNum> {
+    let mut nums = BTreeSet::new();
+    for entry in jj_entries {
+        if let Some(pr_num) = jj::parse_pr_trailer(&entry.commit.description) {
+            nums.insert(pr_num);
+        }
+    }
+    nums.into_iter().collect()
+}
+
 // --- Rendering ---
 
 /// Build the CI and review status indicator string for a PR.
-/// Returns empty string when no status is available.
-fn ci_review_indicators(pr_num: PrNum, pr_statuses: &BTreeMap<PrNum, gh::PrStatus>) -> String {
-    let Some(status) = pr_statuses.get(&pr_num) else {
-        return String::new();
-    };
+/// Returns a string with a leading space when status is available, or empty string otherwise.
+fn ci_review_indicators(status: &gh::PrStatus) -> String {
     let mut parts = Vec::new();
     if let Some(cs) = status.checks_status {
         parts.push(crate::style::ci_status(cs));
@@ -665,16 +673,19 @@ pub fn render_show(
                 } else {
                     ""
                 };
-                let ci_review = ci_review_indicators(*pr_id, pr_statuses);
+                let ci_review = pr_statuses
+                    .get(pr_id)
+                    .map(ci_review_indicators)
+                    .unwrap_or_default();
                 format!(
                     "{}{sync_indicator}  {}{ci_review}  {}\n{}",
                     crate::style::pr_num(*pr_id, Some(&gh_pr.url)),
                     crate::style::status(gh_pr.state, gh_pr.is_draft),
                     crate::style::bookmark(&gh_pr.head_ref_name),
                     gh_pr.title,
-                )
-            }
-            Node::Ambiguous {
+                  )
+              }
+              Node::Ambiguous {
                 branch_prs,
                 trailer_prs,
             } => {
@@ -793,7 +804,10 @@ pub fn render_log(
                     };
                     let pr_str = match gh_pr {
                         Some(pr) => {
-                            let ci_review = ci_review_indicators(*pr_id, pr_statuses);
+                            let ci_review = pr_statuses
+                                .get(pr_id)
+                                .map(ci_review_indicators)
+                                .unwrap_or_default();
                             format!(
                                 "{}{sync_indicator} {}{ci_review}",
                                 crate::style::pr_num(*pr_id, Some(&pr.url)),

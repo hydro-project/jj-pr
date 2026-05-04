@@ -75,15 +75,7 @@ fn run() -> Result<()> {
     let jj_entries = jj::load_entries()?;
 
     // Step 2: Extract PR numbers from trailers to know which PRs to fetch.
-    let pr_nums: Vec<gh::PrNum> = {
-        let mut nums = std::collections::BTreeSet::new();
-        for entry in &jj_entries {
-            if let Some(pr_num) = jj::parse_pr_trailer(&entry.commit.description) {
-                nums.insert(pr_num);
-            }
-        }
-        nums.into_iter().collect()
-    };
+    let pr_nums = pr_dag::extract_pr_nums(&jj_entries);
 
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
     let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums)?;
