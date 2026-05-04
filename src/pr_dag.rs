@@ -1289,21 +1289,47 @@ pub fn cmd_create(
     let (pr_number, pr_url) = gh::create_pr(bookmark, &base, &title, body, true)?;
     eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
-    // Stamp trailers on owned commits.
+    // Stamp trailers on owned commits by walking backwards from the tip.
+    // We can't use `state.commit_node` alone here because `state` was built before
+    // this PR existed — the node assignments are stale for the new PR.
+    // However, `state` is still authoritative for *existing* PRs/trunk, so we
+    // also use it as a hard boundary to avoid stamping commits that belong to
+    // another PR but happen to lack a trailer.
+    let parent_map: HashMap<&CommitId<str>, &JjLogEntry> =
+        jj_entries.iter().map(|e| (&*e.commit.commit_id, e)).collect();
+
     let mut stamped = 0;
-    for jj_entry in jj_entries {
-        let cid = &*jj_entry.commit.commit_id;
-        let Some(&nk) = state.commit_node.get(cid) else {
-            continue;
-        };
-        let tip_nk = state.commit_node.get(&*tip_entry.commit.commit_id);
-        if Some(&nk) != tip_nk {
+    let mut queue = std::collections::VecDeque::new();
+    let mut visited = HashSet::new();
+    queue.push_back(&*tip_entry.commit.commit_id);
+    while let Some(cid) = queue.pop_front() {
+        if !visited.insert(cid) {
             continue;
         }
-        if jj::parse_pr_trailer(&jj_entry.commit.description) != Some(pr_number) {
-            let new_desc = jj::set_pr_trailer(&jj_entry.commit.description, pr_number);
-            jj::describe_stdin(&jj_entry.commit.change_id, &new_desc)?;
+        let Some(entry) = parent_map.get(cid) else {
+            continue; // Beyond revset (trunk boundary).
+        };
+        if entry.immutable {
+            continue; // Don't stamp trunk.
+        }
+        // Check if state already assigns this commit to another PR or trunk/root.
+        if let Some(&nk) = state.commit_node.get(&*entry.commit.commit_id) {
+            match &state.nodes[nk] {
+                Node::Pr(_) | Node::Root | Node::TrunkTip => continue,
+                Node::Ambiguous { .. } => {} // May belong to the new PR.
+            }
+        }
+        let existing = jj::parse_pr_trailer(&entry.commit.description);
+        if existing.is_some() && existing != Some(pr_number) {
+            continue; // Owned by a different PR.
+        }
+        if existing != Some(pr_number) {
+            let new_desc = jj::set_pr_trailer(&entry.commit.description, pr_number);
+            jj::describe_stdin(&entry.commit.change_id, &new_desc)?;
             stamped += 1;
+        }
+        for parent in &entry.commit.parents {
+            queue.push_back(&**parent);
         }
     }
     if stamped > 0 {
