@@ -17,4 +17,4 @@ input_file: src/fixtures/hydro-merged-many.json.gz
 ├─╯  refactor(dfir_lang): operators capture local state instead of using the state API [ci-bench]
 │ [1m[36m◆[0m  [1m[32mtrunk()[0m
 ├─╯
-[1m[36m◆[0m  [1m[32mroot()::[0m
+[2m~[0m  [2m(elided revisions)[0m

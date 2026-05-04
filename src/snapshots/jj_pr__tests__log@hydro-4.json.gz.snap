@@ -55,4 +55,4 @@ input_file: src/fixtures/hydro-4.json.gz
 │ │  SQS working!
 │ ○  [1m[35mtuwnswwkwnov[0m [34mf7dd09ccc02d[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
 ├─╯  add aws, sqs hydro_test
-[1m[36m◆[0m  [1m[32mroot()::[0m
+[2m~[0m  [2m(elided revisions)[0m

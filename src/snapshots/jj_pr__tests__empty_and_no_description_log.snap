@@ -12,4 +12,4 @@ expression: "render_log(&f, false)"
 │  [32m(empty)[0m [32m(no description set)[0m
 [1m[36m◆[0m  [1m[35mchtrunk[0m [34mtrunk[0m [1m[35mmain[0m [1m[32mtrunk()[0m
    trunk
-[1m[36m◆[0m  [1m[32mroot()::[0m
+[2m~[0m  [2m(elided revisions)[0m

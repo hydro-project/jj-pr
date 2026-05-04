@@ -14,4 +14,4 @@ input_file: src/fixtures/jj-pr-ambiguous.json.gz
 │ │  Fix reclaim mode: only activate when tip is foreign-stamped
 │ ○  [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/3PR #3]8;;[0m  [2mMerged[0m  [1m[35mmingwei/pull-parent-pr-out-of-child[0m
 ├─╯  feat: handle out-of-order PR creation with mode-based trailer walk
-[1m[36m◆[0m  [1m[32mroot()::[0m
+[2m~[0m  [2m(elided revisions)[0m

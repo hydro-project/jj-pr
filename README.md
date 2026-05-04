@@ -63,7 +63,7 @@ jj pr          # or: jj-pr show
 ╭─┤  refactor(dfir_lang): operators capture local state
 │ ○  PR #2798  Ready  mingwei/delete-intermediate-subgraph
 ├─╯  refactor(dfir_lang): remove intermediate subgraphs
-◆  root()::
+~  (elided revisions)
 ```
 
 PR numbers are clickable hyperlinks in supported terminals. A `*` after the PR number means there are pending actions

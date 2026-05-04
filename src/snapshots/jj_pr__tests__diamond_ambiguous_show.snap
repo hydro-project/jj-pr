@@ -9,4 +9,4 @@ expression: render_show(&f)
 [33m⚠[0m  [33mambiguous[0m shared between [1m[36m]8;;https://github.com/test/repo/pull/1PR #1]8;;[0m, [1m[36m]8;;https://github.com/test/repo/pull/2PR #2]8;;[0m
 │  [2m(restructure PRs to resolve — stack one on the other)[0m
 [1m[36m◆[0m  [1m[32mtrunk()[0m
-[1m[36m◆[0m  [1m[32mroot()::[0m
+[2m~[0m  [2m(elided revisions)[0m

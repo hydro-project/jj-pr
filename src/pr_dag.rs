@@ -652,7 +652,8 @@ pub fn render_show(
             crate::style::glyph_current()
         } else {
             match node {
-                Node::Root | Node::TrunkTip => crate::style::glyph_immutable(),
+                Node::Root => crate::style::glyph_elided(),
+                Node::TrunkTip => crate::style::glyph_immutable(),
                 Node::Pr(_) => crate::style::GLYPH_MUTABLE.to_owned(),
                 Node::Ambiguous { .. } => crate::style::warn(crate::style::GLYPH_WARNING),
             }
@@ -877,7 +878,7 @@ pub fn render_log(
     }
 
     // Print root.
-    let row = renderer.next_row(None, Vec::new(), crate::style::glyph_immutable(), crate::style::root());
+    let row = renderer.next_row(None, Vec::new(), crate::style::glyph_elided(), crate::style::root());
     write!(out, "{row}")?;
 
     Ok(())
