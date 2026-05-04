@@ -774,7 +774,10 @@ pub fn render_log(
                     };
                     line1_parts.push(pr_str);
                 }
-                Node::Ambiguous { branch_prs, .. } => {
+                Node::Ambiguous {
+                    branch_prs,
+                    trailer_prs,
+                } => {
                     let sync_indicator = if state.node_needs_sync.contains_key(node_key) {
                         "*"
                     } else {
@@ -787,13 +790,24 @@ pub fn render_log(
                             crate::style::pr_num(*pr_id, url)
                         })
                         .collect();
-                    line1_parts.push(format!(
+                    let mut ambig = format!(
                         "{}{sync_indicator} {}{}{}",
                         crate::style::warn("ambiguous"),
                         crate::style::warn("["),
                         pr_strs.join(", "),
                         crate::style::warn("]"),
-                    ));
+                    );
+                    if !trailer_prs.is_empty() {
+                        let trailer_strs: Vec<String> = trailer_prs
+                            .iter()
+                            .map(|pr_id| {
+                                let url = prs.get(pr_id).map(|p| p.url.as_str());
+                                crate::style::pr_num(*pr_id, url)
+                            })
+                            .collect();
+                        ambig.push_str(&format!(" (trailer: {})", trailer_strs.join(", ")));
+                    }
+                    line1_parts.push(ambig);
                 }
             }
         } else {

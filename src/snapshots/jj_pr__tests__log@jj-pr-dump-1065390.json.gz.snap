@@ -31,13 +31,13 @@ input_file: src/fixtures/jj-pr-dump-1065390.json.gz
 │  refactor(dfir_lang): add write_tick_end to OperatorWriteOutput, convert fold to inline state
 ○  [1m[35mpptpkqskpyxs[0m [34m4a248b648f26[0m [1m[35mmingwei/delete-intermediate-subgraph[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m* [32mReady[0m
 │  Address unresolved PR #2798 review comments
-│ [33m⚠[0m  [1m[35mnmqrowzwxvpn[0m [34m799e7c47a7dd[0m [33mambiguous[0m [33m[[0m[33m][0m
+│ [33m⚠[0m  [1m[35mnmqrowzwxvpn[0m [34m799e7c47a7dd[0m [33mambiguous[0m [33m[[0m[33m][0m (trailer: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2801PR #2801]8;;[0m)
 ├─╯  cleanup(dfir_lang): remove unused topo_sort_scc and scc_kosaraju
-[33m⚠[0m  [1m[35mwnkkzpnlkwzt[0m [34m99386b889c85[0m [1m[35msandbox-d11a1381-9aa3-49f8-abf1-16585609c8a6[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m[33m][0m
+[33m⚠[0m  [1m[35mwnkkzpnlkwzt[0m [34m99386b889c85[0m [1m[35msandbox-d11a1381-9aa3-49f8-abf1-16585609c8a6[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m[33m][0m (trailer: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m)
 │  Address PR #2798 review comments: extract helper methods, fix stale comments
-[33m⚠[0m  [1m[35mprupozyltvpz[0m [34mf9e3e1f3ac36[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m[33m][0m
+[33m⚠[0m  [1m[35mprupozyltvpz[0m [34mf9e3e1f3ac36[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m[33m][0m (trailer: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m)
 │  refactor(dfir_lang): double-buffer defer_tick handoffs, remove intermediate subgraphs
-[33m⚠[0m  [1m[35mxqxnxvxoyltz[0m [34mb6124fbfeaf9[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m[33m][0m
+[33m⚠[0m  [1m[35mxqxnxvxoyltz[0m [34mb6124fbfeaf9[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m[33m][0m (trailer: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2798PR #2798]8;;[0m)
 │  test: add test_mutual_defer_tick reproducing as_code topo sort cycle
 │ ○  [1m[35mltloqrxtnksl[0m [34m2df53f58dcaf[0m [1m[35mmingwei/sqs-rebase[0m [1m[35msandbox-236c6a7a-2597-4c57-95fc-46268f948b7a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
 │ │  Address PR #2746 review comments for AWS SQS support
