@@ -90,7 +90,7 @@ struct GraphQlData {
 struct RepositoryData {
     default_branch_ref: DefaultBranchRef,
     #[serde(flatten)]
-    prs: BTreeMap<String, PrNode>,
+    prs: BTreeMap<String, Option<PrNode>>,
 }
 
 #[derive(Deserialize)]
@@ -209,7 +209,7 @@ pub fn load_prs_and_default_branch(pr_nums: &[PrNum]) -> Result<(Vec<GhPr>, BTre
 
     for pr_num in pr_nums.iter() {
         let key = format!("pr{}", pr_num.get());
-        let Some(d) = repo_data.prs.get(&key) else {
+        let Some(Some(d)) = repo_data.prs.get(&key) else {
             continue;
         };
 
