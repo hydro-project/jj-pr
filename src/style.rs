@@ -165,6 +165,10 @@ pub fn review_status(decision: crate::gh::ReviewDecision) -> String {
     match decision {
         crate::gh::ReviewDecision::Approved => styled(READY, "✓Approved"),
         crate::gh::ReviewDecision::ChangesRequested => styled(CLOSED, "✗Changes requested"),
-        crate::gh::ReviewDecision::ReviewRequired => styled(DIM, "●Review"),
+        crate::gh::ReviewDecision::ReviewRequired => styled(DIM, "●Review required"),
     }
+}
+
+pub fn review_status_none() -> String {
+    styled(DIM, "●Unreviewed")
 }

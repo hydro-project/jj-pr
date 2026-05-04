@@ -619,9 +619,10 @@ fn ci_review_indicators(status: &gh::PrStatus) -> String {
     if let Some(cs) = status.checks_status {
         parts.push(crate::style::ci_status(cs));
     }
-    if let Some(rd) = status.review_decision {
-        parts.push(crate::style::review_status(rd));
-    }
+    parts.push(match status.review_decision {
+        Some(rd) => crate::style::review_status(rd),
+        None => crate::style::review_status_none(),
+    });
     if parts.is_empty() {
         String::new()
     } else {
