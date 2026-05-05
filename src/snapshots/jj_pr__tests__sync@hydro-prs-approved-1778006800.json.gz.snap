@@ -1,0 +1,6 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/hydro-prs-approved-1778006800.json.gz
+---
+push: #2841 (mingwei/delete-delaytype), #2746 (mingwei/sqs-rebase)

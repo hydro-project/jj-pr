@@ -73,7 +73,7 @@ pub struct PrStatus {
 }
 
 /// GraphQL fields for a PR node, used in query construction.
-const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision mergeCommit { oid } commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
+const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision latestReviews(first:10) { nodes { state } } mergeCommit { oid } commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
 
 /// Raw GraphQL response types for serde deserialization.
 #[derive(Deserialize)]
@@ -148,8 +148,29 @@ struct PrNode {
     url: String,
     title: String,
     review_decision: Option<ReviewDecision>,
+    latest_reviews: Option<LatestReviews>,
     merge_commit: Option<MergeCommit>,
     commits: CommitsConnection,
+}
+
+#[derive(Deserialize)]
+struct LatestReviews {
+    nodes: Vec<ReviewNode>,
+}
+
+#[derive(Deserialize)]
+struct ReviewNode {
+    state: ReviewState,
+}
+
+#[derive(Clone, Copy, Deserialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum ReviewState {
+    Approved,
+    ChangesRequested,
+    Commented,
+    Dismissed,
+    Pending,
 }
 
 #[derive(Deserialize)]
@@ -277,10 +298,27 @@ pub fn load_prs_and_default_branch(
             .first()
             .and_then(|n| n.commit.status_check_rollup.as_ref())
             .map(|rollup| CheckStatus::from(rollup.state));
+        // `reviewDecision` is sometimes null even when reviews exist (possibly
+        // related to rulesets vs classic branch protection — stacked PRs
+        // targeting non-main branches behave differently too). Fall back to
+        // deriving status from `latestReviews` (best-effort, doesn't account
+        // for required review groups).
+        let review_decision = d.review_decision.or_else(|| {
+            let reviews = d.latest_reviews.as_ref()?;
+            let mut has_approved = false;
+            for review in &reviews.nodes {
+                match review.state {
+                    ReviewState::ChangesRequested => return Some(ReviewDecision::ChangesRequested),
+                    ReviewState::Approved => has_approved = true,
+                    ReviewState::Commented | ReviewState::Dismissed | ReviewState::Pending => {}
+                }
+            }
+            has_approved.then_some(ReviewDecision::Approved)
+        });
         statuses.insert(
             d.number,
             PrStatus {
-                review_decision: d.review_decision,
+                review_decision,
                 checks_status,
             },
         );
