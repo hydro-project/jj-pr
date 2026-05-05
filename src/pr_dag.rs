@@ -915,7 +915,6 @@ pub enum SyncAction {
     /// First rebases the merged commits onto trunk so that abandoning them
     /// reparents children to trunk while preserving other parent edges.
     AbandonMerged {
-        tip_commit_id: String,
         /// Change IDs of all commits in this PR (stable across rewrites).
         change_ids: Vec<String>,
         pr: PrNum,
@@ -1018,13 +1017,11 @@ pub fn plan_sync(
             .iter()
             .filter(|e| state.commit_node.get(&*e.commit.commit_id) == Some(&nk))
             .collect();
-        let Some(tip_entry) = node_entries.first() else {
+        let Some(_tip_entry) = node_entries.first() else {
             continue;
         };
-        let tip_commit_id = tip_entry.commit.commit_id.0.clone();
         let change_ids: Vec<String> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
         actions.push(SyncAction::AbandonMerged {
-            tip_commit_id,
             change_ids,
             pr: *pr_num,
             bookmark: gh_pr.head_ref_name.clone(),
@@ -1102,7 +1099,6 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 jj::describe_stdin(change_id, &new_desc)?;
             }
             SyncAction::AbandonMerged {
-                tip_commit_id,
                 change_ids,
                 pr,
                 bookmark,
@@ -1139,16 +1135,16 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 // the abandoned commits) while preserving the children's other
                 // parent edges intact.
                 //
-                // We use tip_commit_id for the rebase (still valid before rewrite)
-                // and change_ids for the abandon (stable across rewrites).
-                let revset = format!("trunk()..commit_id({tip_commit_id})");
-                jj::rebase(&format!("roots({revset})"), "trunk()")?;
-                let abandon_revset = change_ids
+                // We use change_ids for both steps (stable across rewrites).
+                // The revset targets only this PR's commits (not ancestors from
+                // other PRs that may still be open).
+                let revset = change_ids
                     .iter()
                     .map(|id| format!("change_id({id})"))
                     .collect::<Vec<_>>()
                     .join(" | ");
-                jj::abandon(&abandon_revset)?;
+                jj::rebase(&format!("roots({revset})"), "trunk()")?;
+                jj::abandon(&revset)?;
             }
             SyncAction::Push { bookmarks } => {
                 eprintln!(
