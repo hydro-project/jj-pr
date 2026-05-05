@@ -21,6 +21,7 @@ pub enum Command {
     /// Reconcile local jj state with GitHub (push, update bases, rebase merged children)
     Sync(SyncArgs),
     /// Create a new PR for an existing bookmark
+    #[command(alias = "c")]
     Create(CreateArgs),
     /// Utility commands
     Util(UtilArgs),
