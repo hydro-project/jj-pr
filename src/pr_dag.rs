@@ -911,11 +911,12 @@ use crate::gh;
 pub enum SyncAction {
     /// Stamp a missing `PR: #N` trailer on a commit.
     StampTrailer { change_id: String, pr: PrNum },
-    /// Rebase children of a merged PR onto trunk.
-    RebaseChildren { tip_commit_id: String, pr: PrNum },
     /// Abandon commits of a merged PR and delete its bookmark if present.
+    /// First rebases the merged commits onto trunk so that abandoning them
+    /// reparents children to trunk while preserving other parent edges.
     AbandonMerged {
-        tip_commit_id: String,
+        /// Change IDs of all commits in this PR (stable across rewrites).
+        change_ids: Vec<String>,
         pr: PrNum,
         bookmark: String,
         bookmark_exists: bool,
@@ -936,9 +937,6 @@ impl fmt::Display for SyncAction {
             SyncAction::StampTrailer { change_id, pr } => {
                 let short = &change_id[..12.min(change_id.len())];
                 write!(f, "stamp {pr} trailer on {short}")
-            }
-            SyncAction::RebaseChildren { pr, .. } => {
-                write!(f, "rebase children of {pr} onto trunk()")
             }
             SyncAction::AbandonMerged {
                 pr,
@@ -1005,7 +1003,7 @@ pub fn plan_sync(
         }
     }
 
-    // 2 & 3. Rebase children + abandon for merged PRs.
+    // 2. Abandon merged PRs (rebase onto trunk first to preserve sibling parent edges).
     for &nk in state.topo_order.iter() {
         let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
             continue;
@@ -1014,22 +1012,17 @@ pub fn plan_sync(
         if gh_pr.state != gh::PrState::Merged {
             continue;
         }
-        // Find the tip commit (first in jj_entries, which is reverse topo order) for this node.
-        let tip_commit_id = jj_entries
+        // Collect commits in this node (tip first, since jj_entries is reverse topo order).
+        let node_entries = jj_entries
             .iter()
             .filter(|e| state.commit_node.get(&*e.commit.commit_id) == Some(&nk))
-            .map(|e| e.commit.commit_id.0.clone())
-            .next();
-        let Some(tip_commit_id) = tip_commit_id else { continue };
-        let has_children = state.node_succs.get(nk).is_some_and(|succs| !succs.is_empty());
-        if has_children {
-            actions.push(SyncAction::RebaseChildren {
-                tip_commit_id: tip_commit_id.clone(),
-                pr: *pr_num,
-            });
+            .collect::<Vec<_>>();
+        if node_entries.is_empty() {
+            continue;
         }
+        let change_ids: Vec<String> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
         actions.push(SyncAction::AbandonMerged {
-            tip_commit_id,
+            change_ids,
             pr: *pr_num,
             bookmark: gh_pr.head_ref_name.clone(),
             bookmark_exists: local_bookmark_names.contains(&*gh_pr.head_ref_name),
@@ -1105,12 +1098,8 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 let new_desc = jj::set_pr_trailer(&desc, *pr);
                 jj::describe_stdin(change_id, &new_desc)?;
             }
-            SyncAction::RebaseChildren { tip_commit_id, pr } => {
-                eprintln!("Rebasing children of {} onto trunk()", crate::style::pr_num(*pr, None),);
-                jj::rebase(&format!("commit_id({tip_commit_id})+"), "trunk()")?;
-            }
             SyncAction::AbandonMerged {
-                tip_commit_id,
+                change_ids,
                 pr,
                 bookmark,
                 bookmark_exists,
@@ -1129,7 +1118,32 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                         crate::style::bookmark(bookmark),
                     );
                 }
-                let revset = format!("trunk()..commit_id({tip_commit_id})");
+                // Rebase merged commits onto trunk first, then abandon.
+                //
+                // Why not just abandon directly? Because `jj abandon` reparents
+                // children to the abandoned commit's *current* parents. If the
+                // merged PR's root is based on an older trunk commit, children
+                // would be reparented there instead of the current trunk tip.
+                //
+                // Why not rebase children directly onto trunk? Because that would
+                // destroy other parent edges. If a child has two parents (this
+                // merged PR + another open PR), rebasing the child onto trunk
+                // would lose its relationship with the open PR.
+                //
+                // By rebasing the merged PR onto trunk and then abandoning,
+                // `jj abandon` reparents children to trunk (the new parent of
+                // the abandoned commits) while preserving the children's other
+                // parent edges intact.
+                //
+                // We use change_ids for both steps (stable across rewrites).
+                // The revset targets only this PR's commits (not ancestors from
+                // other PRs that may still be open).
+                let revset = change_ids
+                    .iter()
+                    .map(|id| format!("change_id({id})"))
+                    .collect::<Vec<_>>()
+                    .join(" | ");
+                jj::rebase(&format!("roots({revset})"), "trunk()")?;
                 jj::abandon(&revset)?;
             }
             SyncAction::Push { bookmarks } => {
