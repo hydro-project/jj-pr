@@ -1,0 +1,38 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false)"
+input_file: src/fixtures/jj-pr-stale-trunk-1778002925.json.gz
+---
+○  [1m[35mxwnxlsksvuqk[0m [34m069b90a83ccb[0m [1m[35mstale-trunk[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/41PR #41]8;;[0m [32mReady[0m
+│  Move existing_merge_commits into InputData for testability
+○  [1m[35mtypstupqsxru[0m [34m79acf561a9d3[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/41PR #41]8;;[0m [32mReady[0m
+│  Simplify: single present() wrapping all commit_ids
+○  [1m[35mvupsksvotzmt[0m [34m5c6168d56177[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/41PR #41]8;;[0m [32mReady[0m
+│  Use present() revset to check commit existence in single jj call
+○  [1m[35mzpmkznyrlvxr[0m [34me075476cb399[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/41PR #41]8;;[0m [32mReady[0m
+│  Move CommitId to types.rs and use it for merge_commit_oid
+○  [1m[35mvyszzsryvvxk[0m [34m53750c4505e0[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/41PR #41]8;;[0m [32mReady[0m
+│  Detect stale trunk: skip abandon for merged PRs not yet fetched
+│ ○  [1m[35mklzmozyoqswt[0m [34m3a89fc925a4e[0m [1m[35mcreate-c[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/40PR #40]8;;[0m [32mReady[0m
+├─╯  feat(cli): add `c` as alias for `create` subcommand
+│ ○  [1m[35mmoxxqxxwsusm[0m [34m826417c7b3c4[0m [1m[35mhandle-forks[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m* [33mDraft[0m
+│ │  Remove bookmark_track from create, update README for fork workflows
+│ ○  [1m[35mwxsootupxqxo[0m [34m8586707c8818[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m* [33mDraft[0m
+│ │  Add headRepositoryOwner to GraphQL query and GhPr struct
+│ ○  [1m[35muspmwzsllmyu[0m [34m45887a283575[0m [1m[35msandbox-933fbaa7-a932-4bec-a6af-d18d75909ff5[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m* [33mDraft[0m
+╭─┤  Replace hardcoded "origin" with configurable push remote
+[1m[36m◆[0m │  [1m[35muzrlpnxruwsw[0m [34m1bb33e75c101[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│ │  fix: rebase merged PR onto trunk before abandon to preserve sibling edges (#38)
+│ ○  [1m[35mryokvxykuuyk[0m [34mb4a5de533b0c[0m [1m[35mdiscover-prs[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [2mMerged[0m
+│ │  Fix GraphQL injection and propagate deserialization errors
+│ ○  [1m[35mlqllnsnnzwnu[0m [34m3037bb2ac2d6[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [2mMerged[0m
+│ │  Address PR #35 review comments
+│ ○  [1m[35mwtttsotmxvwm[0m [34m66648b1083f6[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [2mMerged[0m
+│ │  update README.md
+│ ○  [1m[35mtusnqsqnnytk[0m [34m0afa4405c0b5[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [2mMerged[0m
+│ │  Skip branch lookups for bookmarks whose tip already has a PR trailer
+│ ○  [1m[35mymuutkqzksln[0m [34meb19e6cd3659[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [2mMerged[0m
+│ │  Replace HashSet+Vec with BTreeMap for PR deduplication
+│ ○  [1m[35mkoqkzlkykxuu[0m [34m92e1939850b9[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [2mMerged[0m
+├─╯  fix: discover PRs by branch name in the same GraphQL call
+[2m~[0m  [2m(elided revisions)[0m
