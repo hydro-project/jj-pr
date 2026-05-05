@@ -7,7 +7,8 @@ use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 
 use crate::gh::{GhPr, PrNum};
 use crate::graph_algorithms;
-use crate::jj::{self, CommitId, JjLogEntry};
+use crate::jj::{self, JjLogEntry};
+use crate::types::CommitId;
 
 new_key_type! {
     pub struct NodeKey;
@@ -921,6 +922,9 @@ pub enum SyncAction {
         bookmark: String,
         bookmark_exists: bool,
     },
+    /// Merged PR whose merge commit isn't in the local repo yet (trunk is stale).
+    /// Skipped during execution — informational only.
+    StaleMerged { pr: PrNum, bookmark: String },
     /// Push bookmarks that differ from remote.
     Push { bookmarks: Vec<(PrNum, String)> },
     /// Update a PR's base branch on GitHub.
@@ -950,6 +954,9 @@ impl fmt::Display for SyncAction {
                     write!(f, "abandon merged {pr} ({bookmark} already deleted)")
                 }
             }
+            SyncAction::StaleMerged { pr, bookmark } => {
+                write!(f, "skip merged {pr} ({bookmark}) — trunk stale, run `jj git fetch`")
+            }
             SyncAction::Push { bookmarks } => {
                 let details: Vec<_> = bookmarks.iter().map(|(pr, bm)| format!("{pr} ({bm})")).collect();
                 write!(f, "push: {}", details.join(", "))
@@ -967,6 +974,9 @@ pub fn plan_sync(
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     default_branch: &str,
+    // Merge commit OIDs that exist in the local repo (for stale trunk detection).
+    // `None` means all merge commits are considered present (legacy behavior).
+    existing_merge_commits: Option<&HashSet<CommitId>>,
 ) -> Result<Vec<SyncAction>> {
     // Block on unresolvable conflicted bookmarks.
     if !state.bookmarks_blocking.is_empty() {
@@ -1004,12 +1014,26 @@ pub fn plan_sync(
     }
 
     // 2. Abandon merged PRs (rebase onto trunk first to preserve sibling parent edges).
+    // Skip merged PRs whose merge commit isn't in the local repo (trunk is stale — needs fetch).
     for &nk in state.topo_order.iter() {
         let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
             continue;
         };
         let Some(gh_pr) = prs.get(pr_num) else { continue };
         if gh_pr.state != gh::PrState::Merged {
+            continue;
+        }
+        // Skip if the merge commit isn't in the local repo (trunk is stale — needs fetch).
+        if existing_merge_commits.is_some_and(|existing| {
+            gh_pr
+                .merge_commit_oid
+                .as_deref()
+                .is_some_and(|oid| !existing.contains(oid))
+        }) {
+            actions.push(SyncAction::StaleMerged {
+                pr: *pr_num,
+                bookmark: gh_pr.head_ref_name.clone(),
+            });
             continue;
         }
         // Collect commits in this node (tip first, since jj_entries is reverse topo order).
@@ -1167,6 +1191,9 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     crate::style::bookmark(new_base),
                 );
                 gh::edit_base(pr.get(), new_base)?;
+            }
+            SyncAction::StaleMerged { .. } => {
+                // Informational only — no action taken.
             }
         }
     }

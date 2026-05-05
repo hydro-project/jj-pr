@@ -1,0 +1,16 @@
+---
+source: src/tests.rs
+expression: render_show(&f)
+input_file: src/fixtures/jj-pr-stale-trunk-1778002925.json.gz
+---
+○    [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m*  [33mDraft[0m  [1m[35mhandle-forks[0m
+├─╮  Remove bookmark_track from create, update README for fork workflows
+│ ○  [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m  [2mMerged[0m  [1m[35mdiscover-prs[0m
+│ │  fix: discover PRs by branch name in the same GraphQL call
+│ │ ○  [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/40PR #40]8;;[0m  [32mReady[0m  [1m[35mcreate-c[0m
+├───╯  feat(cli): add `c` as alias for `create` subcommand
+│ │ ○  [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/41PR #41]8;;[0m  [32mReady[0m  [1m[35mstale-trunk[0m
+├───╯  Detect stale trunk: skip abandon for merged PRs not yet fetched
+[1m[36m◆[0m │  [1m[32mtrunk()[0m
+├─╯
+[2m~[0m  [2m(elided revisions)[0m
