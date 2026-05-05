@@ -111,7 +111,8 @@ jj pr sync
 ```
 
 This stamps missing trailers, rebases children of merged PRs onto `trunk()`, abandons merged commits, pushes affected
-bookmarks, and updates GitHub base branches. You'll be prompted before any changes are applied.
+bookmarks, and updates GitHub base branches. Bookmarks with content-conflicted commits are skipped automatically.
+You'll be prompted before any changes are applied.
 
 ```apl
   stamp #15 trailer on knynvqkoypsy
