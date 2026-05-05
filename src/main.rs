@@ -11,7 +11,7 @@ mod ui;
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use cli::{Cli, Command};
 use serde::{Deserialize, Serialize};
@@ -75,6 +75,16 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
     let yes = cli.yes;
 
+    let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
+
+    // Handle commands that don't need jj/gh state early.
+    if let Command::Util(cli::UtilArgs {
+        command: cli::UtilCommand::InstallAliases(args),
+    }) = &command
+    {
+        return install_aliases(args.repo);
+    }
+
     // Step 1: Load jj entries (the only local I/O).
     let jj_entries = jj::load_entries()?;
 
@@ -95,10 +105,11 @@ fn run() -> Result<()> {
         tracked_bookmarks: Some(tracked_bookmarks),
     });
 
-    let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
-
-    // Handle `dump` before building derived state — it only needs raw input.
-    if let Command::Dump = &command {
+    // Handle util commands that need input data.
+    if let Command::Util(cli::UtilArgs {
+        command: cli::UtilCommand::Dump,
+    }) = &command
+    {
         serde_json::to_writer(std::io::stdout(), input)?;
         println!();
         return Ok(());
@@ -160,11 +171,60 @@ fn run() -> Result<()> {
             }
             Ok(())
         }
-        Command::Dump => unreachable!("handled above"),
+        Command::Util(_) => unreachable!("handled above"),
     };
 
     if result.is_err() {
         dump_input_on_failure(INPUT_DATA.get());
     }
     result
+}
+
+fn install_aliases(repo: bool) -> Result<()> {
+    use std::process::Command as Cmd;
+
+    let scope = if repo { "--repo" } else { "--user" };
+
+    // Install `jj pr` subcommand alias.
+    let output = Cmd::new("jj")
+        .args([
+            "config",
+            "set",
+            scope,
+            "aliases.pr",
+            r#"["util", "exec", "--", "jj-pr"]"#,
+        ])
+        .output()
+        .context("Failed to run `jj config set` for alias")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("jj config set failed for aliases.pr: {stderr}");
+    }
+
+    let aliases = [
+        ("revset-aliases.\"pr(n)\"", r#"description(regex:"PR: #" ++ n)"#),
+        ("revset-aliases.\"pr_root(n)\"", r#"roots(pr(n))"#),
+    ];
+
+    for (key, value) in &aliases {
+        let output = Cmd::new("jj")
+            .args(["config", "set", scope, key, value])
+            .output()
+            .context("Failed to run `jj config set`")?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("jj config set failed for {key}: {stderr}");
+        }
+    }
+
+    eprintln!("Installed to {scope} config:");
+    eprintln!("  command alias: jj pr     — runs jj-pr");
+    eprintln!("  revset alias: pr(n)      — all commits in PR #n");
+    eprintln!("  revset alias: pr_root(n) — root commit(s) of PR #n");
+    eprintln!();
+    eprintln!("Usage:");
+    eprintln!("  jj pr show");
+    eprintln!("  jj log -r 'pr(\"1234\")'");
+    eprintln!("  jj rebase -s 'pr_root(\"1234\")' -d main");
+    Ok(())
 }
