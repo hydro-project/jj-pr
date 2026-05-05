@@ -1,9 +1,0 @@
----
-source: src/tests.rs
-expression: "render_log(&f, false)"
----
-[31m@[0m  [1m[35mch_local[0m [34mlocal[0m [1m[35mfeat[0m [1m[36m]8;;https://github.com/test/repo/pull/1PR #1]8;;[0m* [33mDraft[0m
-│  my change
-[1m[36m◆[0m  [1m[35mchtrunk[0m [34mtrunk[0m [1m[35mmain[0m [1m[32mtrunk()[0m
-   trunk
-[2m~[0m  [2m(elided revisions)[0m

@@ -623,9 +623,17 @@ impl RepoState {
             default_branch.to_owned()
         }
     }
-}
 
-/// Extract unique PR numbers from jj log entries' trailers.
+    /// Whether a node is conflicted (content conflicts or bookmark conflicts).
+    pub fn is_node_conflicted(&self, nk: NodeKey, prs: &BTreeMap<PrNum, &GhPr>) -> bool {
+        if self.nodes_conflicted.contains_key(nk) {
+            return true;
+        }
+        matches!(self.nodes.get(nk), Some(Node::Pr(pr_id)) if prs
+            .get(pr_id)
+            .is_some_and(|pr| self.bookmarks_blocking.contains(&*pr.head_ref_name)))
+    }
+}
 pub fn extract_pr_nums(jj_entries: &[JjLogEntry]) -> Vec<PrNum> {
     let mut nums = BTreeSet::new();
     for entry in jj_entries {
@@ -675,11 +683,7 @@ pub fn render_show(
 
         let node = state.nodes.get(node_key).unwrap();
         let glyph = if is_current {
-            let is_conflicted = state.nodes_conflicted.contains_key(node_key)
-                || matches!(node, Node::Pr(pr_id) if prs
-                    .get(pr_id)
-                    .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name)));
-            if is_conflicted {
+            if state.is_node_conflicted(node_key, prs) {
                 crate::style::glyph_current_conflicted()
             } else {
                 crate::style::glyph_current()
@@ -688,19 +692,15 @@ pub fn render_show(
             match node {
                 Node::Root => crate::style::glyph_elided(),
                 Node::TrunkTip => crate::style::glyph_immutable(),
-                Node::Pr(pr_id) => {
-                    let is_bookmark_conflicted = prs
-                        .get(pr_id)
-                        .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name));
-                    let is_content_conflicted = state.nodes_conflicted.contains_key(node_key);
-                    if is_bookmark_conflicted || is_content_conflicted {
+                Node::Pr(_) => {
+                    if state.is_node_conflicted(node_key, prs) {
                         crate::style::glyph_conflicted()
                     } else {
                         crate::style::GLYPH_MUTABLE.to_owned()
                     }
                 }
                 Node::Ambiguous { .. } => {
-                    if state.nodes_conflicted.contains_key(node_key) {
+                    if state.is_node_conflicted(node_key, prs) {
                         crate::style::glyph_warning_conflicted()
                     } else {
                         crate::style::warn(crate::style::GLYPH_WARNING)
@@ -810,44 +810,21 @@ pub fn render_log(
 
         // Build the glyph.
         let glyph = if jj_entry.is_working_copy {
-            let is_bookmark_conflicted = node_key.is_some_and(|nk| {
-                matches!(state.nodes.get(nk), Some(Node::Pr(pr_id)) if prs
-                    .get(pr_id)
-                    .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name)))
-            });
-            if jj_entry.conflict || is_bookmark_conflicted {
+            if jj_entry.conflict {
                 crate::style::glyph_current_conflicted()
             } else {
                 crate::style::glyph_current()
             }
+        } else if jj_entry.conflict {
+            match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
+                Some(Node::Ambiguous { .. }) => crate::style::glyph_warning_conflicted(),
+                _ => crate::style::glyph_conflicted(),
+            }
         } else {
-            match node_key.map(|nk| (nk, state.nodes.get(nk).unwrap())) {
-                Some((_, Node::Root | Node::TrunkTip)) => crate::style::glyph_immutable(),
-                Some((nk, Node::Ambiguous { .. })) => {
-                    if jj_entry.conflict || state.nodes_conflicted.contains_key(nk) {
-                        crate::style::glyph_warning_conflicted()
-                    } else {
-                        crate::style::warn(crate::style::GLYPH_WARNING)
-                    }
-                }
-                Some((nk, Node::Pr(pr_id))) => {
-                    let is_bookmark_conflicted = prs
-                        .get(pr_id)
-                        .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name));
-                    let is_content_conflicted = jj_entry.conflict || state.nodes_conflicted.contains_key(nk);
-                    if is_bookmark_conflicted || is_content_conflicted {
-                        crate::style::glyph_conflicted()
-                    } else {
-                        crate::style::GLYPH_MUTABLE.to_owned()
-                    }
-                }
-                None => {
-                    if jj_entry.conflict {
-                        crate::style::glyph_conflicted()
-                    } else {
-                        crate::style::GLYPH_MUTABLE.to_owned()
-                    }
-                }
+            match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
+                Some(Node::Root | Node::TrunkTip) => crate::style::glyph_immutable(),
+                Some(Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
+                Some(Node::Pr(_)) | None => crate::style::GLYPH_MUTABLE.to_owned(),
             }
         };
 

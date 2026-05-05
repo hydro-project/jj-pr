@@ -545,31 +545,6 @@ fn conflicted_working_copy() {
 }
 
 #[test]
-fn conflicted_bookmark_working_copy() {
-    // Bookmark-conflicted PR that is also the working copy should show red @ in log.
-    let mut tip = entry(
-        "local",
-        "ch_local",
-        &["trunk"],
-        "my change\n\nPR: #1\n",
-        &["feat"],
-        false,
-    );
-    tip.local_bookmarks[0].target = vec![
-        Some(CommitId("local".to_owned())),
-        Some(CommitId("base".to_owned())),
-        None,
-    ];
-    tip.is_working_copy = true;
-    let f = fixture(
-        vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
-        vec![gh_pr(1, "feat", "main")],
-        None,
-    );
-    insta::assert_snapshot!("conflicted_bookmark_working_copy_log", render_log(&f, false));
-}
-
-#[test]
 fn conflicted_bookmark_no_null_blocks_sync() {
     // Conflicted bookmark without null (both sides point to commits) should block sync
     // even for merged PRs.
