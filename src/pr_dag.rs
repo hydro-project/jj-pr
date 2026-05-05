@@ -916,6 +916,8 @@ pub enum SyncAction {
     /// reparents children to trunk while preserving other parent edges.
     AbandonMerged {
         tip_commit_id: String,
+        /// Change IDs of all commits in this PR (stable across rewrites).
+        change_ids: Vec<String>,
         pr: PrNum,
         bookmark: String,
         bookmark_exists: bool,
@@ -1011,15 +1013,19 @@ pub fn plan_sync(
         if gh_pr.state != gh::PrState::Merged {
             continue;
         }
-        // Find the tip commit (first in jj_entries, which is reverse topo order) for this node.
-        let tip_commit_id = jj_entries
+        // Collect commits in this node (tip first, since jj_entries is reverse topo order).
+        let node_entries: Vec<_> = jj_entries
             .iter()
             .filter(|e| state.commit_node.get(&*e.commit.commit_id) == Some(&nk))
-            .map(|e| e.commit.commit_id.0.clone())
-            .next();
-        let Some(tip_commit_id) = tip_commit_id else { continue };
+            .collect();
+        let Some(tip_entry) = node_entries.first() else {
+            continue;
+        };
+        let tip_commit_id = tip_entry.commit.commit_id.0.clone();
+        let change_ids: Vec<String> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
         actions.push(SyncAction::AbandonMerged {
             tip_commit_id,
+            change_ids,
             pr: *pr_num,
             bookmark: gh_pr.head_ref_name.clone(),
             bookmark_exists: local_bookmark_names.contains(&*gh_pr.head_ref_name),
@@ -1097,6 +1103,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
             }
             SyncAction::AbandonMerged {
                 tip_commit_id,
+                change_ids,
                 pr,
                 bookmark,
                 bookmark_exists,
@@ -1131,9 +1138,17 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 // `jj abandon` reparents children to trunk (the new parent of
                 // the abandoned commits) while preserving the children's other
                 // parent edges intact.
+                //
+                // We use tip_commit_id for the rebase (still valid before rewrite)
+                // and change_ids for the abandon (stable across rewrites).
                 let revset = format!("trunk()..commit_id({tip_commit_id})");
                 jj::rebase(&format!("roots({revset})"), "trunk()")?;
-                jj::abandon(&revset)?;
+                let abandon_revset = change_ids
+                    .iter()
+                    .map(|id| format!("change_id({id})"))
+                    .collect::<Vec<_>>()
+                    .join(" | ");
+                jj::abandon(&abandon_revset)?;
             }
             SyncAction::Push { bookmarks } => {
                 eprintln!(
