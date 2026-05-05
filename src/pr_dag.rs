@@ -159,11 +159,9 @@ pub fn build(
                             // Only block on the local side to avoid duplicate insertions.
                             repo_state.bookmarks_blocking.insert(local_bookmark_name.to_owned());
                         }
-                    } else if local_bookmark
-                        .target
-                        .first()
-                        .is_some_and(|t| t.as_ref() == Some(&jj_entry.commit.commit_id))
-                    {
+                    } else if local_bookmark.target.as_slice() == [Some(jj_entry.commit.commit_id.clone())] {
+                        // Note `local_bookmark.target == vec![Some(jj_entry.commit.commit_id)]`
+                        // in the non-conflicted case.
                         cid_pr_tip
                             .entry(&*jj_entry.commit.commit_id)
                             .or_default()
