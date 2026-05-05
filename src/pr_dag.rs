@@ -1013,13 +1013,13 @@ pub fn plan_sync(
             continue;
         }
         // Collect commits in this node (tip first, since jj_entries is reverse topo order).
-        let node_entries: Vec<_> = jj_entries
+        let node_entries = jj_entries
             .iter()
             .filter(|e| state.commit_node.get(&*e.commit.commit_id) == Some(&nk))
-            .collect();
-        let Some(_tip_entry) = node_entries.first() else {
+            .collect::<Vec<_>>();
+        if node_entries.is_empty() {
             continue;
-        };
+        }
         let change_ids: Vec<String> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
         actions.push(SyncAction::AbandonMerged {
             change_ids,
