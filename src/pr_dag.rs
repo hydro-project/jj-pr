@@ -682,31 +682,16 @@ pub fn render_show(
         let is_current = state.current_node == Some(node_key);
 
         let node = state.nodes.get(node_key).unwrap();
-        let glyph = if is_current {
-            if state.is_node_conflicted(node_key, prs) {
-                crate::style::glyph_current_conflicted()
-            } else {
-                crate::style::glyph_current()
-            }
-        } else {
-            match node {
-                Node::Root => crate::style::glyph_elided(),
-                Node::TrunkTip => crate::style::glyph_immutable(),
-                Node::Pr(_) => {
-                    if state.is_node_conflicted(node_key, prs) {
-                        crate::style::glyph_conflicted()
-                    } else {
-                        crate::style::GLYPH_MUTABLE.to_owned()
-                    }
-                }
-                Node::Ambiguous { .. } => {
-                    if state.is_node_conflicted(node_key, prs) {
-                        crate::style::glyph_warning_conflicted()
-                    } else {
-                        crate::style::warn(crate::style::GLYPH_WARNING)
-                    }
-                }
-            }
+        let conflicted = state.is_node_conflicted(node_key, prs);
+        let glyph = match (is_current, conflicted, node) {
+            (true, true, _) => crate::style::glyph_current_conflicted(),
+            (true, false, _) => crate::style::glyph_current(),
+            (false, _, Node::Root) => crate::style::glyph_elided(),
+            (false, _, Node::TrunkTip) => crate::style::glyph_immutable(),
+            (false, true, Node::Pr(_)) => crate::style::glyph_conflicted(),
+            (false, false, Node::Pr(_)) => crate::style::GLYPH_MUTABLE.to_owned(),
+            (false, true, Node::Ambiguous { .. }) => crate::style::glyph_warning_conflicted(),
+            (false, false, Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
         };
 
         let message = match node {
