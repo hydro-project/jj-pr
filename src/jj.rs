@@ -5,12 +5,12 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
 use crate::gh::PrNum;
-use crate::types::CommitId;
+use crate::types::{Bookmark, ChangeId, CommitId};
 /// Raw commit data from `json(self)`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjCommit {
     pub commit_id: CommitId,
-    pub change_id: String,
+    pub change_id: ChangeId,
     pub parents: Vec<CommitId>,
     pub description: String,
 }
@@ -18,14 +18,14 @@ pub struct JjCommit {
 /// Bookmark reference from `json(local_bookmarks)` or `json(remote_bookmarks)`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjBookmark {
-    pub name: String,
+    pub name: Bookmark,
     pub target: Vec<Option<CommitId>>,
 }
 
 /// Remote bookmark reference from `json(remote_bookmarks)`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjRemoteBookmark {
-    pub name: String,
+    pub name: Bookmark,
     pub remote: Option<String>,
     pub target: Vec<Option<CommitId>>,
 }
@@ -169,7 +169,7 @@ pub fn load_entries() -> Result<Vec<JjLogEntry>> {
 }
 
 /// Load the set of bookmark names tracked on a given remote.
-pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<String>> {
+pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<Bookmark>> {
     let template = format!(r#"if(remote == "{remote}", name ++ "\n")"#);
     let output = Command::new("jj")
         .args(["bookmark", "list", "--tracked", "-T", &template])
@@ -182,7 +182,11 @@ pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<String>> {
     }
 
     let stdout = String::from_utf8(output.stdout).context("jj output not UTF-8")?;
-    Ok(stdout.lines().filter(|l| !l.is_empty()).map(|l| l.to_owned()).collect())
+    Ok(stdout
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|l| Bookmark(l.to_owned()))
+        .collect())
 }
 
 pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {

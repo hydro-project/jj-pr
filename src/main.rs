@@ -27,7 +27,7 @@ pub(crate) struct InputData {
     /// Bookmark names tracked on the push remote (origin).
     /// `None` means all bookmarks are considered tracked (legacy behavior).
     #[serde(default)]
-    pub(crate) tracked_bookmarks: Option<std::collections::BTreeSet<String>>,
+    pub(crate) tracked_bookmarks: Option<std::collections::BTreeSet<types::Bookmark>>,
     /// Merge commit OIDs that exist in the local repo (for stale trunk detection).
     /// `None` means all merge commits are considered present (legacy behavior).
     #[serde(default)]

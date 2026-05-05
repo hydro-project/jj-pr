@@ -6,7 +6,7 @@ use std::process::Command;
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
-use crate::types::CommitId;
+use crate::types::{Bookmark, CommitId};
 /// Newtype for GitHub PR numbers.
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(transparent)]
@@ -55,8 +55,8 @@ pub enum CheckStatus {
 #[serde(rename_all = "camelCase")]
 pub struct GhPr {
     pub number: PrNum,
-    pub head_ref_name: String,
-    pub base_ref_name: String,
+    pub head_ref_name: Bookmark,
+    pub base_ref_name: Bookmark,
     pub state: PrState,
     pub is_draft: bool,
     pub url: String,
@@ -324,8 +324,8 @@ pub fn load_prs_and_default_branch(
         );
         entry.insert(GhPr {
             number: d.number,
-            head_ref_name: d.head_ref_name,
-            base_ref_name: d.base_ref_name,
+            head_ref_name: Bookmark(d.head_ref_name),
+            base_ref_name: Bookmark(d.base_ref_name),
             state: d.state,
             is_draft: d.is_draft,
             url: d.url,
