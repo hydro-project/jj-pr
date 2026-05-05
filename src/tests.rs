@@ -516,6 +516,7 @@ fn conflicted_bookmark_open_pr_blocks_sync() {
         vec![gh_pr(1, "feat", "main")],
         None,
     );
+    insta::assert_snapshot!("conflicted_open_show", render_show(&f));
     insta::assert_snapshot!("conflicted_open_blocks_sync", plan_sync(&f));
 }
 

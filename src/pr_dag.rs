@@ -672,7 +672,16 @@ pub fn render_show(
             match node {
                 Node::Root => crate::style::glyph_elided(),
                 Node::TrunkTip => crate::style::glyph_immutable(),
-                Node::Pr(_) => crate::style::GLYPH_MUTABLE.to_owned(),
+                Node::Pr(pr_id) => {
+                    let is_conflicted = prs
+                        .get(pr_id)
+                        .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name));
+                    if is_conflicted {
+                        crate::style::glyph_conflicted()
+                    } else {
+                        crate::style::GLYPH_MUTABLE.to_owned()
+                    }
+                }
                 Node::Ambiguous { .. } => crate::style::warn(crate::style::GLYPH_WARNING),
             }
         };
@@ -780,10 +789,20 @@ pub fn render_log(
         let glyph = if jj_entry.is_working_copy {
             crate::style::glyph_current()
         } else {
-            match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
-                Some(Node::Root | Node::TrunkTip) => crate::style::glyph_immutable(),
-                Some(Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
-                Some(Node::Pr(_)) | None => crate::style::GLYPH_MUTABLE.to_owned(),
+            match node_key.map(|nk| (nk, state.nodes.get(nk).unwrap())) {
+                Some((_, Node::Root | Node::TrunkTip)) => crate::style::glyph_immutable(),
+                Some((_, Node::Ambiguous { .. })) => crate::style::warn(crate::style::GLYPH_WARNING),
+                Some((_, Node::Pr(pr_id))) => {
+                    let is_conflicted = prs
+                        .get(pr_id)
+                        .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name));
+                    if is_conflicted {
+                        crate::style::glyph_conflicted()
+                    } else {
+                        crate::style::GLYPH_MUTABLE.to_owned()
+                    }
+                }
+                None => crate::style::GLYPH_MUTABLE.to_owned(),
             }
         };
 
