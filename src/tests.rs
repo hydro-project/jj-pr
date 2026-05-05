@@ -57,7 +57,11 @@ fn plan_sync(input: &InputData) -> String {
         &input.default_branch,
         input.existing_merge_commits.as_ref(),
     ) {
-        Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
+        Ok(plan) => {
+            let mut lines: Vec<String> = plan.warnings.clone();
+            lines.extend(plan.actions.iter().map(|a| a.to_string()));
+            lines.join("\n")
+        }
         Err(e) => format!("ERROR: {e}"),
     }
 }

@@ -154,26 +154,29 @@ fn run() -> Result<()> {
             &mut std::io::stdout(),
         ),
         Command::Sync(args) => {
-            let actions = pr_dag::plan_sync(
+            let plan = pr_dag::plan_sync(
                 &state,
                 &prs,
                 &input.jj_entries,
                 &input.default_branch,
                 input.existing_merge_commits.as_ref(),
             )?;
-            if actions.is_empty() {
+            for warning in &plan.warnings {
+                eprintln!("  {}", style::warn(warning));
+            }
+            if plan.actions.is_empty() {
                 eprintln!("Nothing to sync.");
                 return Ok(());
             }
-            for action in &actions {
+            for action in &plan.actions {
                 eprintln!("  {action}");
             }
             if args.dry_run {
                 eprintln!("\n{}", style::warn("Dry run: no changes applied."));
-            } else if !ui::confirm(&format!("Apply {} action(s)?", actions.len()), yes) {
+            } else if !ui::confirm(&format!("Apply {} action(s)?", plan.actions.len()), yes) {
                 anyhow::bail!("Aborted.");
             } else {
-                pr_dag::execute_sync(&actions)?;
+                pr_dag::execute_sync(&plan.actions)?;
             }
             Ok(())
         }
