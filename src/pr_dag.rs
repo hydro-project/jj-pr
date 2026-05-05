@@ -1115,8 +1115,22 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                         crate::style::bookmark(bookmark),
                     );
                 }
-                // Rebase merged commits onto trunk first, so that abandoning them
-                // reparents children to trunk while preserving other parent edges.
+                // Rebase merged commits onto trunk first, then abandon.
+                //
+                // Why not just abandon directly? Because `jj abandon` reparents
+                // children to the abandoned commit's *current* parents. If the
+                // merged PR's root is based on an older trunk commit, children
+                // would be reparented there instead of the current trunk tip.
+                //
+                // Why not rebase children directly onto trunk? Because that would
+                // destroy other parent edges. If a child has two parents (this
+                // merged PR + another open PR), rebasing the child onto trunk
+                // would lose its relationship with the open PR.
+                //
+                // By rebasing the merged PR onto trunk and then abandoning,
+                // `jj abandon` reparents children to trunk (the new parent of
+                // the abandoned commits) while preserving the children's other
+                // parent edges intact.
                 let revset = format!("trunk()..commit_id({tip_commit_id})");
                 jj::rebase(&format!("roots({revset})"), "trunk()")?;
                 jj::abandon(&revset)?;
