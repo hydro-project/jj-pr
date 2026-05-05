@@ -88,11 +88,17 @@ fn run() -> Result<()> {
     // Step 1: Load jj entries (the only local I/O).
     let jj_entries = jj::load_entries()?;
 
-    // Step 2: Extract PR numbers from trailers to know which PRs to fetch.
+    // Step 2: Extract PR numbers from trailers and local bookmark names.
+    // Only look up bookmarks by branch name if their tip commit doesn't already have a trailer.
     let pr_nums = pr_dag::extract_pr_nums(&jj_entries);
+    let local_bookmarks: Vec<&str> = jj_entries
+        .iter()
+        .filter(|e| jj::parse_pr_trailer(&e.commit.description).is_none())
+        .flat_map(|e| e.local_bookmarks.iter().map(|bm| bm.name.as_str()))
+        .collect();
 
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
-    let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums)?;
+    let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, &local_bookmarks)?;
 
     // Step 4: Load tracked bookmarks (fast, ~25ms).
     let tracked_bookmarks = jj::load_tracked_bookmarks("origin")?;
