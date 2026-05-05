@@ -518,7 +518,30 @@ fn conflicted_bookmark_open_pr_blocks_sync() {
         None,
     );
     insta::assert_snapshot!("conflicted_open_show", render_show(&f));
+    insta::assert_snapshot!("conflicted_open_log", render_log(&f, false));
     insta::assert_snapshot!("conflicted_open_blocks_sync", plan_sync(&f));
+}
+
+#[test]
+fn conflicted_working_copy() {
+    // Conflicted commit that is also the working copy should show red @.
+    let mut tip = entry(
+        "local",
+        "ch_local",
+        &["trunk"],
+        "my change\n\nPR: #1\n",
+        &["feat"],
+        false,
+    );
+    tip.conflict = true;
+    tip.is_working_copy = true;
+    let f = fixture(
+        vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
+        vec![gh_pr(1, "feat", "main")],
+        None,
+    );
+    insta::assert_snapshot!("conflicted_working_copy_show", render_show(&f));
+    insta::assert_snapshot!("conflicted_working_copy_log", render_log(&f, false));
 }
 
 #[test]

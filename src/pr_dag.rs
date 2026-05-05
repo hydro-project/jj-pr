@@ -675,7 +675,11 @@ pub fn render_show(
 
         let node = state.nodes.get(node_key).unwrap();
         let glyph = if is_current {
-            crate::style::glyph_current()
+            if state.nodes_conflicted.contains_key(node_key) {
+                crate::style::glyph_current_conflicted()
+            } else {
+                crate::style::glyph_current()
+            }
         } else {
             match node {
                 Node::Root => crate::style::glyph_elided(),
@@ -796,7 +800,11 @@ pub fn render_log(
 
         // Build the glyph.
         let glyph = if jj_entry.is_working_copy {
-            crate::style::glyph_current()
+            if jj_entry.conflict {
+                crate::style::glyph_current_conflicted()
+            } else {
+                crate::style::glyph_current()
+            }
         } else if jj_entry.conflict {
             crate::style::glyph_conflicted()
         } else {

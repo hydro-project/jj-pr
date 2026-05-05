@@ -146,6 +146,10 @@ pub fn glyph_current() -> String {
     styled(CURRENT, "@")
 }
 
+pub fn glyph_current_conflicted() -> String {
+    styled(CLOSED, "@")
+}
+
 pub fn dim(text: &str) -> String {
     styled(DIM, text)
 }
