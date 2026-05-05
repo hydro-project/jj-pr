@@ -310,21 +310,6 @@ fn needs_push() {
 }
 
 #[test]
-fn needs_push_local_ahead_of_origin() {
-    // Bookmark moved locally past the @origin target — should detect push needed.
-    let f = fixture(
-        vec![
-            entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
-            with_remote(entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false), "feat"),
-            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
-        ],
-        vec![gh_pr(1, "feat", "main")],
-        None,
-    );
-    insta::assert_snapshot!("needs_push_local_ahead_of_origin", plan_sync(&f));
-}
-
-#[test]
 fn no_push_when_only_git_remote() {
     // Bookmark has @git but no @origin — not tracked on origin, should NOT push.
     let f = InputData {

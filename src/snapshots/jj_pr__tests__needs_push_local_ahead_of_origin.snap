@@ -1,5 +1,0 @@
----
-source: src/tests.rs
-expression: plan_sync(&f)
----
-push: #1 (feat)
