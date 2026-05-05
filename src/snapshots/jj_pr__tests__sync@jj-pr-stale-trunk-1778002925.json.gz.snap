@@ -3,4 +3,5 @@ source: src/tests.rs
 expression: plan_sync(&f)
 input_file: src/fixtures/jj-pr-stale-trunk-1778002925.json.gz
 ---
+skip merged #35 (discover-prs) — trunk stale, run `jj git fetch`
 push: #36 (handle-forks)

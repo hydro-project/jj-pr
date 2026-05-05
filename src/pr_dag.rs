@@ -922,6 +922,9 @@ pub enum SyncAction {
         bookmark: String,
         bookmark_exists: bool,
     },
+    /// Merged PR whose merge commit isn't in the local repo yet (trunk is stale).
+    /// Skipped during execution — informational only.
+    StaleMerged { pr: PrNum, bookmark: String },
     /// Push bookmarks that differ from remote.
     Push { bookmarks: Vec<(PrNum, String)> },
     /// Update a PR's base branch on GitHub.
@@ -950,6 +953,9 @@ impl fmt::Display for SyncAction {
                 } else {
                     write!(f, "abandon merged {pr} ({bookmark} already deleted)")
                 }
+            }
+            SyncAction::StaleMerged { pr, bookmark } => {
+                write!(f, "skip merged {pr} ({bookmark}) — trunk stale, run `jj git fetch`")
             }
             SyncAction::Push { bookmarks } => {
                 let details: Vec<_> = bookmarks.iter().map(|(pr, bm)| format!("{pr} ({bm})")).collect();
@@ -1024,11 +1030,10 @@ pub fn plan_sync(
                 .as_deref()
                 .is_some_and(|oid| !existing.contains(oid))
         }) {
-            eprintln!(
-                "{}: {} is merged on GitHub but trunk is stale — run `jj git fetch` to update",
-                crate::style::warn("warning"),
-                crate::style::pr_num(*pr_num, Some(&gh_pr.url)),
-            );
+            actions.push(SyncAction::StaleMerged {
+                pr: *pr_num,
+                bookmark: gh_pr.head_ref_name.clone(),
+            });
             continue;
         }
         // Collect commits in this node (tip first, since jj_entries is reverse topo order).
@@ -1186,6 +1191,9 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     crate::style::bookmark(new_base),
                 );
                 gh::edit_base(pr.get(), new_base)?;
+            }
+            SyncAction::StaleMerged { .. } => {
+                // Informational only — no action taken.
             }
         }
     }
