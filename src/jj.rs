@@ -216,11 +216,12 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
         return Ok(HashSet::new());
     }
     // Use present() to gracefully handle missing commits (returns empty instead of erroring).
-    let revset = oids
+    let inner = oids
         .iter()
-        .map(|oid| format!("present(commit_id({oid}))"))
+        .map(|oid| format!("commit_id({oid})"))
         .collect::<Vec<_>>()
         .join(" | ");
+    let revset = format!("present({inner})");
     let output = Command::new("jj")
         .args(["log", "--no-graph", "-r", &revset, "-T", r#"commit_id ++ "\n""#])
         .output()
