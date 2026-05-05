@@ -1,0 +1,9 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/jj-pr-rebase-1777940339.json.gz
+---
+abandon merged #37 (fix-name-collide already deleted)
+abandon merged #34 (delete install-aliases)
+push: #36 (handle-forks)
+update #36 (handle-forks) base -> discover-prs

@@ -1,0 +1,54 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false)"
+input_file: src/fixtures/jj-pr-rebase-1777940339.json.gz
+---
+[1m[36m◆[0m  [1m[35mlstqtzturtoz[0m [34md857baf553db[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│  fix: bookmark name collision: use separate jj call for tracked bookmarks (#37)
+│ ○  [1m[35mmttkwllvqqoo[0m [34m1c4f4c4af39a[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m [2mMerged[0m
+│ │  Remove duplicate needs_push_local_ahead_of_origin test
+│ ○  [1m[35mwtqoztwzyrow[0m [34mdc26d5b0d3c4[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m [2mMerged[0m
+│ │  Use slice equality for non-conflicted bookmark target check
+│ ○  [1m[35myvmulvmroooo[0m [34m0f08c71b3bd6[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m [2mMerged[0m
+│ │  Address PR #37 review comments
+│ ○  [1m[35mzultmqylwkmw[0m [34md20205a2dc1c[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m [2mMerged[0m
+│ │  Use tracked_bookmarks for pr_needs_push guard instead of remote.is_some()
+│ ○  [1m[35mnloywloypqop[0m [34mda0a12ed706b[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m [2mMerged[0m
+│ │  Fix bookmark collision: use separate jj call for tracked bookmarks
+│ ○  [1m[35muzlxokotyqzp[0m [34m208e7ac5dc02[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m [2mMerged[0m
+│ │  Fix bookmark name collision bug: require remote tracking for PR ownership
+│ ○  [1m[35mmozkzrrrwnmy[0m [34mc6572d30dbb6[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m [2mMerged[0m
+│ │  fix: bookmark name collision bug: require remote tracking for PR ownership
+│ ○  [1m[35mrokpxownlsxp[0m [34maf962000d22e[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m [2mMerged[0m
+│ │  trying things
+│ ○  [1m[35mqxxoknnusqtp[0m [34m553640a0d0dd[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m [2mMerged[0m
+├─╯  Add test demonstrating bookmark name collision bug
+│ ○  [1m[35mmoxxqxxwsusm[0m [34m2fd0740e0aae[0m [1m[35mhandle-forks[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m* [33mDraft[0m
+│ │  Remove bookmark_track from create, update README for fork workflows
+│ ○  [1m[35mwxsootupxqxo[0m [34m70818672ac8f[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m* [33mDraft[0m
+│ │  Add headRepositoryOwner to GraphQL query and GhPr struct
+│ ○    [1m[35muspmwzsllmyu[0m [34m95d208f51064[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m* [33mDraft[0m
+│ ├─╮  Replace hardcoded "origin" with configurable push remote
+│ ○ │  [1m[35mmympwplwsors[0m [34m759e910d51ff[0m [1m[35minstall-aliases[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/34PR #34]8;;[0m [2mMerged[0m
+│ │ │  refactor: reorder install-aliases to put `jj pr` alias first
+│ ○ │  [1m[35mllxyrvpvypwm[0m [34me36533c658a2[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/34PR #34]8;;[0m [2mMerged[0m
+│ │ │  refactor: use if-let instead of single-arm matches
+│ ○ │  [1m[35mrzrlrumklxvu[0m [34m7bae9b67c842[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/34PR #34]8;;[0m [2mMerged[0m
+│ │ │  fix: dispatch install-aliases before loading jj/gh state
+│ ○ │  [1m[35mmvwmzsmzyyym[0m [34m1a6eaf1c0bcb[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/34PR #34]8;;[0m [2mMerged[0m
+│ │ │  Install aliases to --user by default, add jj pr subcommand alias
+│ ○ │  [1m[35mvyxwnsvqlusy[0m [34md3ed81f1522b[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/34PR #34]8;;[0m [2mMerged[0m
+├─╯ │  feat: add `util` subcommand with `dump` and `install-aliases`
+│   ○  [1m[35mryokvxykuuyk[0m [34m79df272783a0[0m [1m[35mdiscover-prs[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [32mReady[0m
+│   │  Fix GraphQL injection and propagate deserialization errors
+│   ○  [1m[35mlqllnsnnzwnu[0m [34m68b2dfa85ece[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [32mReady[0m
+│   │  Address PR #35 review comments
+│   ○  [1m[35mwtttsotmxvwm[0m [34m5a8fbc91b9fa[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [32mReady[0m
+│   │  update README.md
+│   ○  [1m[35mtusnqsqnnytk[0m [34mb69a92a4df50[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [32mReady[0m
+│   │  Skip branch lookups for bookmarks whose tip already has a PR trailer
+│   ○  [1m[35mymuutkqzksln[0m [34m4d3f86e32e84[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [32mReady[0m
+│   │  Replace HashSet+Vec with BTreeMap for PR deduplication
+│   ○  [1m[35mkoqkzlkykxuu[0m [34m7175ebefbceb[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m [32mReady[0m
+├───╯  fix: discover PRs by branch name in the same GraphQL call
+[2m~[0m  [2m(elided revisions)[0m

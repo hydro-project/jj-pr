@@ -911,9 +911,9 @@ use crate::gh;
 pub enum SyncAction {
     /// Stamp a missing `PR: #N` trailer on a commit.
     StampTrailer { change_id: String, pr: PrNum },
-    /// Rebase children of a merged PR onto trunk.
-    RebaseChildren { tip_commit_id: String, pr: PrNum },
     /// Abandon commits of a merged PR and delete its bookmark if present.
+    /// First rebases the merged commits onto trunk so that abandoning them
+    /// reparents children to trunk while preserving other parent edges.
     AbandonMerged {
         tip_commit_id: String,
         pr: PrNum,
@@ -936,9 +936,6 @@ impl fmt::Display for SyncAction {
             SyncAction::StampTrailer { change_id, pr } => {
                 let short = &change_id[..12.min(change_id.len())];
                 write!(f, "stamp {pr} trailer on {short}")
-            }
-            SyncAction::RebaseChildren { pr, .. } => {
-                write!(f, "rebase children of {pr} onto trunk()")
             }
             SyncAction::AbandonMerged {
                 pr,
@@ -1005,7 +1002,7 @@ pub fn plan_sync(
         }
     }
 
-    // 2 & 3. Rebase children + abandon for merged PRs.
+    // 2. Abandon merged PRs (rebase onto trunk first to preserve sibling parent edges).
     for &nk in state.topo_order.iter() {
         let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
             continue;
@@ -1021,13 +1018,6 @@ pub fn plan_sync(
             .map(|e| e.commit.commit_id.0.clone())
             .next();
         let Some(tip_commit_id) = tip_commit_id else { continue };
-        let has_children = state.node_succs.get(nk).is_some_and(|succs| !succs.is_empty());
-        if has_children {
-            actions.push(SyncAction::RebaseChildren {
-                tip_commit_id: tip_commit_id.clone(),
-                pr: *pr_num,
-            });
-        }
         actions.push(SyncAction::AbandonMerged {
             tip_commit_id,
             pr: *pr_num,
@@ -1105,10 +1095,6 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 let new_desc = jj::set_pr_trailer(&desc, *pr);
                 jj::describe_stdin(change_id, &new_desc)?;
             }
-            SyncAction::RebaseChildren { tip_commit_id, pr } => {
-                eprintln!("Rebasing children of {} onto trunk()", crate::style::pr_num(*pr, None),);
-                jj::rebase(&format!("commit_id({tip_commit_id})+"), "trunk()")?;
-            }
             SyncAction::AbandonMerged {
                 tip_commit_id,
                 pr,
@@ -1129,7 +1115,10 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                         crate::style::bookmark(bookmark),
                     );
                 }
+                // Rebase merged commits onto trunk first, so that abandoning them
+                // reparents children to trunk while preserving other parent edges.
                 let revset = format!("trunk()..commit_id({tip_commit_id})");
+                jj::rebase(&format!("roots({revset})"), "trunk()")?;
                 jj::abandon(&revset)?;
             }
             SyncAction::Push { bookmarks } => {
