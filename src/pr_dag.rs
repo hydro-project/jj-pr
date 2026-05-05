@@ -810,7 +810,12 @@ pub fn render_log(
 
         // Build the glyph.
         let glyph = if jj_entry.is_working_copy {
-            if jj_entry.conflict {
+            let is_bookmark_conflicted = node_key.is_some_and(|nk| {
+                matches!(state.nodes.get(nk), Some(Node::Pr(pr_id)) if prs
+                    .get(pr_id)
+                    .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name)))
+            });
+            if jj_entry.conflict || is_bookmark_conflicted {
                 crate::style::glyph_current_conflicted()
             } else {
                 crate::style::glyph_current()
