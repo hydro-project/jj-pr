@@ -809,23 +809,15 @@ pub fn render_log(
         };
 
         // Build the glyph.
-        let glyph = if jj_entry.is_working_copy {
-            if jj_entry.conflict {
-                crate::style::glyph_current_conflicted()
-            } else {
-                crate::style::glyph_current()
-            }
-        } else if jj_entry.conflict {
-            match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
-                Some(Node::Ambiguous { .. }) => crate::style::glyph_warning_conflicted(),
-                _ => crate::style::glyph_conflicted(),
-            }
-        } else {
-            match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
-                Some(Node::Root | Node::TrunkTip) => crate::style::glyph_immutable(),
-                Some(Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
-                Some(Node::Pr(_)) | None => crate::style::GLYPH_MUTABLE.to_owned(),
-            }
+        let node = node_key.map(|nk| state.nodes.get(nk).unwrap());
+        let glyph = match (jj_entry.is_working_copy, jj_entry.conflict, node) {
+            (true, true, _) => crate::style::glyph_current_conflicted(),
+            (true, false, _) => crate::style::glyph_current(),
+            (false, true, Some(Node::Ambiguous { .. })) => crate::style::glyph_warning_conflicted(),
+            (false, true, _) => crate::style::glyph_conflicted(),
+            (false, false, Some(Node::Root | Node::TrunkTip)) => crate::style::glyph_immutable(),
+            (false, false, Some(Node::Ambiguous { .. })) => crate::style::warn(crate::style::GLYPH_WARNING),
+            (false, false, Some(Node::Pr(_)) | None) => crate::style::GLYPH_MUTABLE.to_owned(),
         };
 
         // First line: change_id commit_id [bookmarks] [PR info]
