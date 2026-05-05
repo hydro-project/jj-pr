@@ -675,7 +675,11 @@ pub fn render_show(
 
         let node = state.nodes.get(node_key).unwrap();
         let glyph = if is_current {
-            if state.nodes_conflicted.contains_key(node_key) {
+            let is_conflicted = state.nodes_conflicted.contains_key(node_key)
+                || matches!(node, Node::Pr(pr_id) if prs
+                    .get(pr_id)
+                    .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name)));
+            if is_conflicted {
                 crate::style::glyph_current_conflicted()
             } else {
                 crate::style::glyph_current()
