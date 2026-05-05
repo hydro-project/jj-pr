@@ -1,53 +1,11 @@
-use std::borrow::Borrow;
 use std::collections::{BTreeSet, HashSet};
-use std::fmt::Display;
-use std::ops::Deref;
 use std::process::Command;
 
 use anyhow::{Context, Result, bail};
-use ref_cast::RefCast;
 use serde::{Deserialize, Serialize};
 
 use crate::gh::PrNum;
-
-/// Newtype for the commit_id hash.
-#[derive(Clone, Debug, Deserialize, Serialize, Eq, Hash, Ord, PartialEq, PartialOrd, RefCast)]
-#[repr(transparent)]
-#[serde(transparent)]
-pub struct CommitId<T: ?Sized = String>(pub T);
-impl<T: ?Sized> Display for CommitId<T>
-where
-    T: Display,
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
-    }
-}
-
-impl<T: ?Sized> Deref for CommitId<T>
-where
-    T: Deref,
-{
-    type Target = CommitId<T::Target>;
-    fn deref(&self) -> &Self::Target {
-        CommitId::ref_cast(self.0.deref())
-    }
-}
-
-impl Borrow<CommitId<str>> for CommitId {
-    fn borrow(&self) -> &CommitId<str> {
-        self
-    }
-}
-
-impl ToOwned for CommitId<str> {
-    type Owned = CommitId<String>;
-
-    fn to_owned(&self) -> Self::Owned {
-        CommitId(self.0.to_owned())
-    }
-}
-
+use crate::types::CommitId;
 /// Raw commit data from `json(self)`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjCommit {
@@ -253,7 +211,7 @@ pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
 }
 
 /// Check which commit OIDs exist in the local repo. Returns the set of OIDs that exist.
-pub fn check_commits_exist(oids: &[&str]) -> Result<HashSet<String>> {
+pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>> {
     if oids.is_empty() {
         return Ok(HashSet::new());
     }
@@ -287,7 +245,7 @@ pub fn check_commits_exist(oids: &[&str]) -> Result<HashSet<String>> {
             if out.status.success() {
                 let s = String::from_utf8(out.stdout)?;
                 if !s.trim().is_empty() {
-                    existing.insert(oid.to_string());
+                    existing.insert(CommitId(s.trim().to_owned()));
                 }
             }
         }
@@ -295,7 +253,11 @@ pub fn check_commits_exist(oids: &[&str]) -> Result<HashSet<String>> {
     }
 
     let stdout = String::from_utf8(output.stdout)?;
-    Ok(stdout.lines().filter(|l| !l.is_empty()).map(|l| l.to_owned()).collect())
+    Ok(stdout
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|l| CommitId(l.to_owned()))
+        .collect())
 }
 
 /// Read the description of a revision.

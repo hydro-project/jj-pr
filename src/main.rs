@@ -6,6 +6,7 @@ mod pr_dag;
 mod style;
 #[cfg(test)]
 mod tests;
+pub(crate) mod types;
 mod ui;
 
 use std::collections::BTreeMap;
@@ -141,7 +142,7 @@ fn run() -> Result<()> {
         ),
         Command::Sync(args) => {
             // Check which merged PRs have their merge commit in the local repo.
-            let merge_oids: Vec<&str> = prs
+            let merge_oids: Vec<&types::CommitId<str>> = prs
                 .values()
                 .filter(|pr| pr.state == gh::PrState::Merged)
                 .filter_map(|pr| pr.merge_commit_oid.as_deref())

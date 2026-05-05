@@ -7,7 +7,8 @@ use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 
 use crate::gh::{GhPr, PrNum};
 use crate::graph_algorithms;
-use crate::jj::{self, CommitId, JjLogEntry};
+use crate::jj::{self, JjLogEntry};
+use crate::types::CommitId;
 
 new_key_type! {
     pub struct NodeKey;
@@ -968,7 +969,7 @@ pub fn plan_sync(
     jj_entries: &[JjLogEntry],
     default_branch: &str,
     // Merge commit OIDs that exist in the local repo (for stale trunk detection).
-    existing_merge_commits: &HashSet<String>,
+    existing_merge_commits: &HashSet<CommitId>,
 ) -> Result<Vec<SyncAction>> {
     // Block on unresolvable conflicted bookmarks.
     if !state.bookmarks_blocking.is_empty() {

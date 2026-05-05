@@ -6,6 +6,7 @@ use std::process::Command;
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
+use crate::types::CommitId;
 /// Newtype for GitHub PR numbers.
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(transparent)]
@@ -62,7 +63,7 @@ pub struct GhPr {
     pub title: String,
     /// The commit SHA of the merge/squash commit on the base branch (only for merged PRs).
     #[serde(default)]
-    pub merge_commit_oid: Option<String>,
+    pub merge_commit_oid: Option<CommitId>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -153,7 +154,7 @@ struct PrNode {
 
 #[derive(Deserialize)]
 struct MergeCommit {
-    oid: String,
+    oid: CommitId,
 }
 
 #[derive(Deserialize)]

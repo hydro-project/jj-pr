@@ -2,8 +2,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use super::InputData;
 use crate::gh::{CheckStatus, GhPr, PrNum, PrStatus, ReviewDecision};
-use crate::jj::{CommitId, JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
+use crate::jj::{JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
+use crate::types::CommitId;
 
 fn render_show(input: &InputData) -> String {
     render_show_with_statuses(input, &BTreeMap::new())
@@ -183,7 +184,7 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
-        merge_commit_oid: Some(format!("merge_commit_{number}")),
+        merge_commit_oid: Some(CommitId(format!("merge_commit_{number}"))),
     }
 }
 
