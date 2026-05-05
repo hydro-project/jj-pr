@@ -922,9 +922,6 @@ pub enum SyncAction {
         bookmark: String,
         bookmark_exists: bool,
     },
-    /// Merged PR whose merge commit isn't in the local repo yet (trunk is stale).
-    /// Skipped during execution — informational only.
-    StaleMerged { pr: PrNum, bookmark: String },
     /// Push bookmarks that differ from remote.
     Push { bookmarks: Vec<(PrNum, String)> },
     /// Update a PR's base branch on GitHub.
@@ -954,9 +951,6 @@ impl fmt::Display for SyncAction {
                     write!(f, "abandon merged {pr} ({bookmark} already deleted)")
                 }
             }
-            SyncAction::StaleMerged { pr, bookmark } => {
-                write!(f, "skip merged {pr} ({bookmark}) — trunk stale, run `jj git fetch`")
-            }
             SyncAction::Push { bookmarks } => {
                 let details: Vec<_> = bookmarks.iter().map(|(pr, bm)| format!("{pr} ({bm})")).collect();
                 write!(f, "push: {}", details.join(", "))
@@ -968,6 +962,13 @@ impl fmt::Display for SyncAction {
     }
 }
 
+/// The result of planning a sync: actions to execute and warnings to display.
+#[derive(Debug)]
+pub struct SyncPlan {
+    pub actions: Vec<SyncAction>,
+    pub warnings: Vec<String>,
+}
+
 /// Plan sync actions. Returns Err if blocking issues exist.
 pub fn plan_sync(
     state: &RepoState,
@@ -977,7 +978,7 @@ pub fn plan_sync(
     // Merge commit OIDs that exist in the local repo (for stale trunk detection).
     // `None` means all merge commits are considered present (legacy behavior).
     existing_merge_commits: Option<&HashSet<CommitId>>,
-) -> Result<Vec<SyncAction>> {
+) -> Result<SyncPlan> {
     // Block on unresolvable conflicted bookmarks.
     if !state.bookmarks_blocking.is_empty() {
         let names: Vec<_> = state.bookmarks_blocking.iter().map(|s| s.as_str()).collect();
@@ -988,6 +989,7 @@ pub fn plan_sync(
     }
 
     let mut actions = Vec::new();
+    let mut warnings = Vec::new();
 
     // Bookmark names that exist locally (for determining if we need to delete during abandon).
     let local_bookmark_names: HashSet<&str> = jj_entries
@@ -1030,10 +1032,10 @@ pub fn plan_sync(
                 .as_deref()
                 .is_some_and(|oid| !existing.contains(oid))
         }) {
-            actions.push(SyncAction::StaleMerged {
-                pr: *pr_num,
-                bookmark: gh_pr.head_ref_name.clone(),
-            });
+            warnings.push(format!(
+                "skip merged {} ({}) — trunk stale, run `jj git fetch`",
+                pr_num, gh_pr.head_ref_name,
+            ));
             continue;
         }
         // Collect commits in this node (tip first, since jj_entries is reverse topo order).
@@ -1105,7 +1107,7 @@ pub fn plan_sync(
         }
     }
 
-    Ok(actions)
+    Ok(SyncPlan { actions, warnings })
 }
 
 /// Execute planned sync actions.
@@ -1191,9 +1193,6 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     crate::style::bookmark(new_base),
                 );
                 gh::edit_base(pr.get(), new_base)?;
-            }
-            SyncAction::StaleMerged { .. } => {
-                // Informational only — no action taken.
             }
         }
     }

@@ -57,7 +57,11 @@ fn plan_sync(input: &InputData) -> String {
         &input.default_branch,
         input.existing_merge_commits.as_ref(),
     ) {
-        Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
+        Ok(plan) => {
+            let mut lines: Vec<String> = plan.warnings.clone();
+            lines.extend(plan.actions.iter().map(|a| a.to_string()));
+            lines.join("\n")
+        }
         Err(e) => format!("ERROR: {e}"),
     }
 }
@@ -658,4 +662,24 @@ fn bookmark_name_collision_no_remote() {
         existing_merge_commits: None, // No bookmarks tracked.
     };
     insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
+}
+
+#[test]
+fn stale_trunk_skips_abandon() {
+    // PR #1 is merged but its merge commit is NOT in the local repo (trunk stale).
+    // Should warn and skip the abandon, not prompt for action.
+    let f = InputData {
+        jj_entries: vec![
+            with_remote(
+                entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![gh_pr_merged(1, "feat", "main")],
+        default_branch: "main".to_owned(),
+        tracked_bookmarks: None,
+        existing_merge_commits: Some(std::collections::HashSet::new()), // Empty = nothing fetched.
+    };
+    insta::assert_snapshot!("stale_trunk_skips_abandon", plan_sync(&f));
 }
