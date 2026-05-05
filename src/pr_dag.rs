@@ -811,13 +811,11 @@ pub fn render_log(
             } else {
                 crate::style::glyph_current()
             }
-        } else if jj_entry.conflict {
-            crate::style::glyph_conflicted()
         } else {
             match node_key.map(|nk| (nk, state.nodes.get(nk).unwrap())) {
                 Some((_, Node::Root | Node::TrunkTip)) => crate::style::glyph_immutable(),
                 Some((nk, Node::Ambiguous { .. })) => {
-                    if state.nodes_conflicted.contains_key(nk) {
+                    if jj_entry.conflict || state.nodes_conflicted.contains_key(nk) {
                         crate::style::glyph_warning_conflicted()
                     } else {
                         crate::style::warn(crate::style::GLYPH_WARNING)
@@ -827,14 +825,20 @@ pub fn render_log(
                     let is_bookmark_conflicted = prs
                         .get(pr_id)
                         .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name));
-                    let is_content_conflicted = state.nodes_conflicted.contains_key(nk);
+                    let is_content_conflicted = jj_entry.conflict || state.nodes_conflicted.contains_key(nk);
                     if is_bookmark_conflicted || is_content_conflicted {
                         crate::style::glyph_conflicted()
                     } else {
                         crate::style::GLYPH_MUTABLE.to_owned()
                     }
                 }
-                None => crate::style::GLYPH_MUTABLE.to_owned(),
+                None => {
+                    if jj_entry.conflict {
+                        crate::style::glyph_conflicted()
+                    } else {
+                        crate::style::GLYPH_MUTABLE.to_owned()
+                    }
+                }
             }
         };
 
