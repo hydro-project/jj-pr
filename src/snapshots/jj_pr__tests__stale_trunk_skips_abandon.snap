@@ -1,0 +1,5 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+---
+skip merged #1 (feat) — trunk stale, run `jj git fetch`

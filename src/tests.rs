@@ -663,3 +663,23 @@ fn bookmark_name_collision_no_remote() {
     };
     insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
 }
+
+#[test]
+fn stale_trunk_skips_abandon() {
+    // PR #1 is merged but its merge commit is NOT in the local repo (trunk stale).
+    // Should warn and skip the abandon, not prompt for action.
+    let f = InputData {
+        jj_entries: vec![
+            with_remote(
+                entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![gh_pr_merged(1, "feat", "main")],
+        default_branch: "main".to_owned(),
+        tracked_bookmarks: None,
+        existing_merge_commits: Some(std::collections::HashSet::new()), // Empty = nothing fetched.
+    };
+    insta::assert_snapshot!("stale_trunk_skips_abandon", plan_sync(&f));
+}
