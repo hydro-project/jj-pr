@@ -215,9 +215,10 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
     if oids.is_empty() {
         return Ok(HashSet::new());
     }
+    // Use present() to gracefully handle missing commits (returns empty instead of erroring).
     let revset = oids
         .iter()
-        .map(|oid| format!("commit_id({oid})"))
+        .map(|oid| format!("present(commit_id({oid}))"))
         .collect::<Vec<_>>()
         .join(" | ");
     let output = Command::new("jj")
@@ -225,31 +226,9 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
         .output()
         .context("Failed to run `jj log` for commit existence check")?;
 
-    // Non-zero exit is expected if some commits don't exist — jj errors on unresolvable revsets.
-    // In that case, fall back to checking one by one.
     if !output.status.success() {
-        // Batch failed (some commits don't exist). Check individually.
-        let mut existing = HashSet::new();
-        for oid in oids {
-            let out = Command::new("jj")
-                .args([
-                    "log",
-                    "--no-graph",
-                    "-r",
-                    &format!("commit_id({oid})"),
-                    "-T",
-                    r#"commit_id ++ "\n""#,
-                ])
-                .output()
-                .context("Failed to run `jj log`")?;
-            if out.status.success() {
-                let s = String::from_utf8(out.stdout)?;
-                if !s.trim().is_empty() {
-                    existing.insert(CommitId(s.trim().to_owned()));
-                }
-            }
-        }
-        return Ok(existing);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj log (commit existence check) failed: {stderr}");
     }
 
     let stdout = String::from_utf8(output.stdout)?;
