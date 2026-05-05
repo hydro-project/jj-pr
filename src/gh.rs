@@ -60,6 +60,9 @@ pub struct GhPr {
     pub is_draft: bool,
     pub url: String,
     pub title: String,
+    /// The commit SHA of the merge/squash commit on the base branch (only for merged PRs).
+    #[serde(default)]
+    pub merge_commit_oid: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -69,7 +72,7 @@ pub struct PrStatus {
 }
 
 /// GraphQL fields for a PR node, used in query construction.
-const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
+const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision mergeCommit { oid } commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
 
 /// Raw GraphQL response types for serde deserialization.
 #[derive(Deserialize)]
@@ -144,7 +147,13 @@ struct PrNode {
     url: String,
     title: String,
     review_decision: Option<ReviewDecision>,
+    merge_commit: Option<MergeCommit>,
     commits: CommitsConnection,
+}
+
+#[derive(Deserialize)]
+struct MergeCommit {
+    oid: String,
 }
 
 #[derive(Deserialize)]
@@ -260,6 +269,7 @@ pub fn load_prs_and_default_branch(
         let std::collections::btree_map::Entry::Vacant(entry) = prs.entry(d.number) else {
             continue; // Deduplicate (same PR found by number and by branch).
         };
+
         let checks_status = d
             .commits
             .nodes
@@ -281,6 +291,7 @@ pub fn load_prs_and_default_branch(
             is_draft: d.is_draft,
             url: d.url,
             title: d.title,
+            merge_commit_oid: d.merge_commit.map(|mc| mc.oid),
         });
     }
 

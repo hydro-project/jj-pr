@@ -1,5 +1,5 @@
 use std::borrow::Borrow;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashSet};
 use std::fmt::Display;
 use std::ops::Deref;
 use std::process::Command;
@@ -250,6 +250,52 @@ pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
         entries.push(entry);
     }
     Ok(entries)
+}
+
+/// Check which commit OIDs exist in the local repo. Returns the set of OIDs that exist.
+pub fn check_commits_exist(oids: &[&str]) -> Result<HashSet<String>> {
+    if oids.is_empty() {
+        return Ok(HashSet::new());
+    }
+    let revset = oids
+        .iter()
+        .map(|oid| format!("commit_id({oid})"))
+        .collect::<Vec<_>>()
+        .join(" | ");
+    let output = Command::new("jj")
+        .args(["log", "--no-graph", "-r", &revset, "-T", r#"commit_id ++ "\n""#])
+        .output()
+        .context("Failed to run `jj log` for commit existence check")?;
+
+    // Non-zero exit is expected if some commits don't exist — jj errors on unresolvable revsets.
+    // In that case, fall back to checking one by one.
+    if !output.status.success() {
+        // Batch failed (some commits don't exist). Check individually.
+        let mut existing = HashSet::new();
+        for oid in oids {
+            let out = Command::new("jj")
+                .args([
+                    "log",
+                    "--no-graph",
+                    "-r",
+                    &format!("commit_id({oid})"),
+                    "-T",
+                    r#"commit_id ++ "\n""#,
+                ])
+                .output()
+                .context("Failed to run `jj log`")?;
+            if out.status.success() {
+                let s = String::from_utf8(out.stdout)?;
+                if !s.trim().is_empty() {
+                    existing.insert(oid.to_string());
+                }
+            }
+        }
+        return Ok(existing);
+    }
+
+    let stdout = String::from_utf8(output.stdout)?;
+    Ok(stdout.lines().filter(|l| !l.is_empty()).map(|l| l.to_owned()).collect())
 }
 
 /// Read the description of a revision.

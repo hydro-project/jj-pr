@@ -49,7 +49,19 @@ fn plan_sync(input: &InputData) -> String {
         input.tracked_bookmarks.as_ref(),
     )
     .unwrap();
-    match pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch) {
+    // In tests, treat all merge commits as existing (no stale trunk detection).
+    let existing_merge_commits = prs
+        .values()
+        .filter_map(|pr| pr.merge_commit_oid.as_deref())
+        .map(|s| s.to_owned())
+        .collect();
+    match pr_dag::plan_sync(
+        &state,
+        &prs,
+        &input.jj_entries,
+        &input.default_branch,
+        &existing_merge_commits,
+    ) {
         Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
         Err(e) => format!("ERROR: {e}"),
     }
@@ -157,6 +169,7 @@ fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: true,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
+        merge_commit_oid: None,
     }
 }
 
@@ -170,6 +183,7 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
+        merge_commit_oid: Some(format!("merge_commit_{number}")),
     }
 }
 
@@ -183,6 +197,7 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
+        merge_commit_oid: None,
     }
 }
 

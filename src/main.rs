@@ -140,7 +140,20 @@ fn run() -> Result<()> {
             &mut std::io::stdout(),
         ),
         Command::Sync(args) => {
-            let actions = pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch)?;
+            // Check which merged PRs have their merge commit in the local repo.
+            let merge_oids: Vec<&str> = prs
+                .values()
+                .filter(|pr| pr.state == gh::PrState::Merged)
+                .filter_map(|pr| pr.merge_commit_oid.as_deref())
+                .collect();
+            let existing_merge_commits = jj::check_commits_exist(&merge_oids)?;
+            let actions = pr_dag::plan_sync(
+                &state,
+                &prs,
+                &input.jj_entries,
+                &input.default_branch,
+                &existing_merge_commits,
+            )?;
             if actions.is_empty() {
                 eprintln!("Nothing to sync.");
                 return Ok(());

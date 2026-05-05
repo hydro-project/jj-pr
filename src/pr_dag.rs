@@ -967,6 +967,8 @@ pub fn plan_sync(
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     default_branch: &str,
+    // Merge commit OIDs that exist in the local repo (for stale trunk detection).
+    existing_merge_commits: &HashSet<String>,
 ) -> Result<Vec<SyncAction>> {
     // Block on unresolvable conflicted bookmarks.
     if !state.bookmarks_blocking.is_empty() {
@@ -1004,12 +1006,26 @@ pub fn plan_sync(
     }
 
     // 2. Abandon merged PRs (rebase onto trunk first to preserve sibling parent edges).
+    // Skip merged PRs whose merge commit isn't in the local repo (trunk is stale — needs fetch).
     for &nk in state.topo_order.iter() {
         let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
             continue;
         };
         let Some(gh_pr) = prs.get(pr_num) else { continue };
         if gh_pr.state != gh::PrState::Merged {
+            continue;
+        }
+        // Skip if the merge commit isn't in the local repo (trunk is stale — needs fetch).
+        if gh_pr
+            .merge_commit_oid
+            .as_deref()
+            .is_some_and(|oid| !existing_merge_commits.contains(oid))
+        {
+            eprintln!(
+                "{}: {} is merged on GitHub but trunk is stale — run `jj git fetch` to update",
+                crate::style::warn("warning"),
+                crate::style::pr_num(*pr_num, Some(&gh_pr.url)),
+            );
             continue;
         }
         // Collect commits in this node (tip first, since jj_entries is reverse topo order).
