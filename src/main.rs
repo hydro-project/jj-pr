@@ -23,6 +23,10 @@ pub(crate) struct InputData {
     pub(crate) jj_entries: Vec<jj::JjLogEntry>,
     pub(crate) prs: Vec<gh::GhPr>,
     pub(crate) default_branch: String,
+    /// Bookmark names tracked on the push remote (origin).
+    /// `None` means all bookmarks are considered tracked (legacy behavior).
+    #[serde(default)]
+    pub(crate) tracked_bookmarks: Option<std::collections::BTreeSet<String>>,
 }
 
 impl InputData {
@@ -80,11 +84,15 @@ fn run() -> Result<()> {
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
     let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums)?;
 
+    // Step 4: Load tracked bookmarks (fast, ~25ms).
+    let tracked_bookmarks = jj::load_tracked_bookmarks("origin")?;
+
     // Store input data globally for panic/error dump.
     let input = INPUT_DATA.get_or_init(|| InputData {
         jj_entries,
         prs,
         default_branch,
+        tracked_bookmarks: Some(tracked_bookmarks),
     });
 
     let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
@@ -97,7 +105,12 @@ fn run() -> Result<()> {
     }
 
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch)?;
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )?;
 
     let result = match command {
         Command::Show(_args) => pr_dag::render_show(&state, &prs, &pr_statuses, &mut std::io::stdout()),

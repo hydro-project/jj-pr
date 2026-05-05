@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::collections::BTreeSet;
 use std::fmt::Display;
 use std::ops::Deref;
 use std::process::Command;
@@ -205,6 +206,23 @@ pub fn resolve_revision(rev: &str) -> Result<String> {
 
 pub fn load_entries() -> Result<Vec<JjLogEntry>> {
     load_entries_with_revset("trunk().. | trunk()")
+}
+
+/// Load the set of bookmark names tracked on a given remote.
+pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<String>> {
+    let template = format!(r#"if(remote == "{remote}", name ++ "\n")"#);
+    let output = Command::new("jj")
+        .args(["bookmark", "list", "--tracked", "-T", &template])
+        .output()
+        .context("Failed to run `jj bookmark list --tracked`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj bookmark list --tracked failed: {stderr}");
+    }
+
+    let stdout = String::from_utf8(output.stdout).context("jj output not UTF-8")?;
+    Ok(stdout.lines().filter(|l| !l.is_empty()).map(|l| l.to_owned()).collect())
 }
 
 pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {

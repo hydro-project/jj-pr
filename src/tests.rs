@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::InputData;
 use crate::gh::{CheckStatus, GhPr, PrNum, PrStatus, ReviewDecision};
@@ -12,7 +12,13 @@ fn render_show(input: &InputData) -> String {
 fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, PrStatus>) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
     let mut buf = Vec::new();
     pr_dag::render_show(&state, &prs, pr_statuses, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
@@ -21,7 +27,13 @@ fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, Pr
 fn render_log(input: &InputData, show_all: bool) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
     let mut buf = Vec::new();
     pr_dag::render_log(&state, &prs, &pr_statuses, &input.jj_entries, show_all, &mut buf).unwrap();
@@ -30,7 +42,13 @@ fn render_log(input: &InputData, show_all: bool) -> String {
 
 fn plan_sync(input: &InputData) -> String {
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
     match pr_dag::plan_sync(&state, &prs, &input.jj_entries, &input.default_branch) {
         Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
         Err(e) => format!("ERROR: {e}"),
@@ -39,7 +57,13 @@ fn plan_sync(input: &InputData) -> String {
 
 fn plan_create(input: &InputData, bookmark: &str) -> String {
     let prs = input.prs_map();
-    let state = pr_dag::build(&input.jj_entries, &prs, &input.default_branch).unwrap();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
     match pr_dag::plan_create(
         &state,
         &prs,
@@ -162,11 +186,12 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
     }
 }
 
-fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>) -> InputData {
+fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>, tracked_bookmarks: Option<BTreeSet<String>>) -> InputData {
     InputData {
         jj_entries: entries,
         prs,
         default_branch: "main".to_owned(),
+        tracked_bookmarks,
     }
 }
 
@@ -184,6 +209,7 @@ fn single_pr() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat", "main")],
+        None,
     );
     insta::assert_snapshot!("single_pr_show", render_show(&f));
     insta::assert_snapshot!("single_pr_log", render_log(&f, false));
@@ -206,6 +232,7 @@ fn current_change() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+        None,
     );
     insta::assert_snapshot!("current_change_show", render_show(&f));
     insta::assert_snapshot!("current_change_log", render_log(&f, false));
@@ -226,6 +253,7 @@ fn stacked_prs() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+        None,
     );
     insta::assert_snapshot!("stacked_prs_show", render_show(&f));
     insta::assert_snapshot!("stacked_prs_log", render_log(&f, false));
@@ -242,6 +270,7 @@ fn diamond_ambiguous() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "main")],
+        None,
     );
     insta::assert_snapshot!("diamond_ambiguous_show", render_show(&f));
     insta::assert_snapshot!("diamond_ambiguous_log", render_log(&f, true));
@@ -259,6 +288,7 @@ fn merged_parent() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr_merged(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+        None,
     );
     insta::assert_snapshot!("merged_parent_show", render_show(&f));
     insta::assert_snapshot!("merged_parent_sync", plan_sync(&f));
@@ -273,17 +303,17 @@ fn needs_push() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat", "main")],
+        None,
     );
     insta::assert_snapshot!("needs_push_show", render_show(&f));
     insta::assert_snapshot!("needs_push_sync", plan_sync(&f));
 }
 
 #[test]
-fn needs_push_git_remote_not_origin() {
-    // Bookmark moved locally — @git matches local but @origin is absent.
-    // Should still detect push needed.
-    let f = fixture(
-        vec![
+fn no_push_when_only_git_remote() {
+    // Bookmark has @git but no @origin — not tracked on origin, should NOT push.
+    let f = InputData {
+        jj_entries: vec![
             with_git_remote(
                 entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
                 "feat",
@@ -291,9 +321,31 @@ fn needs_push_git_remote_not_origin() {
             entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
-        vec![gh_pr(1, "feat", "main")],
-    );
-    insta::assert_snapshot!("needs_push_git_not_origin_sync", plan_sync(&f));
+        prs: vec![gh_pr(1, "feat", "main")],
+        default_branch: "main".to_owned(),
+        tracked_bookmarks: Some(BTreeSet::new()), // Not tracked on origin.
+    };
+    insta::assert_snapshot!("no_push_when_only_git_remote", plan_sync(&f));
+}
+
+#[test]
+fn needs_push_tracked_but_no_origin_in_revset() {
+    // Bookmark is tracked on origin but @origin commit is outside the revset
+    // (e.g. after amending). Should still detect push needed.
+    let f = InputData {
+        jj_entries: vec![
+            with_git_remote(
+                entry("c2", "ch2", &["c1"], "update\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![gh_pr(1, "feat", "main")],
+        default_branch: "main".to_owned(),
+        tracked_bookmarks: Some(["feat".to_owned()].into()), // Tracked on origin.
+    };
+    insta::assert_snapshot!("needs_push_tracked_but_no_origin_in_revset", plan_sync(&f));
 }
 
 #[test]
@@ -311,6 +363,7 @@ fn base_mismatch() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "main")], // wrong base for #2
+        None,
     );
     insta::assert_snapshot!("base_mismatch_show", render_show(&f));
     insta::assert_snapshot!("base_mismatch_sync", plan_sync(&f));
@@ -332,6 +385,7 @@ fn closed_pr_base_mismatch_skips_update() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat-a", "main"), gh_pr_closed(2, "feat-b", "main")], // wrong base, but closed
+        None,
     );
     insta::assert_snapshot!("closed_pr_base_mismatch_sync", plan_sync(&f));
 }
@@ -347,6 +401,7 @@ fn nothing_to_sync() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat", "main")],
+        None,
     );
     insta::assert_snapshot!("nothing_to_sync", plan_sync(&f));
 }
@@ -369,6 +424,7 @@ fn merge_child() {
             gh_pr(2, "feat-b", "main"),
             gh_pr(3, "feat-c", "feat-a"),
         ],
+        None,
     );
     insta::assert_snapshot!("merge_child_show", render_show(&f));
     insta::assert_snapshot!("merge_child_log", render_log(&f, false));
@@ -389,6 +445,7 @@ fn empty_and_no_description() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat", "main")],
+        None,
     );
     insta::assert_snapshot!("empty_and_no_description_log", render_log(&f, false));
 }
@@ -415,6 +472,7 @@ fn conflicted_bookmark_merged_pr_with_null() {
     let f = fixture(
         vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
         vec![gh_pr_merged(1, "feat", "main")],
+        None,
     );
     insta::assert_snapshot!("conflicted_merged_null_show", render_show(&f));
     insta::assert_snapshot!("conflicted_merged_null_sync", plan_sync(&f));
@@ -439,6 +497,7 @@ fn conflicted_bookmark_open_pr_blocks_sync() {
     let f = fixture(
         vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
         vec![gh_pr(1, "feat", "main")],
+        None,
     );
     insta::assert_snapshot!("conflicted_open_blocks_sync", plan_sync(&f));
 }
@@ -463,6 +522,7 @@ fn conflicted_bookmark_no_null_blocks_sync() {
     let f = fixture(
         vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
         vec![gh_pr_merged(1, "feat", "main")],
+        None,
     );
     insta::assert_snapshot!("conflicted_no_null_blocks_sync", plan_sync(&f));
 }
@@ -482,6 +542,7 @@ fn ci_review_status_indicators() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+        None,
     );
     let statuses = BTreeMap::from([
         (
@@ -512,6 +573,7 @@ fn create_new_pr() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![],
+        None,
     );
     insta::assert_snapshot!("create_new_pr", plan_create(&f, "feat"));
 }
@@ -529,6 +591,7 @@ fn create_stacked_pr() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat-a", "main")],
+        None,
     );
     insta::assert_snapshot!("create_stacked_pr", plan_create(&f, "feat-b"));
 }
@@ -545,6 +608,7 @@ fn create_already_exists() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         vec![gh_pr(1, "feat", "main")],
+        None,
     );
     insta::assert_snapshot!("create_already_exists", plan_create(&f, "feat"));
 }
@@ -561,6 +625,23 @@ fn create_conflicted_bookmark_rejected() {
     let f = fixture(
         vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
         vec![],
+        None,
     );
     insta::assert_snapshot!("create_conflicted_bookmark", plan_create(&f, "feat"));
+}
+
+#[test]
+fn bookmark_name_collision_no_remote() {
+    // User has a local bookmark "fix-typo" that coincidentally matches someone else's PR.
+    // No remote tracking, no trailer. Should NOT plan a push (not our PR).
+    let f = InputData {
+        jj_entries: vec![
+            entry("c1", "ch1", &["trunk"], "my unrelated work\n", &["fix-typo"], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![gh_pr(42, "fix-typo", "main")],
+        default_branch: "main".to_owned(),
+        tracked_bookmarks: Some(BTreeSet::new()), // No bookmarks tracked.
+    };
+    insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
 }

@@ -83,7 +83,12 @@ impl Node {
 /// Build the repo state from raw jj and GitHub data.
 ///
 /// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
-pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> Result<RepoState> {
+pub fn build(
+    jj_entries: &[JjLogEntry],
+    prs: &BTreeMap<PrNum, &GhPr>,
+    default_branch: &str,
+    tracked_bookmarks: Option<&BTreeSet<String>>,
+) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
     let mut node_preds = SecondaryMap::new();
@@ -117,6 +122,12 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
             for local_bookmark in jj_entry.local_bookmarks.iter() {
                 let local_bookmark_name = &*local_bookmark.name;
                 if let Some(pr) = head_to_pr.get(local_bookmark_name) {
+                    // Only consider this a PR bookmark if it's tracked on the push remote.
+                    // `None` means all bookmarks are considered tracked (legacy/old fixtures).
+                    let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains(local_bookmark_name));
+                    if !is_tracked {
+                        continue;
+                    }
                     // This is a PR bookmark.
                     if 1 < local_bookmark.target.len() {
                         // Conflict! Check if this is a merged PR with a deleted remote
@@ -148,8 +159,9 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
                             // Only block on the local side to avoid duplicate insertions.
                             repo_state.bookmarks_blocking.insert(local_bookmark_name.to_owned());
                         }
-                    } else {
-                        // Note `local_bookmark.target == vec![jj_entry.commit.commit_id]` in the non-conflicted case.
+                    } else if local_bookmark.target.as_slice() == [Some(jj_entry.commit.commit_id.clone())] {
+                        // Note `local_bookmark.target == vec![Some(jj_entry.commit.commit_id)]`
+                        // in the non-conflicted case.
                         cid_pr_tip
                             .entry(&*jj_entry.commit.commit_id)
                             .or_default()
@@ -181,6 +193,11 @@ pub fn build(jj_entries: &[JjLogEntry], prs: &BTreeMap<PrNum, &GhPr>, default_br
         }
         for gh_pr in prs.values() {
             let bookmark = &*gh_pr.head_ref_name;
+            // Only consider bookmarks we own (tracked on push remote).
+            let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains(bookmark));
+            if !is_tracked {
+                continue;
+            }
             let local = local_targets.get(bookmark);
             let remote = remote_targets.get(bookmark);
             if local != remote {
