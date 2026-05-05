@@ -5,6 +5,7 @@ use crate::gh::PrState;
 // --- Glyphs ---
 pub const GLYPH_IMMUTABLE: &str = "◆";
 pub const GLYPH_MUTABLE: &str = "○";
+pub const GLYPH_CONFLICTED: &str = "✗";
 pub const GLYPH_WARNING: &str = "⚠";
 
 // --- Labels ---
@@ -137,8 +138,20 @@ pub fn glyph_elided() -> String {
     styled(DIM, "~")
 }
 
+pub fn glyph_conflicted() -> String {
+    styled(CLOSED, GLYPH_CONFLICTED)
+}
+
 pub fn glyph_current() -> String {
     styled(CURRENT, "@")
+}
+
+pub fn glyph_current_conflicted() -> String {
+    styled(CLOSED, "@")
+}
+
+pub fn glyph_warning_conflicted() -> String {
+    styled(CLOSED, GLYPH_WARNING)
 }
 
 pub fn dim(text: &str) -> String {

@@ -41,6 +41,9 @@ pub struct RepoState {
     /// Bookmarks with conflicting targets that block sync (user must resolve with `jj bookmark`).
     pub bookmarks_blocking: BTreeSet<String>,
 
+    /// Nodes containing at least one commit with content conflicts.
+    pub nodes_conflicted: SparseSecondaryMap<NodeKey, ()>,
+
     /// The node containing the working copy (`@`), if any.
     pub current_node: Option<NodeKey>,
 }
@@ -95,7 +98,8 @@ pub fn build(
     let mut node_preds = SecondaryMap::new();
     node_preds.insert(root_node, Vec::new()); // `root()` has no parent nodes.
 
-    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_blocking) = Default::default();
+    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_blocking, nodes_conflicted) =
+        Default::default();
     let mut repo_state = RepoState {
         nodes,
         root_node,
@@ -106,6 +110,7 @@ pub fn build(
         pr_needs_push,
         node_needs_sync,
         bookmarks_blocking,
+        nodes_conflicted,
         current_node: None,
     };
 
@@ -301,6 +306,9 @@ pub fn build(
                     }
                 };
                 repo_state.commit_node.insert(cid.to_owned(), node_key);
+                if jj_entry.conflict {
+                    repo_state.nodes_conflicted.insert(node_key, ());
+                }
             }
         }
     }
@@ -615,9 +623,17 @@ impl RepoState {
             default_branch.to_owned()
         }
     }
-}
 
-/// Extract unique PR numbers from jj log entries' trailers.
+    /// Whether a node is conflicted (content conflicts or bookmark conflicts).
+    pub fn is_node_conflicted(&self, nk: NodeKey, prs: &BTreeMap<PrNum, &GhPr>) -> bool {
+        if self.nodes_conflicted.contains_key(nk) {
+            return true;
+        }
+        matches!(self.nodes.get(nk), Some(Node::Pr(pr_id)) if prs
+            .get(pr_id)
+            .is_some_and(|pr| self.bookmarks_blocking.contains(&*pr.head_ref_name)))
+    }
+}
 pub fn extract_pr_nums(jj_entries: &[JjLogEntry]) -> Vec<PrNum> {
     let mut nums = BTreeSet::new();
     for entry in jj_entries {
@@ -666,15 +682,16 @@ pub fn render_show(
         let is_current = state.current_node == Some(node_key);
 
         let node = state.nodes.get(node_key).unwrap();
-        let glyph = if is_current {
-            crate::style::glyph_current()
-        } else {
-            match node {
-                Node::Root => crate::style::glyph_elided(),
-                Node::TrunkTip => crate::style::glyph_immutable(),
-                Node::Pr(_) => crate::style::GLYPH_MUTABLE.to_owned(),
-                Node::Ambiguous { .. } => crate::style::warn(crate::style::GLYPH_WARNING),
-            }
+        let conflicted = state.is_node_conflicted(node_key, prs);
+        let glyph = match (is_current, conflicted, node) {
+            (true, true, _) => crate::style::glyph_current_conflicted(),
+            (true, false, _) => crate::style::glyph_current(),
+            (false, _, Node::Root) => crate::style::glyph_elided(),
+            (false, _, Node::TrunkTip) => crate::style::glyph_immutable(),
+            (false, true, Node::Pr(_)) => crate::style::glyph_conflicted(),
+            (false, false, Node::Pr(_)) => crate::style::GLYPH_MUTABLE.to_owned(),
+            (false, true, Node::Ambiguous { .. }) => crate::style::glyph_warning_conflicted(),
+            (false, false, Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
         };
 
         let message = match node {
@@ -777,14 +794,15 @@ pub fn render_log(
         };
 
         // Build the glyph.
-        let glyph = if jj_entry.is_working_copy {
-            crate::style::glyph_current()
-        } else {
-            match node_key.map(|nk| state.nodes.get(nk).unwrap()) {
-                Some(Node::Root | Node::TrunkTip) => crate::style::glyph_immutable(),
-                Some(Node::Ambiguous { .. }) => crate::style::warn(crate::style::GLYPH_WARNING),
-                Some(Node::Pr(_)) | None => crate::style::GLYPH_MUTABLE.to_owned(),
-            }
+        let node = node_key.map(|nk| state.nodes.get(nk).unwrap());
+        let glyph = match (jj_entry.is_working_copy, jj_entry.conflict, node) {
+            (true, true, _) => crate::style::glyph_current_conflicted(),
+            (true, false, _) => crate::style::glyph_current(),
+            (false, true, Some(Node::Ambiguous { .. })) => crate::style::glyph_warning_conflicted(),
+            (false, true, _) => crate::style::glyph_conflicted(),
+            (false, false, Some(Node::Root | Node::TrunkTip)) => crate::style::glyph_immutable(),
+            (false, false, Some(Node::Ambiguous { .. })) => crate::style::warn(crate::style::GLYPH_WARNING),
+            (false, false, Some(Node::Pr(_)) | None) => crate::style::GLYPH_MUTABLE.to_owned(),
         };
 
         // First line: change_id commit_id [bookmarks] [PR info]
@@ -1071,6 +1089,13 @@ pub fn plan_sync(
                 gh_pr.state,
                 "bug: merged PR {pr_num} in node_needs_sync",
             );
+            if state.nodes_conflicted.contains_key(nk) {
+                warnings.push(format!(
+                    "skip push {} ({}) — has content conflicts",
+                    pr_num, gh_pr.head_ref_name,
+                ));
+                continue;
+            }
             push_bookmarks.push((*pr_num, gh_pr.head_ref_name.clone()));
         }
         if !push_bookmarks.is_empty() {
