@@ -50,18 +50,12 @@ fn plan_sync(input: &InputData) -> String {
         input.tracked_bookmarks.as_ref(),
     )
     .unwrap();
-    // In tests, treat all merge commits as existing (no stale trunk detection).
-    let existing_merge_commits = prs
-        .values()
-        .filter_map(|pr| pr.merge_commit_oid.as_deref())
-        .map(|s| s.to_owned())
-        .collect();
     match pr_dag::plan_sync(
         &state,
         &prs,
         &input.jj_entries,
         &input.default_branch,
-        &existing_merge_commits,
+        input.existing_merge_commits.as_ref(),
     ) {
         Ok(actions) => actions.iter().map(|a| a.to_string()).collect::<Vec<_>>().join("\n"),
         Err(e) => format!("ERROR: {e}"),
@@ -208,6 +202,7 @@ fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>, tracked_bookmarks: Option<B
         prs,
         default_branch: "main".to_owned(),
         tracked_bookmarks,
+        existing_merge_commits: None, // Legacy: all merge commits considered present.
     }
 }
 
@@ -339,7 +334,8 @@ fn no_push_when_only_git_remote() {
         ],
         prs: vec![gh_pr(1, "feat", "main")],
         default_branch: "main".to_owned(),
-        tracked_bookmarks: Some(BTreeSet::new()), // Not tracked on origin.
+        tracked_bookmarks: Some(BTreeSet::new()),
+        existing_merge_commits: None, // Not tracked on origin.
     };
     insta::assert_snapshot!("no_push_when_only_git_remote", plan_sync(&f));
 }
@@ -360,6 +356,7 @@ fn needs_push_tracked_but_no_origin_in_revset() {
         prs: vec![gh_pr(1, "feat", "main")],
         default_branch: "main".to_owned(),
         tracked_bookmarks: Some(["feat".to_owned()].into()), // Tracked on origin.
+        existing_merge_commits: None,
     };
     insta::assert_snapshot!("needs_push_tracked_but_no_origin_in_revset", plan_sync(&f));
 }
@@ -657,7 +654,8 @@ fn bookmark_name_collision_no_remote() {
         ],
         prs: vec![gh_pr(42, "fix-typo", "main")],
         default_branch: "main".to_owned(),
-        tracked_bookmarks: Some(BTreeSet::new()), // No bookmarks tracked.
+        tracked_bookmarks: Some(BTreeSet::new()),
+        existing_merge_commits: None, // No bookmarks tracked.
     };
     insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
 }

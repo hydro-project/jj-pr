@@ -28,6 +28,10 @@ pub(crate) struct InputData {
     /// `None` means all bookmarks are considered tracked (legacy behavior).
     #[serde(default)]
     pub(crate) tracked_bookmarks: Option<std::collections::BTreeSet<String>>,
+    /// Merge commit OIDs that exist in the local repo (for stale trunk detection).
+    /// `None` means all merge commits are considered present (legacy behavior).
+    #[serde(default)]
+    pub(crate) existing_merge_commits: Option<std::collections::HashSet<types::CommitId>>,
 }
 
 impl InputData {
@@ -104,12 +108,21 @@ fn run() -> Result<()> {
     // Step 4: Load tracked bookmarks (fast, ~25ms).
     let tracked_bookmarks = jj::load_tracked_bookmarks("origin")?;
 
+    // Step 5: Check which merged PRs have their merge commit in the local repo.
+    let merge_oids: Vec<&types::CommitId<str>> = prs
+        .iter()
+        .filter(|pr| pr.state == gh::PrState::Merged)
+        .filter_map(|pr| pr.merge_commit_oid.as_deref())
+        .collect();
+    let existing_merge_commits = jj::check_commits_exist(&merge_oids)?;
+
     // Store input data globally for panic/error dump.
     let input = INPUT_DATA.get_or_init(|| InputData {
         jj_entries,
         prs,
         default_branch,
         tracked_bookmarks: Some(tracked_bookmarks),
+        existing_merge_commits: Some(existing_merge_commits),
     });
 
     // Handle util commands that need input data.
@@ -141,19 +154,12 @@ fn run() -> Result<()> {
             &mut std::io::stdout(),
         ),
         Command::Sync(args) => {
-            // Check which merged PRs have their merge commit in the local repo.
-            let merge_oids: Vec<&types::CommitId<str>> = prs
-                .values()
-                .filter(|pr| pr.state == gh::PrState::Merged)
-                .filter_map(|pr| pr.merge_commit_oid.as_deref())
-                .collect();
-            let existing_merge_commits = jj::check_commits_exist(&merge_oids)?;
             let actions = pr_dag::plan_sync(
                 &state,
                 &prs,
                 &input.jj_entries,
                 &input.default_branch,
-                &existing_merge_commits,
+                input.existing_merge_commits.as_ref(),
             )?;
             if actions.is_empty() {
                 eprintln!("Nothing to sync.");

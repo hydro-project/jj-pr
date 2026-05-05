@@ -969,7 +969,8 @@ pub fn plan_sync(
     jj_entries: &[JjLogEntry],
     default_branch: &str,
     // Merge commit OIDs that exist in the local repo (for stale trunk detection).
-    existing_merge_commits: &HashSet<CommitId>,
+    // `None` means all merge commits are considered present (legacy behavior).
+    existing_merge_commits: Option<&HashSet<CommitId>>,
 ) -> Result<Vec<SyncAction>> {
     // Block on unresolvable conflicted bookmarks.
     if !state.bookmarks_blocking.is_empty() {
@@ -1017,11 +1018,12 @@ pub fn plan_sync(
             continue;
         }
         // Skip if the merge commit isn't in the local repo (trunk is stale — needs fetch).
-        if gh_pr
-            .merge_commit_oid
-            .as_deref()
-            .is_some_and(|oid| !existing_merge_commits.contains(oid))
-        {
+        if existing_merge_commits.is_some_and(|existing| {
+            gh_pr
+                .merge_commit_oid
+                .as_deref()
+                .is_some_and(|oid| !existing.contains(oid))
+        }) {
             eprintln!(
                 "{}: {} is merged on GitHub but trunk is stale — run `jj git fetch` to update",
                 crate::style::warn("warning"),
