@@ -150,6 +150,10 @@ pub fn glyph_current_conflicted() -> String {
     styled(CLOSED, "@")
 }
 
+pub fn glyph_warning_conflicted() -> String {
+    styled(CLOSED, GLYPH_WARNING)
+}
+
 pub fn dim(text: &str) -> String {
     styled(DIM, text)
 }

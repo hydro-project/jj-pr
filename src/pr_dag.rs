@@ -695,7 +695,13 @@ pub fn render_show(
                         crate::style::GLYPH_MUTABLE.to_owned()
                     }
                 }
-                Node::Ambiguous { .. } => crate::style::warn(crate::style::GLYPH_WARNING),
+                Node::Ambiguous { .. } => {
+                    if state.nodes_conflicted.contains_key(node_key) {
+                        crate::style::glyph_warning_conflicted()
+                    } else {
+                        crate::style::warn(crate::style::GLYPH_WARNING)
+                    }
+                }
             }
         };
 
@@ -810,7 +816,13 @@ pub fn render_log(
         } else {
             match node_key.map(|nk| (nk, state.nodes.get(nk).unwrap())) {
                 Some((_, Node::Root | Node::TrunkTip)) => crate::style::glyph_immutable(),
-                Some((_, Node::Ambiguous { .. })) => crate::style::warn(crate::style::GLYPH_WARNING),
+                Some((nk, Node::Ambiguous { .. })) => {
+                    if state.nodes_conflicted.contains_key(nk) {
+                        crate::style::glyph_warning_conflicted()
+                    } else {
+                        crate::style::warn(crate::style::GLYPH_WARNING)
+                    }
+                }
                 Some((nk, Node::Pr(pr_id))) => {
                     let is_bookmark_conflicted = prs
                         .get(pr_id)
