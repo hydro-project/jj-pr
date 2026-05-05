@@ -1,0 +1,7 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/jj-pr-conflict-1778014006.json.gz
+---
+skip push #36 (handle-forks) — has content conflicts
+push: #45 (red-x)

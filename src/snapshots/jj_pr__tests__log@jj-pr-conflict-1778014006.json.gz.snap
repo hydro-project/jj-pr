@@ -1,0 +1,16 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false)"
+input_file: src/fixtures/jj-pr-conflict-1778014006.json.gz
+---
+○  [1m[35mvlwpkrxrultz[0m [34m90d0cdd96965[0m [1m[35mred-x[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/45PR #45]8;;[0m* [32mReady[0m
+│  feat: use red ✗ for conflicted branches in show/log views
+│ [31m✗[0m  [1m[35mmoxxqxxwsusm[0m [34me0f23719aaa3[0m [1m[35mhandle-forks[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m* [33mDraft[0m
+│ │  Remove bookmark_track from create, update README for fork workflows
+│ [31m✗[0m  [1m[35mwxsootupxqxo[0m [34m1ea4a9c5618b[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m* [33mDraft[0m
+│ │  Add headRepositoryOwner to GraphQL query and GhPr struct
+│ [31m✗[0m  [1m[35muspmwzsllmyu[0m [34mf8230a935774[0m [1m[35msandbox-933fbaa7-a932-4bec-a6af-d18d75909ff5[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m* [33mDraft[0m
+├─╯  Replace hardcoded "origin" with configurable push remote
+[1m[36m◆[0m  [1m[35mpyywpzpoqztp[0m [34m9aec6ee06924[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│  fix: PR approval display by falling back to latestReviews when reviewDecision is null (#44)
+[2m~[0m  [2m(elided revisions)[0m

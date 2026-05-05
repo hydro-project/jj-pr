@@ -41,6 +41,9 @@ pub struct RepoState {
     /// Bookmarks with conflicting targets that block sync (user must resolve with `jj bookmark`).
     pub bookmarks_blocking: BTreeSet<String>,
 
+    /// Nodes containing at least one commit with content conflicts.
+    pub nodes_conflicted: SparseSecondaryMap<NodeKey, ()>,
+
     /// The node containing the working copy (`@`), if any.
     pub current_node: Option<NodeKey>,
 }
@@ -95,7 +98,8 @@ pub fn build(
     let mut node_preds = SecondaryMap::new();
     node_preds.insert(root_node, Vec::new()); // `root()` has no parent nodes.
 
-    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_blocking) = Default::default();
+    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_blocking, nodes_conflicted) =
+        Default::default();
     let mut repo_state = RepoState {
         nodes,
         root_node,
@@ -106,6 +110,7 @@ pub fn build(
         pr_needs_push,
         node_needs_sync,
         bookmarks_blocking,
+        nodes_conflicted,
         current_node: None,
     };
 
@@ -301,6 +306,9 @@ pub fn build(
                     }
                 };
                 repo_state.commit_node.insert(cid.to_owned(), node_key);
+                if jj_entry.conflict {
+                    repo_state.nodes_conflicted.insert(node_key, ());
+                }
             }
         }
     }
@@ -673,10 +681,11 @@ pub fn render_show(
                 Node::Root => crate::style::glyph_elided(),
                 Node::TrunkTip => crate::style::glyph_immutable(),
                 Node::Pr(pr_id) => {
-                    let is_conflicted = prs
+                    let is_bookmark_conflicted = prs
                         .get(pr_id)
                         .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name));
-                    if is_conflicted {
+                    let is_content_conflicted = state.nodes_conflicted.contains_key(node_key);
+                    if is_bookmark_conflicted || is_content_conflicted {
                         crate::style::glyph_conflicted()
                     } else {
                         crate::style::GLYPH_MUTABLE.to_owned()
@@ -788,15 +797,18 @@ pub fn render_log(
         // Build the glyph.
         let glyph = if jj_entry.is_working_copy {
             crate::style::glyph_current()
+        } else if jj_entry.conflict {
+            crate::style::glyph_conflicted()
         } else {
             match node_key.map(|nk| (nk, state.nodes.get(nk).unwrap())) {
                 Some((_, Node::Root | Node::TrunkTip)) => crate::style::glyph_immutable(),
                 Some((_, Node::Ambiguous { .. })) => crate::style::warn(crate::style::GLYPH_WARNING),
-                Some((_, Node::Pr(pr_id))) => {
-                    let is_conflicted = prs
+                Some((nk, Node::Pr(pr_id))) => {
+                    let is_bookmark_conflicted = prs
                         .get(pr_id)
                         .is_some_and(|pr| state.bookmarks_blocking.contains(&*pr.head_ref_name));
-                    if is_conflicted {
+                    let is_content_conflicted = state.nodes_conflicted.contains_key(nk);
+                    if is_bookmark_conflicted || is_content_conflicted {
                         crate::style::glyph_conflicted()
                     } else {
                         crate::style::GLYPH_MUTABLE.to_owned()
@@ -1090,6 +1102,13 @@ pub fn plan_sync(
                 gh_pr.state,
                 "bug: merged PR {pr_num} in node_needs_sync",
             );
+            if state.nodes_conflicted.contains_key(nk) {
+                warnings.push(format!(
+                    "skip push {} ({}) — has content conflicts",
+                    pr_num, gh_pr.head_ref_name,
+                ));
+                continue;
+            }
             push_bookmarks.push((*pr_num, gh_pr.head_ref_name.clone()));
         }
         if !push_bookmarks.is_empty() {

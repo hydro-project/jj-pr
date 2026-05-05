@@ -127,6 +127,7 @@ fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str]
         is_trunk_tip,
         empty: false,
         is_working_copy: false,
+        conflict: false,
     }
 }
 

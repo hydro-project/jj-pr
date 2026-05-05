@@ -42,6 +42,8 @@ pub struct JjLogEntry {
     pub empty: bool,
     #[serde(default)]
     pub is_working_copy: bool,
+    #[serde(default)]
+    pub conflict: bool,
 }
 
 /// Parsed PR trailer value, e.g. `PR: #1234` → `1234`.
@@ -184,7 +186,7 @@ pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<String>> {
 }
 
 pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
-    const JJ_TEMPLATE: &str = r#""{\"commit\": " ++ json(self) ++ ", \"local_bookmarks\": " ++ json(local_bookmarks) ++ ", \"remote_bookmarks\": " ++ json(remote_bookmarks) ++ ", \"immutable\": " ++ json(self.immutable()) ++ ", \"is_trunk_tip\": " ++ json(self.contained_in("trunk()")) ++ ", \"empty\": " ++ json(self.empty()) ++ ", \"is_working_copy\": " ++ json(self.contained_in("@")) ++ "}\n""#;
+    const JJ_TEMPLATE: &str = r#""{\"commit\": " ++ json(self) ++ ", \"local_bookmarks\": " ++ json(local_bookmarks) ++ ", \"remote_bookmarks\": " ++ json(remote_bookmarks) ++ ", \"immutable\": " ++ json(self.immutable()) ++ ", \"is_trunk_tip\": " ++ json(self.contained_in("trunk()")) ++ ", \"empty\": " ++ json(self.empty()) ++ ", \"is_working_copy\": " ++ json(self.contained_in("@")) ++ ", \"conflict\": " ++ json(self.conflict()) ++ "}\n""#;
 
     let output = Command::new("jj")
         .args(["log", "--no-graph", "-r", revset, "-T", JJ_TEMPLATE])
