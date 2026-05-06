@@ -230,30 +230,11 @@ fn install_aliases(repo: bool) -> Result<()> {
         anyhow::bail!("jj config set failed for aliases.pr: {stderr}");
     }
 
-    let aliases = [
-        ("revset-aliases.\"pr(n)\"", r#"description(regex:"PR: #" ++ n)"#),
-        ("revset-aliases.\"pr_root(n)\"", r#"roots(pr(n))"#),
-    ];
-
-    for (key, value) in &aliases {
-        let output = Cmd::new("jj")
-            .args(["config", "set", scope, key, value])
-            .output()
-            .context("Failed to run `jj config set`")?;
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("jj config set failed for {key}: {stderr}");
-        }
-    }
-
     eprintln!("Installed to {scope} config:");
-    eprintln!("  command alias: jj pr     — runs jj-pr");
-    eprintln!("  revset alias: pr(n)      — all commits in PR #n");
-    eprintln!("  revset alias: pr_root(n) — root commit(s) of PR #n");
+    eprintln!("  command alias: jj pr — runs jj-pr");
     eprintln!();
     eprintln!("Usage:");
     eprintln!("  jj pr show");
-    eprintln!("  jj log -r 'pr(\"1234\")'");
-    eprintln!("  jj rebase -s 'pr_root(\"1234\")' -d main");
+    eprintln!("  jj pr sync");
     Ok(())
 }
