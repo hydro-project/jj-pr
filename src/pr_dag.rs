@@ -9,7 +9,7 @@ use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 use crate::gh::{GhPr, PrNum};
 use crate::graph_algorithms;
 use crate::jj::{self, JjLogEntry};
-use crate::types::{Bookmark, ChangeId, CommitId};
+use crate::types::{AsRevset, Bookmark, ChangeId, CommitId};
 
 new_key_type! {
     pub struct NodeKey;
@@ -1147,9 +1147,10 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     crate::style::pr_num(*pr, None),
                     crate::style::change_id(change_id),
                 );
-                let desc = jj::read_description(change_id.as_str())?;
+                let rev = change_id.as_revset();
+                let desc = jj::read_description(&rev)?;
                 let new_desc = jj::set_pr_trailer(&desc, *pr);
-                jj::describe_stdin(change_id.as_str(), &new_desc)?;
+                jj::describe_stdin(&rev, &new_desc)?;
             }
             SyncAction::AbandonMerged {
                 change_ids,
@@ -1163,7 +1164,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                         crate::style::pr_num(*pr, None),
                         crate::style::bookmark(bookmark),
                     );
-                    jj::bookmark_delete(bookmark.as_str())?;
+                    jj::bookmark_delete(bookmark)?;
                 } else {
                     eprintln!(
                         "Abandoning merged {} ({} already deleted)",
@@ -1191,13 +1192,9 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 // We use change_ids for both steps (stable across rewrites).
                 // The revset targets only this PR's commits (not ancestors from
                 // other PRs that may still be open).
-                let revset = change_ids
-                    .iter()
-                    .map(|id| format!("change_id({id})"))
-                    .collect::<Vec<_>>()
-                    .join(" | ");
+                let revset = crate::types::revset_union(change_ids.iter());
                 jj::rebase(&format!("roots({revset})"), "trunk()")?;
-                jj::abandon(&revset)?;
+                jj::abandon(&revset.to_string())?;
             }
             SyncAction::Push { bookmarks } => {
                 eprintln!(
@@ -1209,7 +1206,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                         .collect::<Vec<_>>()
                         .join(", "),
                 );
-                let refs: Vec<&str> = bookmarks.iter().map(|(_, s)| s.as_str()).collect();
+                let refs: Vec<&Bookmark<str>> = bookmarks.iter().map(|(_, s)| &**s).collect();
                 jj::git_push_bookmarks(&refs)?;
             }
             SyncAction::UpdateBase { pr, bookmark, new_base } => {
@@ -1440,12 +1437,12 @@ pub fn plan_create(
 /// Execute a planned PR creation. Performs side effects: push, create PR, stamp trailers.
 pub fn execute_create(plan: &CreatePlan) -> Result<()> {
     // Track remote (ignore error — remote bookmark may not exist yet).
-    if let Err(e) = jj::bookmark_track(plan.bookmark.as_str(), "origin") {
+    if let Err(e) = jj::bookmark_track(&plan.bookmark, "origin") {
         tracing::debug!("bookmark track failed (expected if new): {e:#}");
     }
 
     eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
-    jj::git_push_bookmark(plan.bookmark.as_str())?;
+    jj::git_push_bookmark(&plan.bookmark)?;
 
     let base_ref = Bookmark::ref_cast(&*plan.base);
     eprintln!(
@@ -1459,9 +1456,10 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
 
     if !plan.stamp_change_ids.is_empty() {
         for change_id in &plan.stamp_change_ids {
-            let desc = jj::read_description(change_id.as_str())?;
+            let rev = change_id.as_revset();
+            let desc = jj::read_description(&rev)?;
             let new_desc = jj::set_pr_trailer(&desc, pr_number);
-            jj::describe_stdin(change_id.as_str(), &new_desc)?;
+            jj::describe_stdin(&rev, &new_desc)?;
         }
         eprintln!(
             "Stamped {} on {} commit(s)",

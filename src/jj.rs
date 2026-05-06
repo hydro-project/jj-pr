@@ -5,7 +5,7 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
 use crate::gh::PrNum;
-use crate::types::{Bookmark, ChangeId, CommitId};
+use crate::types::{Bookmark, ChangeId, CommitId, Revset, revset_union};
 /// Raw commit data from `json(self)`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjCommit {
@@ -221,12 +221,7 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
     if oids.is_empty() {
         return Ok(HashSet::new());
     }
-    // Use present() to gracefully handle missing commits (returns empty instead of erroring).
-    let inner = oids
-        .iter()
-        .map(|oid| format!("commit_id({oid})"))
-        .collect::<Vec<_>>()
-        .join(" | ");
+    let inner = revset_union(oids.iter().copied());
     let revset = format!("present({inner})");
     let output = Command::new("jj")
         .args(["log", "--no-graph", "-r", &revset, "-T", r#"commit_id ++ "\n""#])
@@ -247,9 +242,9 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
 }
 
 /// Read the description of a revision.
-pub fn read_description(revision: &str) -> Result<String> {
+pub fn read_description(revision: &Revset) -> Result<String> {
     let output = Command::new("jj")
-        .args(["log", "--no-graph", "-r", revision, "-T", "description"])
+        .args(["log", "--no-graph", "-r", revision.as_str(), "-T", "description"])
         .output()
         .context("Failed to run `jj log` for description")?;
     if !output.status.success() {
@@ -260,10 +255,10 @@ pub fn read_description(revision: &str) -> Result<String> {
 }
 
 /// Set the description of a revision via `jj describe --stdin`.
-pub fn describe_stdin(revision: &str, description: &str) -> Result<()> {
+pub fn describe_stdin(revision: &Revset, description: &str) -> Result<()> {
     use std::io::Write;
     let mut child = Command::new("jj")
-        .args(["describe", revision, "--stdin"])
+        .args(["describe", revision.as_str(), "--stdin"])
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
@@ -287,9 +282,9 @@ pub fn describe_stdin(revision: &str, description: &str) -> Result<()> {
 }
 
 /// Push a bookmark to the remote.
-pub fn git_push_bookmark(bookmark: &str) -> Result<()> {
+pub fn git_push_bookmark(bookmark: &Bookmark<str>) -> Result<()> {
     let output = Command::new("jj")
-        .args(["git", "push", "--bookmark", bookmark])
+        .args(["git", "push", "--bookmark", bookmark.as_str()])
         .output()
         .context("Failed to run `jj git push`")?;
 
@@ -302,9 +297,9 @@ pub fn git_push_bookmark(bookmark: &str) -> Result<()> {
 
 /// Set a bookmark to point at a revision.
 #[expect(dead_code, reason = "used by track command (TODO)")]
-pub fn bookmark_set(name: &str, revision: &str) -> Result<()> {
+pub fn bookmark_set(name: &Bookmark<str>, revision: &Revset) -> Result<()> {
     let output = Command::new("jj")
-        .args(["bookmark", "set", name, "-r", revision])
+        .args(["bookmark", "set", name.as_str(), "-r", revision.as_str()])
         .output()
         .context("Failed to run `jj bookmark set`")?;
 
@@ -316,9 +311,9 @@ pub fn bookmark_set(name: &str, revision: &str) -> Result<()> {
 }
 
 /// Delete a bookmark.
-pub fn bookmark_delete(name: &str) -> Result<()> {
+pub fn bookmark_delete(name: &Bookmark<str>) -> Result<()> {
     let output = Command::new("jj")
-        .args(["bookmark", "delete", name])
+        .args(["bookmark", "delete", name.as_str()])
         .output()
         .context("Failed to run `jj bookmark delete`")?;
 
@@ -330,7 +325,7 @@ pub fn bookmark_delete(name: &str) -> Result<()> {
 }
 
 /// Track a remote bookmark.
-pub fn bookmark_track(name: &str, remote: &str) -> Result<()> {
+pub fn bookmark_track(name: &Bookmark<str>, remote: &str) -> Result<()> {
     let refname = format!("{name}@{remote}");
     let output = Command::new("jj")
         .args(["bookmark", "track", &refname])
@@ -374,9 +369,10 @@ pub fn abandon(revset: &str) -> Result<()> {
 }
 
 /// Push multiple bookmarks to the remote in a single command.
-pub fn git_push_bookmarks(bookmarks: &[&str]) -> Result<()> {
+pub fn git_push_bookmarks(bookmarks: &[&Bookmark<str>]) -> Result<()> {
     let mut args = vec!["git", "push"];
-    for bm in bookmarks {
+    let strs: Vec<&str> = bookmarks.iter().map(|bm| bm.as_str()).collect();
+    for bm in &strs {
         args.push("--bookmark");
         args.push(bm);
     }

@@ -1,9 +1,65 @@
 use std::borrow::Borrow;
-use std::fmt::Display;
+use std::fmt::{self, Display, Write};
 use std::ops::Deref;
 
 use ref_cast::RefCast;
 use serde::{Deserialize, Serialize};
+
+/// A jj revset expression. Wraps a `String` that can be passed directly to `-r`.
+pub struct Revset(String);
+
+impl Revset {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl Display for Revset {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+/// Convert a typed ID into a jj revset expression.
+pub trait AsRevset {
+    fn as_revset(&self) -> Revset;
+}
+
+impl<T: ?Sized + Display> AsRevset for CommitId<T> {
+    fn as_revset(&self) -> Revset {
+        Revset(format!("commit_id({})", &self.0))
+    }
+}
+
+impl<T: ?Sized + Display> AsRevset for ChangeId<T> {
+    fn as_revset(&self) -> Revset {
+        Revset(format!("change_id({})", &self.0))
+    }
+}
+
+impl<T: ?Sized + Display> AsRevset for Bookmark<T> {
+    fn as_revset(&self) -> Revset {
+        Revset(format!("bookmark({})", &self.0))
+    }
+}
+
+impl<R: AsRevset + ?Sized> AsRevset for &R {
+    fn as_revset(&self) -> Revset {
+        (**self).as_revset()
+    }
+}
+
+/// Join multiple revset-able items with `|` into a single revset expression.
+pub fn revset_union(items: impl IntoIterator<Item = impl AsRevset>) -> Revset {
+    let mut buf = String::new();
+    for item in items {
+        if !buf.is_empty() {
+            buf.push_str(" | ");
+        }
+        write!(buf, "{}", item.as_revset()).unwrap();
+    }
+    Revset(buf)
+}
 
 /// Generates a transparent newtype over a string-like inner type with `Display`,
 /// `Deref`, `Borrow`, and `ToOwned` impls (mirroring the `str`/`String` pattern).
