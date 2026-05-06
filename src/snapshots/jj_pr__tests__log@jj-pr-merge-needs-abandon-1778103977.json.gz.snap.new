@@ -1,0 +1,35 @@
+---
+source: src/tests.rs
+assertion_line: 103
+expression: "render_log(&f, false)"
+input_file: src/fixtures/jj-pr-merge-needs-abandon-1778103977.json.gz
+---
+○  [1m[35mlmzwkzkszrnw[0m [34m9a6166660729[0m [1m[35mremove-aliases[0m [1m[35mremove-alises[0m [1m[35msandbox-c9222c98-3727-406d-80ae-55c0a77301ca[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/50PR #50]8;;[0m [2mMerged[0m
+│  Remove broken revset aliases and update README
+│ ○  [1m[35mmoxxqxxwsusm[0m [34me06e3de4db73[0m [1m[35mhandle-forks[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m [33mDraft[0m
+│ │  Remove bookmark_track from create, update README for fork workflows
+│ ○  [1m[35mwxsootupxqxo[0m [34m09c805067531[0m [1m[35msandbox-a42dc5d7-0f37-46f9-af27-676f458960f9[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m [33mDraft[0m
+│ │  Add headRepositoryOwner to GraphQL query and GhPr struct
+│ │ ○  [1m[35mwnslwoyxuwyp[0m [34mead10139d432[0m [1m[35mnewtypes[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/48PR #48]8;;[0m [32mReady[0m
+│ │ │  Simplify gh::create_pr to use &str args directly instead of Vec<String>
+│ │ ○  [1m[35mtnxqqrkzmvto[0m [34m8d1b08e31b66[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/48PR #48]8;;[0m [32mReady[0m
+│ │ │  Restore comment explaining present() usage in check_commits_exist
+│ │ ○  [1m[35mtlnvkvuwpyqm[0m [34m1bfc5c981970[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/48PR #48]8;;[0m [32mReady[0m
+│ │ │  Use imports instead of fully qualified paths in style.rs
+│ │ ○  [1m[35msmpmtrrzmsxx[0m [34m08ed0fae6157[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/48PR #48]8;;[0m [32mReady[0m
+│ │ │  Use Display precision in SyncAction::Display instead of as_str() + slice
+│ │ ○  [1m[35mzxkttlsswuot[0m [34m5ae74d875f52[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/48PR #48]8;;[0m [32mReady[0m
+│ │ │  Make gh functions accept typed Bookmark args; remove external as_str() calls
+│ │ ○  [1m[35mvmoovpllzvzm[0m [34m287cb03da10d[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/48PR #48]8;;[0m [32mReady[0m
+│ │ │  Remove PartialEq<str> impls; keep as_str() only for external API boundaries
+│ │ ○  [1m[35mmopyxtzztwow[0m [34m431aed1a5d87[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/48PR #48]8;;[0m [32mReady[0m
+│ │ │  Deserialize Bookmark directly instead of converting from String
+│ │ ○  [1m[35mntsxuplyrnxy[0m [34m398d2ecd6df1[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/48PR #48]8;;[0m [32mReady[0m
+│ │ │  Add AsRevset trait and Revset type to eliminate string conversions
+│ │ ○  [1m[35movnqnuktpsnm[0m [34mac5ceb43d5fa[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/48PR #48]8;;[0m [32mReady[0m
+├───╯  Add ChangeId and Bookmark newtypes via declarative macro
+[1m[36m◆[0m │  [1m[35mqxmvxtsvzson[0m [34mc763e5c4fe62[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│ │  feat: red ✗ glyph for conflicted branches, skip push for conflicts (#45)
+│ ○  [1m[35muspmwzsllmyu[0m [34mf8230a935774[0m [1m[35msandbox-933fbaa7-a932-4bec-a6af-d18d75909ff5[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m [33mDraft[0m
+├─╯  Replace hardcoded "origin" with configurable push remote
+[2m~[0m  [2m(elided revisions)[0m

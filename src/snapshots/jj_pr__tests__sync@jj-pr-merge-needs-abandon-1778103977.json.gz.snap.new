@@ -1,0 +1,7 @@
+---
+source: src/tests.rs
+assertion_line: 104
+expression: plan_sync(&f)
+input_file: src/fixtures/jj-pr-merge-needs-abandon-1778103977.json.gz
+---
+skip merged #50 (remove-aliases) — trunk stale, run `jj git fetch`
