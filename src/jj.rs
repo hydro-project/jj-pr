@@ -221,6 +221,7 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
     if oids.is_empty() {
         return Ok(HashSet::new());
     }
+    // Use present() to gracefully handle missing commits (returns empty instead of erroring).
     let inner = revset_union(oids.iter().copied());
     let revset = format!("present({inner})");
     let output = Command::new("jj")
