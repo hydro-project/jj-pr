@@ -1,7 +1,7 @@
 ---
 source: src/tests.rs
 expression: render_show(&f)
-input_file: src/fixtures/hydro-remade2-pr.1778101559.json.gz
+input_file: src/fixtures/remade-pr-both-branches-exist.json.gz
 ---
 ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m  [32mReady[0m  [1m[35mmingwei/sqs-rebase[0m
 │  feat(hydro_test): add example of AWS + SQS support

@@ -1,7 +1,7 @@
 ---
 source: src/tests.rs
 expression: "render_log(&f, false)"
-input_file: src/fixtures/hydro-remade2-pr.1778101559.json.gz
+input_file: src/fixtures/remade-pr-both-branches-exist.json.gz
 ---
 ○  [1m[35mluuklzktmzky[0m [34m8540d8511b0c[0m [1m[35mmingwei/delete-subgraph-id[0m [1m[35msandbox-d5d0431d-46d9-45d4-9cee-4bbc5cd58f18[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m* [32mReady[0m
 │  Remove unused slot_vec module from dfir_rs

@@ -9,7 +9,7 @@ mod tests;
 pub(crate) mod types;
 mod ui;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;
 
 use anyhow::{Context, Result};
@@ -27,7 +27,7 @@ pub(crate) struct InputData {
     /// Bookmark names tracked on the push remote (origin).
     /// `None` means all bookmarks are considered tracked (legacy behavior).
     #[serde(default)]
-    pub(crate) tracked_bookmarks: Option<std::collections::BTreeSet<types::Bookmark>>,
+    pub(crate) tracked_bookmarks: Option<BTreeSet<types::Bookmark>>,
     /// Merge commit OIDs that exist in the local repo (for stale trunk detection).
     /// `None` means all merge commits are considered present (legacy behavior).
     #[serde(default)]
@@ -94,13 +94,14 @@ fn run() -> Result<()> {
     let jj_entries = jj::load_entries()?;
 
     // Step 2: Extract PR numbers from trailers and local bookmark names.
-    // Only look up bookmarks by branch name if their tip commit doesn't already have a trailer.
+    // We query both because trailers and bookmarks may reference different PRs
+    // (e.g. stale trailers from a closed PR, bookmark pointing to a new PR).
     let pr_nums = pr_dag::extract_pr_nums(&jj_entries);
-    let local_bookmarks: Vec<&types::Bookmark<str>> = jj_entries
+    let local_bookmarks: BTreeSet<&types::Bookmark<str>> = jj_entries
         .iter()
-        .filter(|e| jj::parse_pr_trailer(&e.commit.description).is_none())
         .flat_map(|e| e.local_bookmarks.iter().map(|bm| &*bm.name))
         .collect();
+    let local_bookmarks: Vec<&types::Bookmark<str>> = local_bookmarks.into_iter().collect();
 
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
     let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, &local_bookmarks)?;
