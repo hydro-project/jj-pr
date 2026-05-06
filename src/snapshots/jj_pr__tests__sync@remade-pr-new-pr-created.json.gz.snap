@@ -1,0 +1,7 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/remade-pr-new-pr-created.json.gz
+---
+stamp #2812 trailer on luuklzktmzky
+push: #2812 (mingwei/delete-subgraph-id)
