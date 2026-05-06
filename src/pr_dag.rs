@@ -955,9 +955,7 @@ impl fmt::Display for SyncAction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SyncAction::StampTrailer { change_id, pr } => {
-                let s = change_id.as_str();
-                let short = &s[..12.min(s.len())];
-                write!(f, "stamp {pr} trailer on {short}")
+                write!(f, "stamp {pr} trailer on {change_id:.12}")
             }
             SyncAction::AbandonMerged {
                 pr,
