@@ -91,7 +91,7 @@ impl Node {
 pub fn build(
     jj_entries: &[JjLogEntry],
     prs: &BTreeMap<PrNum, &GhPr>,
-    default_branch: &str,
+    default_branch: &Bookmark<str>,
     tracked_bookmarks: Option<&BTreeSet<Bookmark>>,
 ) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
@@ -601,9 +601,9 @@ impl RepoState {
     /// Returns the expected GitHub base branch name for a node, derived from the DAG.
     /// If the parent is another open PR, returns its head_ref_name.
     /// Otherwise returns the default branch name (trunk).
-    pub fn expected_base(&self, nk: NodeKey, prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> Bookmark {
+    pub fn expected_base(&self, nk: NodeKey, prs: &BTreeMap<PrNum, &GhPr>, default_branch: &Bookmark<str>) -> Bookmark {
         let Some(preds) = self.node_preds.get(nk) else {
-            return Bookmark(default_branch.to_owned());
+            return default_branch.to_owned();
         };
         // If there's exactly one parent that is an open PR, use its branch.
         let parent_prs: Vec<_> = preds
@@ -621,7 +621,7 @@ impl RepoState {
         if let [single] = parent_prs.as_slice() {
             (*single).clone()
         } else {
-            Bookmark(default_branch.to_owned())
+            default_branch.to_owned()
         }
     }
 
@@ -994,7 +994,7 @@ pub fn plan_sync(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
-    default_branch: &str,
+    default_branch: &Bookmark<str>,
     // Merge commit OIDs that exist in the local repo (for stale trunk detection).
     // `None` means all merge commits are considered present (legacy behavior).
     existing_merge_commits: Option<&HashSet<CommitId>>,
@@ -1234,8 +1234,8 @@ fn find_base_branch(
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     bookmark: &Bookmark<str>,
-    default_branch: &str,
-) -> String {
+    default_branch: &Bookmark<str>,
+) -> Bookmark {
     // Find the tip commit for this bookmark.
     let tip_cid = jj_entries.iter().find_map(|e| {
         e.local_bookmarks
@@ -1273,7 +1273,7 @@ fn find_base_branch(
                     && let Some(gh_pr) = prs.get(pr_num)
                     && gh_pr.state != gh::PrState::Merged
                 {
-                    return gh_pr.head_ref_name.0.clone();
+                    return gh_pr.head_ref_name.clone();
                 }
                 // Hit trunk/root/ambiguous — use default.
                 return default_branch.to_owned();
@@ -1295,7 +1295,7 @@ fn find_base_branch(
 #[derive(Debug)]
 pub struct CreatePlan {
     pub bookmark: Bookmark,
-    pub base: String,
+    pub base: Bookmark,
     pub title: String,
     pub body: String,
     /// Change IDs of commits that will be stamped with the PR trailer.
@@ -1322,7 +1322,7 @@ pub fn plan_create(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
-    default_branch: &str,
+    default_branch: &Bookmark<str>,
     bookmark: &str,
     title: Option<&str>,
     body: Option<&str>,
@@ -1444,14 +1444,13 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
     eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
     jj::git_push_bookmark(&plan.bookmark)?;
 
-    let base_ref = Bookmark::ref_cast(&*plan.base);
     eprintln!(
         "Creating PR: {} ({} → {}) [draft]",
         plan.title,
         crate::style::bookmark(&plan.bookmark),
-        crate::style::bookmark(base_ref),
+        crate::style::bookmark(&plan.base),
     );
-    let (pr_number, pr_url) = gh::create_pr(plan.bookmark.as_str(), &plan.base, &plan.title, &plan.body, true)?;
+    let (pr_number, pr_url) = gh::create_pr(plan.bookmark.as_str(), plan.base.as_str(), &plan.title, &plan.body, true)?;
     eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
     if !plan.stamp_change_ids.is_empty() {

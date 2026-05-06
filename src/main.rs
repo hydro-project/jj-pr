@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 pub(crate) struct InputData {
     pub(crate) jj_entries: Vec<jj::JjLogEntry>,
     pub(crate) prs: Vec<gh::GhPr>,
-    pub(crate) default_branch: String,
+    pub(crate) default_branch: types::Bookmark,
     /// Bookmark names tracked on the push remote (origin).
     /// `None` means all bookmarks are considered tracked (legacy behavior).
     #[serde(default)]

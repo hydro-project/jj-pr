@@ -205,7 +205,7 @@ fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>, tracked_bookmarks: Option<B
     InputData {
         jj_entries: entries,
         prs,
-        default_branch: "main".to_owned(),
+        default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks,
         existing_merge_commits: None, // Legacy: all merge commits considered present.
     }
@@ -338,7 +338,7 @@ fn no_push_when_only_git_remote() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(1, "feat", "main")],
-        default_branch: "main".to_owned(),
+        default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: Some(BTreeSet::new()),
         existing_merge_commits: None, // Not tracked on origin.
     };
@@ -359,7 +359,7 @@ fn needs_push_tracked_but_no_origin_in_revset() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(1, "feat", "main")],
-        default_branch: "main".to_owned(),
+        default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: Some([Bookmark("feat".to_owned())].into()), // Tracked on origin.
         existing_merge_commits: None,
     };
@@ -682,7 +682,7 @@ fn bookmark_name_collision_no_remote() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(42, "fix-typo", "main")],
-        default_branch: "main".to_owned(),
+        default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: Some(BTreeSet::new()),
         existing_merge_commits: None, // No bookmarks tracked.
     };
@@ -702,7 +702,7 @@ fn stale_trunk_skips_abandon() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr_merged(1, "feat", "main")],
-        default_branch: "main".to_owned(),
+        default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: None,
         existing_merge_commits: Some(std::collections::HashSet::new()), // Empty = nothing fetched.
     };

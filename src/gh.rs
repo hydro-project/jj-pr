@@ -134,15 +134,15 @@ where
 
 #[derive(Deserialize)]
 struct DefaultBranchRef {
-    name: String,
+    name: Bookmark,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PrNode {
     number: PrNum,
-    head_ref_name: String,
-    base_ref_name: String,
+    head_ref_name: Bookmark,
+    base_ref_name: Bookmark,
     state: PrState,
     is_draft: bool,
     url: String,
@@ -224,7 +224,7 @@ impl From<CheckState> for CheckStatus {
 pub fn load_prs_and_default_branch(
     pr_nums: &[PrNum],
     bookmarks: &[&str],
-) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, String)> {
+) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, Bookmark)> {
     let mut pr_fields = String::new();
     for n in pr_nums {
         use std::fmt::Write;
@@ -324,8 +324,8 @@ pub fn load_prs_and_default_branch(
         );
         entry.insert(GhPr {
             number: d.number,
-            head_ref_name: Bookmark(d.head_ref_name),
-            base_ref_name: Bookmark(d.base_ref_name),
+            head_ref_name: d.head_ref_name,
+            base_ref_name: d.base_ref_name,
             state: d.state,
             is_draft: d.is_draft,
             url: d.url,
