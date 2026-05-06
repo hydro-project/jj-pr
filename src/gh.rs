@@ -337,26 +337,24 @@ pub fn load_prs_and_default_branch(
     Ok((prs.into_values().collect(), statuses, default_branch))
 }
 
-pub fn create_pr(head: &Bookmark<str>, base: &Bookmark<str>, title: &str, body: &str, draft: bool) -> Result<(PrNum, String)> {
+pub fn create_pr(
+    head: &Bookmark<str>,
+    base: &Bookmark<str>,
+    title: &str,
+    body: &str,
+    draft: bool,
+) -> Result<(PrNum, String)> {
+    let head = head.as_str();
+    let base = base.as_str();
     let mut args = vec![
-        "pr".to_owned(),
-        "create".to_owned(),
-        "--head".to_owned(),
-        head.as_str().to_owned(),
-        "--base".to_owned(),
-        base.as_str().to_owned(),
-        "--title".to_owned(),
-        title.to_owned(),
-        "--body".to_owned(),
-        body.to_owned(),
+        "pr", "create", "--head", head, "--base", base, "--title", title, "--body", body,
     ];
     if draft {
-        args.push("--draft".to_owned());
+        args.push("--draft");
     }
 
-    let str_args: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
     let output = Command::new("gh")
-        .args(&str_args)
+        .args(&args)
         .output()
         .context("Failed to run `gh pr create`")?;
 
