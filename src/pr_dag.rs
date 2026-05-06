@@ -809,7 +809,7 @@ pub fn render_log(
         // First line: change_id commit_id [bookmarks] [PR info]
         let mut line1_parts = vec![
             crate::style::change_id(&jj_entry.commit.change_id),
-            crate::style::commit_id_short(&cid.to_string()),
+            crate::style::commit_id_short(cid),
         ];
 
         // Add bookmark labels.

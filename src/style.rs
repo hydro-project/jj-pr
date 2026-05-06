@@ -104,8 +104,9 @@ pub fn change_id(id: &crate::types::ChangeId<str>) -> String {
     styled(CHANGE_ID, short)
 }
 
-pub fn commit_id_short(id: &str) -> String {
-    let short = &id[..12.min(id.len())];
+pub fn commit_id_short(id: &crate::types::CommitId<str>) -> String {
+    let s = id.as_str();
+    let short = &s[..12.min(s.len())];
     styled(COMMIT_ID, short)
 }
 

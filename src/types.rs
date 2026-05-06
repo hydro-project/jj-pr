@@ -102,26 +102,8 @@ macro_rules! newtype_str {
                 }
             }
 
-            impl PartialEq<str> for $Name {
-                fn eq(&self, other: &str) -> bool {
-                    self.0 == other
-                }
-            }
-
-            impl PartialEq<&str> for $Name {
-                fn eq(&self, other: &&str) -> bool {
-                    self.0 == *other
-                }
-            }
-
-            impl PartialEq<$Name> for &str {
-                fn eq(&self, other: &$Name) -> bool {
-                    *self == other.0
-                }
-            }
-
             impl $Name<str> {
-                /// Returns the inner `&str`.
+                /// Returns the inner `&str`, for passing to external APIs that require it.
                 pub fn as_str(&self) -> &str {
                     &self.0
                 }
