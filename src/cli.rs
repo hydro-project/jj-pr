@@ -72,7 +72,7 @@ pub struct UtilArgs {
 pub enum UtilCommand {
     /// Dump raw state (jj + gh) as JSON for test fixtures
     Dump,
-    /// Install recommended jj revset aliases for working with PRs
+    /// Install recommended jj aliases for working with PRs
     InstallAliases(InstallAliasesArgs),
 }
 
