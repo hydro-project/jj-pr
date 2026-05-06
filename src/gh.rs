@@ -223,7 +223,7 @@ impl From<CheckState> for CheckStatus {
 /// Discovers PRs both by number (from trailers) and by branch name (from local bookmarks).
 pub fn load_prs_and_default_branch(
     pr_nums: &[PrNum],
-    bookmarks: &[&str],
+    bookmarks: &[&Bookmark<str>],
 ) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, Bookmark)> {
     let mut pr_fields = String::new();
     for n in pr_nums {
@@ -239,7 +239,7 @@ pub fn load_prs_and_default_branch(
     for (i, bm) in bookmarks.iter().enumerate() {
         use std::fmt::Write;
         // Escape the bookmark name for safe embedding in a GraphQL string literal.
-        let escaped = bm.replace('\\', "\\\\").replace('"', "\\\"");
+        let escaped = bm.as_str().replace('\\', "\\\\").replace('"', "\\\"");
         write!(
             pr_fields,
             r#" br{i}: pullRequests(first:1, headRefName:"{escaped}") {{ nodes {{ {PR_NODE_FIELDS} }} }}"#,
@@ -337,14 +337,14 @@ pub fn load_prs_and_default_branch(
     Ok((prs.into_values().collect(), statuses, default_branch))
 }
 
-pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(PrNum, String)> {
+pub fn create_pr(head: &Bookmark<str>, base: &Bookmark<str>, title: &str, body: &str, draft: bool) -> Result<(PrNum, String)> {
     let mut args = vec![
         "pr".to_owned(),
         "create".to_owned(),
         "--head".to_owned(),
-        head.to_owned(),
+        head.as_str().to_owned(),
         "--base".to_owned(),
-        base.to_owned(),
+        base.as_str().to_owned(),
         "--title".to_owned(),
         title.to_owned(),
         "--body".to_owned(),
@@ -378,10 +378,10 @@ pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -
     Ok((pr_number, url))
 }
 
-pub fn edit_base(pr_number: u64, base: &str) -> Result<()> {
+pub fn edit_base(pr_number: u64, base: &Bookmark<str>) -> Result<()> {
     let num = pr_number.to_string();
     let output = Command::new("gh")
-        .args(["pr", "edit", &num, "--base", base])
+        .args(["pr", "edit", &num, "--base", base.as_str()])
         .output()
         .context("Failed to run `gh pr edit`")?;
 

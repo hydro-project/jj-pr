@@ -96,10 +96,10 @@ fn run() -> Result<()> {
     // Step 2: Extract PR numbers from trailers and local bookmark names.
     // Only look up bookmarks by branch name if their tip commit doesn't already have a trailer.
     let pr_nums = pr_dag::extract_pr_nums(&jj_entries);
-    let local_bookmarks: Vec<&str> = jj_entries
+    let local_bookmarks: Vec<&types::Bookmark<str>> = jj_entries
         .iter()
         .filter(|e| jj::parse_pr_trailer(&e.commit.description).is_none())
-        .flat_map(|e| e.local_bookmarks.iter().map(|bm| bm.name.as_str()))
+        .flat_map(|e| e.local_bookmarks.iter().map(|bm| &*bm.name))
         .collect();
 
     // Step 3: Single GraphQL call for PR data + statuses + default branch.

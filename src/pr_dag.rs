@@ -1001,7 +1001,7 @@ pub fn plan_sync(
 ) -> Result<SyncPlan> {
     // Block on unresolvable conflicted bookmarks.
     if !state.bookmarks_blocking.is_empty() {
-        let names: Vec<_> = state.bookmarks_blocking.iter().map(|s| s.as_str()).collect();
+        let names: Vec<_> = state.bookmarks_blocking.iter().map(|s| s.to_string()).collect();
         anyhow::bail!(
             "Conflicted bookmark(s): {}. Resolve with `jj bookmark` before syncing.",
             names.join(", ")
@@ -1216,7 +1216,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     crate::style::bookmark(bookmark),
                     crate::style::bookmark(new_base),
                 );
-                gh::edit_base(pr.get(), new_base.as_str())?;
+                gh::edit_base(pr.get(), new_base)?;
             }
         }
     }
@@ -1450,7 +1450,7 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
         crate::style::bookmark(&plan.bookmark),
         crate::style::bookmark(&plan.base),
     );
-    let (pr_number, pr_url) = gh::create_pr(plan.bookmark.as_str(), plan.base.as_str(), &plan.title, &plan.body, true)?;
+    let (pr_number, pr_url) = gh::create_pr(&plan.bookmark, &plan.base, &plan.title, &plan.body, true)?;
     eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
     if !plan.stamp_change_ids.is_empty() {
