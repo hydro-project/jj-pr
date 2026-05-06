@@ -296,6 +296,21 @@ pub fn git_push_bookmark(bookmark: &str) -> Result<()> {
     Ok(())
 }
 
+/// Get the configured push remote name. Reads `git.push` from jj config, defaults to "origin".
+pub fn push_remote() -> Result<String> {
+    let output = Command::new("jj")
+        .args(["config", "get", "git.push"])
+        .output()
+        .context("Failed to run `jj config get`")?;
+    if output.status.success() {
+        let remote = String::from_utf8(output.stdout)?.trim().trim_matches('"').to_owned();
+        if !remote.is_empty() {
+            return Ok(remote);
+        }
+    }
+    Ok("origin".to_owned())
+}
+
 /// Set a bookmark to point at a revision.
 #[expect(dead_code, reason = "used by track command (TODO)")]
 pub fn bookmark_set(name: &str, revision: &str) -> Result<()> {
@@ -326,6 +341,7 @@ pub fn bookmark_delete(name: &str) -> Result<()> {
 }
 
 /// Track a remote bookmark.
+#[expect(dead_code, reason = "may be needed for future workflows")]
 pub fn bookmark_track(name: &str, remote: &str) -> Result<()> {
     let refname = format!("{name}@{remote}");
     let output = Command::new("jj")
