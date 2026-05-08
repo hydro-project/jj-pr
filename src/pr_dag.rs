@@ -1192,7 +1192,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 // other PRs that may still be open).
                 let revset = crate::types::revset_union(change_ids.iter());
                 jj::rebase(&format!("roots({revset})"), "trunk()")?;
-                jj::abandon(&revset.to_string())?;
+                jj::abandon(&revset)?;
             }
             SyncAction::Push { bookmarks } => {
                 eprintln!(

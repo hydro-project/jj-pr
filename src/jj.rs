@@ -356,9 +356,9 @@ pub fn rebase(sources: &str, dest: &str) -> Result<()> {
 }
 
 /// Abandon revisions matching a revset.
-pub fn abandon(revset: &str) -> Result<()> {
+pub fn abandon(revset: &Revset) -> Result<()> {
     let output = Command::new("jj")
-        .args(["abandon", revset])
+        .args(["abandon", revset.as_str()])
         .output()
         .context("Failed to run `jj abandon`")?;
 
@@ -372,10 +372,9 @@ pub fn abandon(revset: &str) -> Result<()> {
 /// Push multiple bookmarks to the remote in a single command.
 pub fn git_push_bookmarks(bookmarks: &[&Bookmark<str>]) -> Result<()> {
     let mut args = vec!["git", "push"];
-    let strs: Vec<&str> = bookmarks.iter().map(|bm| bm.as_str()).collect();
-    for bm in &strs {
+    for bm in bookmarks {
         args.push("--bookmark");
-        args.push(bm);
+        args.push(bm.as_str());
     }
     let output = Command::new("jj")
         .args(&args)

@@ -39,7 +39,10 @@ impl<T: ?Sized + Display> AsRevset for ChangeId<T> {
 
 impl<T: ?Sized + Display> AsRevset for Bookmark<T> {
     fn as_revset(&self) -> Revset {
-        Revset(format!("bookmark({})", &self.0))
+        // Quote the bookmark name to handle special characters (e.g. `-`, `/`).
+        let name = self.0.to_string();
+        let escaped = name.replace('\\', "\\\\").replace('"', "\\\"");
+        Revset(format!("bookmark(\"{}\")", escaped))
     }
 }
 
