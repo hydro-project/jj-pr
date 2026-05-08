@@ -2,13 +2,14 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
 
 use anyhow::Result;
+use ref_cast::RefCast;
 use renderdag::{Ancestor, GraphRowRenderer, Renderer};
 use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 
 use crate::gh::{GhPr, PrNum};
 use crate::graph_algorithms;
 use crate::jj::{self, JjLogEntry};
-use crate::types::CommitId;
+use crate::types::{AsRevset, Bookmark, ChangeId, CommitId};
 
 new_key_type! {
     pub struct NodeKey;
@@ -39,7 +40,7 @@ pub struct RepoState {
     pub node_needs_sync: SparseSecondaryMap<NodeKey, bool>,
 
     /// Bookmarks with conflicting targets that block sync (user must resolve with `jj bookmark`).
-    pub bookmarks_blocking: BTreeSet<String>,
+    pub bookmarks_blocking: BTreeSet<Bookmark>,
 
     /// Nodes containing at least one commit with content conflicts.
     pub nodes_conflicted: SparseSecondaryMap<NodeKey, ()>,
@@ -90,8 +91,8 @@ impl Node {
 pub fn build(
     jj_entries: &[JjLogEntry],
     prs: &BTreeMap<PrNum, &GhPr>,
-    default_branch: &str,
-    tracked_bookmarks: Option<&BTreeSet<String>>,
+    default_branch: &Bookmark<str>,
+    tracked_bookmarks: Option<&BTreeSet<Bookmark>>,
 ) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
@@ -120,7 +121,7 @@ pub fn build(
 
         // GH PR head ref name -> GH PR data.
         // TODO(mingwei): handle multiple PRs sharing the same bookmark (e.g. Open + Closed/Merged).
-        let head_to_pr: HashMap<&str, &GhPr> = prs.values().map(|&pr| (&*pr.head_ref_name, pr)).collect();
+        let head_to_pr: HashMap<&Bookmark<str>, &GhPr> = prs.values().map(|&pr| (&*pr.head_ref_name, pr)).collect();
 
         let mut pr_local = HashSet::new();
 
@@ -184,8 +185,8 @@ pub fn build(
     // Compute pr_needs_push: compare local vs remote bookmark targets for PR bookmarks.
     // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.
     {
-        let mut local_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
-        let mut remote_targets: HashMap<&str, &CommitId<str>> = HashMap::new();
+        let mut local_targets: HashMap<&Bookmark<str>, &CommitId<str>> = HashMap::new();
+        let mut remote_targets: HashMap<&Bookmark<str>, &CommitId<str>> = HashMap::new();
         for jj_entry in jj_entries.iter() {
             for bm in &jj_entry.local_bookmarks {
                 local_targets.insert(&bm.name, &jj_entry.commit.commit_id);
@@ -600,7 +601,7 @@ impl RepoState {
     /// Returns the expected GitHub base branch name for a node, derived from the DAG.
     /// If the parent is another open PR, returns its head_ref_name.
     /// Otherwise returns the default branch name (trunk).
-    pub fn expected_base(&self, nk: NodeKey, prs: &BTreeMap<PrNum, &GhPr>, default_branch: &str) -> String {
+    pub fn expected_base(&self, nk: NodeKey, prs: &BTreeMap<PrNum, &GhPr>, default_branch: &Bookmark<str>) -> Bookmark {
         let Some(preds) = self.node_preds.get(nk) else {
             return default_branch.to_owned();
         };
@@ -808,7 +809,7 @@ pub fn render_log(
         // First line: change_id commit_id [bookmarks] [PR info]
         let mut line1_parts = vec![
             crate::style::change_id(&jj_entry.commit.change_id),
-            crate::style::commit_id_short(&cid.to_string()),
+            crate::style::commit_id_short(cid),
         ];
 
         // Add bookmark labels.
@@ -929,24 +930,24 @@ use crate::gh;
 #[derive(Debug)]
 pub enum SyncAction {
     /// Stamp a missing `PR: #N` trailer on a commit.
-    StampTrailer { change_id: String, pr: PrNum },
+    StampTrailer { change_id: ChangeId, pr: PrNum },
     /// Abandon commits of a merged PR and delete its bookmark if present.
     /// First rebases the merged commits onto trunk so that abandoning them
     /// reparents children to trunk while preserving other parent edges.
     AbandonMerged {
         /// Change IDs of all commits in this PR (stable across rewrites).
-        change_ids: Vec<String>,
+        change_ids: Vec<ChangeId>,
         pr: PrNum,
-        bookmark: String,
+        bookmark: Bookmark,
         bookmark_exists: bool,
     },
     /// Push bookmarks that differ from remote.
-    Push { bookmarks: Vec<(PrNum, String)> },
+    Push { bookmarks: Vec<(PrNum, Bookmark)> },
     /// Update a PR's base branch on GitHub.
     UpdateBase {
         pr: PrNum,
-        bookmark: String,
-        new_base: String,
+        bookmark: Bookmark,
+        new_base: Bookmark,
     },
 }
 
@@ -954,8 +955,7 @@ impl fmt::Display for SyncAction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SyncAction::StampTrailer { change_id, pr } => {
-                let short = &change_id[..12.min(change_id.len())];
-                write!(f, "stamp {pr} trailer on {short}")
+                write!(f, "stamp {pr} trailer on {change_id:.12}")
             }
             SyncAction::AbandonMerged {
                 pr,
@@ -992,14 +992,14 @@ pub fn plan_sync(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
-    default_branch: &str,
+    default_branch: &Bookmark<str>,
     // Merge commit OIDs that exist in the local repo (for stale trunk detection).
     // `None` means all merge commits are considered present (legacy behavior).
     existing_merge_commits: Option<&HashSet<CommitId>>,
 ) -> Result<SyncPlan> {
     // Block on unresolvable conflicted bookmarks.
     if !state.bookmarks_blocking.is_empty() {
-        let names: Vec<_> = state.bookmarks_blocking.iter().map(|s| s.as_str()).collect();
+        let names: Vec<_> = state.bookmarks_blocking.iter().map(|s| s.to_string()).collect();
         anyhow::bail!(
             "Conflicted bookmark(s): {}. Resolve with `jj bookmark` before syncing.",
             names.join(", ")
@@ -1010,9 +1010,9 @@ pub fn plan_sync(
     let mut warnings = Vec::new();
 
     // Bookmark names that exist locally (for determining if we need to delete during abandon).
-    let local_bookmark_names: HashSet<&str> = jj_entries
+    let local_bookmark_names: HashSet<&Bookmark<str>> = jj_entries
         .iter()
-        .flat_map(|e| e.local_bookmarks.iter().map(|bm| bm.name.as_str()))
+        .flat_map(|e| e.local_bookmarks.iter().map(|bm| &*bm.name))
         .collect();
 
     // 1. Stamp missing trailers.
@@ -1064,7 +1064,7 @@ pub fn plan_sync(
         if node_entries.is_empty() {
             continue;
         }
-        let change_ids: Vec<String> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
+        let change_ids: Vec<ChangeId> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
         actions.push(SyncAction::AbandonMerged {
             change_ids,
             pr: *pr_num,
@@ -1145,9 +1145,10 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     crate::style::pr_num(*pr, None),
                     crate::style::change_id(change_id),
                 );
-                let desc = jj::read_description(change_id)?;
+                let rev = change_id.as_revset();
+                let desc = jj::read_description(&rev)?;
                 let new_desc = jj::set_pr_trailer(&desc, *pr);
-                jj::describe_stdin(change_id, &new_desc)?;
+                jj::describe_stdin(&rev, &new_desc)?;
             }
             SyncAction::AbandonMerged {
                 change_ids,
@@ -1189,11 +1190,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 // We use change_ids for both steps (stable across rewrites).
                 // The revset targets only this PR's commits (not ancestors from
                 // other PRs that may still be open).
-                let revset = change_ids
-                    .iter()
-                    .map(|id| format!("change_id({id})"))
-                    .collect::<Vec<_>>()
-                    .join(" | ");
+                let revset = crate::types::revset_union(change_ids.iter());
                 jj::rebase(&format!("roots({revset})"), "trunk()")?;
                 jj::abandon(&revset)?;
             }
@@ -1207,7 +1204,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                         .collect::<Vec<_>>()
                         .join(", "),
                 );
-                let refs: Vec<&str> = bookmarks.iter().map(|(_, s)| s.as_str()).collect();
+                let refs: Vec<&Bookmark<str>> = bookmarks.iter().map(|(_, s)| &**s).collect();
                 jj::git_push_bookmarks(&refs)?;
             }
             SyncAction::UpdateBase { pr, bookmark, new_base } => {
@@ -1234,14 +1231,14 @@ fn find_base_branch(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
-    bookmark: &str,
-    default_branch: &str,
-) -> String {
+    bookmark: &Bookmark<str>,
+    default_branch: &Bookmark<str>,
+) -> Bookmark {
     // Find the tip commit for this bookmark.
     let tip_cid = jj_entries.iter().find_map(|e| {
         e.local_bookmarks
             .iter()
-            .any(|bm| bm.name == bookmark)
+            .any(|bm| *bm.name == *bookmark)
             .then_some(&*e.commit.commit_id)
     });
     let Some(tip_cid) = tip_cid else {
@@ -1295,12 +1292,12 @@ fn find_base_branch(
 /// The planned actions for creating a new PR.
 #[derive(Debug)]
 pub struct CreatePlan {
-    pub bookmark: String,
-    pub base: String,
+    pub bookmark: Bookmark,
+    pub base: Bookmark,
     pub title: String,
     pub body: String,
     /// Change IDs of commits that will be stamped with the PR trailer.
-    pub stamp_change_ids: Vec<String>,
+    pub stamp_change_ids: Vec<ChangeId>,
 }
 
 impl fmt::Display for CreatePlan {
@@ -1323,15 +1320,17 @@ pub fn plan_create(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
-    default_branch: &str,
+    default_branch: &Bookmark<str>,
     bookmark: &str,
     title: Option<&str>,
     body: Option<&str>,
 ) -> Result<CreatePlan> {
+    let bookmark_ref = Bookmark::ref_cast(bookmark);
+
     // Verify bookmark exists.
     let tip_entry = jj_entries
         .iter()
-        .find(|e| e.local_bookmarks.iter().any(|bm| bm.name == bookmark))
+        .find(|e| e.local_bookmarks.iter().any(|bm| *bm.name == *bookmark_ref))
         .with_context(|| {
             format!(
                 "bookmark '{}' not found — create it with `jj bookmark create {}`",
@@ -1343,7 +1342,7 @@ pub fn plan_create(
     let bm = tip_entry
         .local_bookmarks
         .iter()
-        .find(|bm| bm.name == bookmark)
+        .find(|bm| *bm.name == *bookmark_ref)
         .expect("bookmark must exist — already verified above");
     anyhow::ensure!(
         bm.target.len() == 1,
@@ -1353,7 +1352,7 @@ pub fn plan_create(
     );
 
     // Verify no PR already exists for this bookmark.
-    if let Some(existing) = prs.values().find(|pr| pr.head_ref_name == bookmark) {
+    if let Some(existing) = prs.values().find(|pr| *pr.head_ref_name == *bookmark_ref) {
         anyhow::bail!(
             "bookmark '{}' already has {} — use `jj-pr sync` to update it",
             bookmark,
@@ -1361,7 +1360,7 @@ pub fn plan_create(
         );
     }
 
-    let base = find_base_branch(state, prs, jj_entries, bookmark, default_branch);
+    let base = find_base_branch(state, prs, jj_entries, bookmark_ref, default_branch);
 
     let title = title.map(|s| s.to_owned()).unwrap_or_else(|| {
         tip_entry
@@ -1425,7 +1424,7 @@ pub fn plan_create(
     }
 
     Ok(CreatePlan {
-        bookmark: bookmark.to_owned(),
+        bookmark: Bookmark(bookmark.to_owned()),
         base,
         title,
         body,
@@ -1454,9 +1453,10 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
 
     if !plan.stamp_change_ids.is_empty() {
         for change_id in &plan.stamp_change_ids {
-            let desc = jj::read_description(change_id)?;
+            let rev = change_id.as_revset();
+            let desc = jj::read_description(&rev)?;
             let new_desc = jj::set_pr_trailer(&desc, pr_number);
-            jj::describe_stdin(change_id, &new_desc)?;
+            jj::describe_stdin(&rev, &new_desc)?;
         }
         eprintln!(
             "Stamped {} on {} commit(s)",

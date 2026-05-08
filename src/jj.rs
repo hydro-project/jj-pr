@@ -5,12 +5,12 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
 use crate::gh::PrNum;
-use crate::types::CommitId;
+use crate::types::{Bookmark, ChangeId, CommitId, Revset, revset_union};
 /// Raw commit data from `json(self)`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjCommit {
     pub commit_id: CommitId,
-    pub change_id: String,
+    pub change_id: ChangeId,
     pub parents: Vec<CommitId>,
     pub description: String,
 }
@@ -18,14 +18,14 @@ pub struct JjCommit {
 /// Bookmark reference from `json(local_bookmarks)` or `json(remote_bookmarks)`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjBookmark {
-    pub name: String,
+    pub name: Bookmark,
     pub target: Vec<Option<CommitId>>,
 }
 
 /// Remote bookmark reference from `json(remote_bookmarks)`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjRemoteBookmark {
-    pub name: String,
+    pub name: Bookmark,
     pub remote: Option<String>,
     pub target: Vec<Option<CommitId>>,
 }
@@ -169,7 +169,7 @@ pub fn load_entries() -> Result<Vec<JjLogEntry>> {
 }
 
 /// Load the set of bookmark names tracked on a given remote.
-pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<String>> {
+pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<Bookmark>> {
     let template = format!(r#"if(remote == "{remote}", name ++ "\n")"#);
     let output = Command::new("jj")
         .args(["bookmark", "list", "--tracked", "-T", &template])
@@ -182,7 +182,11 @@ pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<String>> {
     }
 
     let stdout = String::from_utf8(output.stdout).context("jj output not UTF-8")?;
-    Ok(stdout.lines().filter(|l| !l.is_empty()).map(|l| l.to_owned()).collect())
+    Ok(stdout
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(|l| Bookmark(l.to_owned()))
+        .collect())
 }
 
 pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
@@ -218,11 +222,7 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
         return Ok(HashSet::new());
     }
     // Use present() to gracefully handle missing commits (returns empty instead of erroring).
-    let inner = oids
-        .iter()
-        .map(|oid| format!("commit_id({oid})"))
-        .collect::<Vec<_>>()
-        .join(" | ");
+    let inner = revset_union(oids.iter().copied());
     let revset = format!("present({inner})");
     let output = Command::new("jj")
         .args(["log", "--no-graph", "-r", &revset, "-T", r#"commit_id ++ "\n""#])
@@ -243,9 +243,9 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
 }
 
 /// Read the description of a revision.
-pub fn read_description(revision: &str) -> Result<String> {
+pub fn read_description(revision: &Revset) -> Result<String> {
     let output = Command::new("jj")
-        .args(["log", "--no-graph", "-r", revision, "-T", "description"])
+        .args(["log", "--no-graph", "-r", revision.as_str(), "-T", "description"])
         .output()
         .context("Failed to run `jj log` for description")?;
     if !output.status.success() {
@@ -256,10 +256,10 @@ pub fn read_description(revision: &str) -> Result<String> {
 }
 
 /// Set the description of a revision via `jj describe --stdin`.
-pub fn describe_stdin(revision: &str, description: &str) -> Result<()> {
+pub fn describe_stdin(revision: &Revset, description: &str) -> Result<()> {
     use std::io::Write;
     let mut child = Command::new("jj")
-        .args(["describe", revision, "--stdin"])
+        .args(["describe", revision.as_str(), "--stdin"])
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
@@ -283,9 +283,9 @@ pub fn describe_stdin(revision: &str, description: &str) -> Result<()> {
 }
 
 /// Push a bookmark to the remote.
-pub fn git_push_bookmark(bookmark: &str) -> Result<()> {
+pub fn git_push_bookmark(bookmark: &Bookmark<str>) -> Result<()> {
     let output = Command::new("jj")
-        .args(["git", "push", "--bookmark", bookmark])
+        .args(["git", "push", "--bookmark", bookmark.as_str()])
         .output()
         .context("Failed to run `jj git push`")?;
 
@@ -298,9 +298,9 @@ pub fn git_push_bookmark(bookmark: &str) -> Result<()> {
 
 /// Set a bookmark to point at a revision.
 #[expect(dead_code, reason = "used by track command (TODO)")]
-pub fn bookmark_set(name: &str, revision: &str) -> Result<()> {
+pub fn bookmark_set(name: &Bookmark<str>, revision: &Revset) -> Result<()> {
     let output = Command::new("jj")
-        .args(["bookmark", "set", name, "-r", revision])
+        .args(["bookmark", "set", name.as_str(), "-r", revision.as_str()])
         .output()
         .context("Failed to run `jj bookmark set`")?;
 
@@ -312,9 +312,9 @@ pub fn bookmark_set(name: &str, revision: &str) -> Result<()> {
 }
 
 /// Delete a bookmark.
-pub fn bookmark_delete(name: &str) -> Result<()> {
+pub fn bookmark_delete(name: &Bookmark<str>) -> Result<()> {
     let output = Command::new("jj")
-        .args(["bookmark", "delete", name])
+        .args(["bookmark", "delete", name.as_str()])
         .output()
         .context("Failed to run `jj bookmark delete`")?;
 
@@ -326,7 +326,7 @@ pub fn bookmark_delete(name: &str) -> Result<()> {
 }
 
 /// Track a remote bookmark.
-pub fn bookmark_track(name: &str, remote: &str) -> Result<()> {
+pub fn bookmark_track(name: &Bookmark<str>, remote: &str) -> Result<()> {
     let refname = format!("{name}@{remote}");
     let output = Command::new("jj")
         .args(["bookmark", "track", &refname])
@@ -356,9 +356,9 @@ pub fn rebase(sources: &str, dest: &str) -> Result<()> {
 }
 
 /// Abandon revisions matching a revset.
-pub fn abandon(revset: &str) -> Result<()> {
+pub fn abandon(revset: &Revset) -> Result<()> {
     let output = Command::new("jj")
-        .args(["abandon", revset])
+        .args(["abandon", revset.as_str()])
         .output()
         .context("Failed to run `jj abandon`")?;
 
@@ -370,11 +370,11 @@ pub fn abandon(revset: &str) -> Result<()> {
 }
 
 /// Push multiple bookmarks to the remote in a single command.
-pub fn git_push_bookmarks(bookmarks: &[&str]) -> Result<()> {
+pub fn git_push_bookmarks(bookmarks: &[&Bookmark<str>]) -> Result<()> {
     let mut args = vec!["git", "push"];
     for bm in bookmarks {
         args.push("--bookmark");
-        args.push(bm);
+        args.push(bm.as_str());
     }
     let output = Command::new("jj")
         .args(&args)

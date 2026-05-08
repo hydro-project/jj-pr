@@ -6,7 +6,7 @@ use std::process::Command;
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
-use crate::types::CommitId;
+use crate::types::{Bookmark, CommitId};
 /// Newtype for GitHub PR numbers.
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(transparent)]
@@ -55,8 +55,8 @@ pub enum CheckStatus {
 #[serde(rename_all = "camelCase")]
 pub struct GhPr {
     pub number: PrNum,
-    pub head_ref_name: String,
-    pub base_ref_name: String,
+    pub head_ref_name: Bookmark,
+    pub base_ref_name: Bookmark,
     pub state: PrState,
     pub is_draft: bool,
     pub url: String,
@@ -134,15 +134,15 @@ where
 
 #[derive(Deserialize)]
 struct DefaultBranchRef {
-    name: String,
+    name: Bookmark,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PrNode {
     number: PrNum,
-    head_ref_name: String,
-    base_ref_name: String,
+    head_ref_name: Bookmark,
+    base_ref_name: Bookmark,
     state: PrState,
     is_draft: bool,
     url: String,
@@ -223,8 +223,8 @@ impl From<CheckState> for CheckStatus {
 /// Discovers PRs both by number (from trailers) and by branch name (from local bookmarks).
 pub fn load_prs_and_default_branch(
     pr_nums: &[PrNum],
-    bookmarks: &[&str],
-) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, String)> {
+    bookmarks: &[&Bookmark<str>],
+) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, Bookmark)> {
     let mut pr_fields = String::new();
     for n in pr_nums {
         use std::fmt::Write;
@@ -239,7 +239,7 @@ pub fn load_prs_and_default_branch(
     for (i, bm) in bookmarks.iter().enumerate() {
         use std::fmt::Write;
         // Escape the bookmark name for safe embedding in a GraphQL string literal.
-        let escaped = bm.replace('\\', "\\\\").replace('"', "\\\"");
+        let escaped = bm.as_str().replace('\\', "\\\\").replace('"', "\\\"");
         write!(
             pr_fields,
             r#" br{i}: pullRequests(first:1, headRefName:"{escaped}") {{ nodes {{ {PR_NODE_FIELDS} }} }}"#,
@@ -337,26 +337,24 @@ pub fn load_prs_and_default_branch(
     Ok((prs.into_values().collect(), statuses, default_branch))
 }
 
-pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -> Result<(PrNum, String)> {
+pub fn create_pr(
+    head: &Bookmark<str>,
+    base: &Bookmark<str>,
+    title: &str,
+    body: &str,
+    draft: bool,
+) -> Result<(PrNum, String)> {
+    let head = head.as_str();
+    let base = base.as_str();
     let mut args = vec![
-        "pr".to_owned(),
-        "create".to_owned(),
-        "--head".to_owned(),
-        head.to_owned(),
-        "--base".to_owned(),
-        base.to_owned(),
-        "--title".to_owned(),
-        title.to_owned(),
-        "--body".to_owned(),
-        body.to_owned(),
+        "pr", "create", "--head", head, "--base", base, "--title", title, "--body", body,
     ];
     if draft {
-        args.push("--draft".to_owned());
+        args.push("--draft");
     }
 
-    let str_args: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
     let output = Command::new("gh")
-        .args(&str_args)
+        .args(&args)
         .output()
         .context("Failed to run `gh pr create`")?;
 
@@ -378,10 +376,10 @@ pub fn create_pr(head: &str, base: &str, title: &str, body: &str, draft: bool) -
     Ok((pr_number, url))
 }
 
-pub fn edit_base(pr_number: u64, base: &str) -> Result<()> {
+pub fn edit_base(pr_number: u64, base: &Bookmark<str>) -> Result<()> {
     let num = pr_number.to_string();
     let output = Command::new("gh")
-        .args(["pr", "edit", &num, "--base", base])
+        .args(["pr", "edit", &num, "--base", base.as_str()])
         .output()
         .context("Failed to run `gh pr edit`")?;
 

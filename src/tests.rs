@@ -4,7 +4,7 @@ use super::InputData;
 use crate::gh::{CheckStatus, GhPr, PrNum, PrStatus, ReviewDecision};
 use crate::jj::{JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
-use crate::types::CommitId;
+use crate::types::{Bookmark, ChangeId, CommitId};
 
 fn render_show(input: &InputData) -> String {
     render_show_with_statuses(input, &BTreeMap::new())
@@ -111,14 +111,14 @@ fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str]
     JjLogEntry {
         commit: JjCommit {
             commit_id: CommitId(cid.to_owned()),
-            change_id: chid.to_owned(),
+            change_id: ChangeId(chid.to_owned()),
             parents: parents.iter().map(|s| CommitId(s.to_string())).collect(),
             description: desc.to_owned(),
         },
         local_bookmarks: bookmarks
             .iter()
             .map(|name| JjBookmark {
-                name: name.to_string(),
+                name: Bookmark(name.to_string()),
                 target: vec![Some(CommitId(cid.to_owned()))],
             })
             .collect(),
@@ -133,7 +133,7 @@ fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str]
 
 fn with_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e.remote_bookmarks.push(JjRemoteBookmark {
-        name: name.to_owned(),
+        name: Bookmark(name.to_owned()),
         remote: Some("origin".to_owned()),
         target: vec![Some(e.commit.commit_id.clone())],
     });
@@ -152,7 +152,7 @@ fn with_working_copy(mut e: JjLogEntry) -> JjLogEntry {
 
 fn with_git_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e.remote_bookmarks.push(JjRemoteBookmark {
-        name: name.to_owned(),
+        name: Bookmark(name.to_owned()),
         remote: Some("git".to_owned()),
         target: vec![Some(e.commit.commit_id.clone())],
     });
@@ -163,8 +163,8 @@ fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
     use crate::gh::PrState;
     GhPr {
         number: PrNum::new(number).unwrap(),
-        head_ref_name: head.to_owned(),
-        base_ref_name: base.to_owned(),
+        head_ref_name: Bookmark(head.to_owned()),
+        base_ref_name: Bookmark(base.to_owned()),
         state: PrState::Open,
         is_draft: true,
         url: format!("https://github.com/test/repo/pull/{number}"),
@@ -177,8 +177,8 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
     use crate::gh::PrState;
     GhPr {
         number: PrNum::new(number).unwrap(),
-        head_ref_name: head.to_owned(),
-        base_ref_name: base.to_owned(),
+        head_ref_name: Bookmark(head.to_owned()),
+        base_ref_name: Bookmark(base.to_owned()),
         state: PrState::Merged,
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
@@ -191,8 +191,8 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
     use crate::gh::PrState;
     GhPr {
         number: PrNum::new(number).unwrap(),
-        head_ref_name: head.to_owned(),
-        base_ref_name: base.to_owned(),
+        head_ref_name: Bookmark(head.to_owned()),
+        base_ref_name: Bookmark(base.to_owned()),
         state: PrState::Closed,
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
@@ -201,11 +201,11 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
     }
 }
 
-fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>, tracked_bookmarks: Option<BTreeSet<String>>) -> InputData {
+fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>, tracked_bookmarks: Option<BTreeSet<Bookmark>>) -> InputData {
     InputData {
         jj_entries: entries,
         prs,
-        default_branch: "main".to_owned(),
+        default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks,
         existing_merge_commits: None, // Legacy: all merge commits considered present.
     }
@@ -338,7 +338,7 @@ fn no_push_when_only_git_remote() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(1, "feat", "main")],
-        default_branch: "main".to_owned(),
+        default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: Some(BTreeSet::new()),
         existing_merge_commits: None, // Not tracked on origin.
     };
@@ -359,8 +359,8 @@ fn needs_push_tracked_but_no_origin_in_revset() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(1, "feat", "main")],
-        default_branch: "main".to_owned(),
-        tracked_bookmarks: Some(["feat".to_owned()].into()), // Tracked on origin.
+        default_branch: Bookmark("main".to_owned()),
+        tracked_bookmarks: Some([Bookmark("feat".to_owned())].into()), // Tracked on origin.
         existing_merge_commits: None,
     };
     insta::assert_snapshot!("needs_push_tracked_but_no_origin_in_revset", plan_sync(&f));
@@ -682,7 +682,7 @@ fn bookmark_name_collision_no_remote() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(42, "fix-typo", "main")],
-        default_branch: "main".to_owned(),
+        default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: Some(BTreeSet::new()),
         existing_merge_commits: None, // No bookmarks tracked.
     };
@@ -702,7 +702,7 @@ fn stale_trunk_skips_abandon() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr_merged(1, "feat", "main")],
-        default_branch: "main".to_owned(),
+        default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: None,
         existing_merge_commits: Some(std::collections::HashSet::new()), // Empty = nothing fetched.
     };

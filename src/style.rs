@@ -1,6 +1,7 @@
 use anstyle::{AnsiColor, Effects, Style};
 
 use crate::gh::PrState;
+use crate::types::{Bookmark, ChangeId, CommitId};
 
 // --- Glyphs ---
 pub const GLYPH_IMMUTABLE: &str = "◆";
@@ -84,8 +85,8 @@ pub fn pr_num(number: crate::gh::PrNum, url: Option<&str>) -> String {
     styled(PR_NUM, &linked)
 }
 
-pub fn bookmark(name: &str) -> String {
-    styled(BOOKMARK, name)
+pub fn bookmark(name: &Bookmark<str>) -> String {
+    styled(BOOKMARK, name.as_str())
 }
 
 pub fn status(state: PrState, is_draft: bool) -> String {
@@ -97,14 +98,16 @@ pub fn status(state: PrState, is_draft: bool) -> String {
     }
 }
 
-pub fn change_id(id: &str) -> String {
+pub fn change_id(id: &ChangeId<str>) -> String {
     // Show first 12 chars in bold magenta (like jj's unique prefix style).
-    let short = &id[..12.min(id.len())];
+    let s = id.as_str();
+    let short = &s[..12.min(s.len())];
     styled(CHANGE_ID, short)
 }
 
-pub fn commit_id_short(id: &str) -> String {
-    let short = &id[..12.min(id.len())];
+pub fn commit_id_short(id: &CommitId<str>) -> String {
+    let s = id.as_str();
+    let short = &s[..12.min(s.len())];
     styled(COMMIT_ID, short)
 }
 
@@ -121,8 +124,8 @@ pub fn empty_marker() -> String {
     styled(EMPTY, "(empty)")
 }
 
-pub fn bookmark_label(name: &str) -> String {
-    styled(BOOKMARK, name)
+pub fn bookmark_label(name: &Bookmark<str>) -> String {
+    styled(BOOKMARK, name.as_str())
 }
 
 #[expect(dead_code, reason = "available for UI")]
