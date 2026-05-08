@@ -1,6 +1,5 @@
 ---
 source: src/tests.rs
-assertion_line: 103
 expression: "render_log(&f, false)"
 input_file: src/fixtures/jj-pr-merge-needs-abandon-1778103977.json.gz
 ---
