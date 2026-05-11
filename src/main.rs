@@ -97,11 +97,11 @@ fn run() -> Result<()> {
     // We query both because trailers and bookmarks may reference different PRs
     // (e.g. stale trailers from a closed PR, bookmark pointing to a new PR).
     let pr_nums = pr_dag::extract_pr_nums(&jj_entries);
-    let local_bookmarks: BTreeSet<&types::Bookmark<str>> = jj_entries
+    let local_bookmarks = jj_entries
         .iter()
         .flat_map(|e| e.local_bookmarks.iter().map(|bm| &*bm.name))
-        .collect();
-    let local_bookmarks: Vec<&types::Bookmark<str>> = local_bookmarks.into_iter().collect();
+        .collect::<BTreeSet<_>>();
+    let local_bookmarks = local_bookmarks.into_iter().collect::<Vec<_>>();
 
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
     let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, &local_bookmarks)?;
