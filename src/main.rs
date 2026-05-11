@@ -101,10 +101,9 @@ fn run() -> Result<()> {
         .iter()
         .flat_map(|e| e.local_bookmarks.iter().map(|bm| &*bm.name))
         .collect::<BTreeSet<_>>();
-    let local_bookmarks = local_bookmarks.into_iter().collect::<Vec<_>>();
 
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
-    let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, &local_bookmarks)?;
+    let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, local_bookmarks)?;
 
     // Step 4: Load tracked bookmarks (fast, ~25ms).
     let tracked_bookmarks = jj::load_tracked_bookmarks("origin")?;

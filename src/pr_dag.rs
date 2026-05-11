@@ -242,11 +242,11 @@ pub fn build(
             // - All child `Node` types (and `NodeKey`s corresponding).
             // - The trailer PR num, if set.
             //
-        // We also consider global info:
-        // - If the trailer PR num has a local branch tracking it.
-        // - If there is already a node for the PR.
-        // - The PR state (e.g. merged) from GitHub data.
-        //
+            // We also consider global info:
+            // - If the trailer PR num has a local branch tracking it.
+            // - If there is already a node for the PR.
+            // - The PR state (e.g. merged) from GitHub data.
+            //
             let is_trunk_tip = jj_entry.is_trunk_tip;
             let tip_pr_nums = cid_pr_tip.get(cid).map(Deref::deref).unwrap_or_default();
             let child_nodes = cid_children
