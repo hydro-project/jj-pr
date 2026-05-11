@@ -221,9 +221,9 @@ impl From<CheckState> for CheckStatus {
 
 /// Fetch PR data + statuses + default branch in a single GraphQL call.
 /// Discovers PRs both by number (from trailers) and by branch name (from local bookmarks).
-pub fn load_prs_and_default_branch(
+pub fn load_prs_and_default_branch<'a>(
     pr_nums: &[PrNum],
-    bookmarks: &[&Bookmark<str>],
+    bookmarks: impl IntoIterator<Item = &'a Bookmark<str>>,
 ) -> Result<(Vec<GhPr>, BTreeMap<PrNum, PrStatus>, Bookmark)> {
     let mut pr_fields = String::new();
     for n in pr_nums {
@@ -236,7 +236,7 @@ pub fn load_prs_and_default_branch(
         .unwrap();
     }
     // Also look up PRs by branch name for bookmarks not already covered by trailers.
-    for (i, bm) in bookmarks.iter().enumerate() {
+    for (i, bm) in bookmarks.into_iter().enumerate() {
         use std::fmt::Write;
         // Escape the bookmark name for safe embedding in a GraphQL string literal.
         let escaped = bm.as_str().replace('\\', "\\\\").replace('"', "\\\"");

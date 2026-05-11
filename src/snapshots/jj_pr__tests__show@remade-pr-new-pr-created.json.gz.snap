@@ -1,0 +1,22 @@
+---
+source: src/tests.rs
+expression: render_show(&f)
+input_file: src/fixtures/remade-pr-new-pr-created.json.gz
+---
+○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m  [32mReady[0m  [1m[35mmingwei/sqs-rebase[0m
+│  feat(hydro_test): add example of AWS + SQS support
+│ [33m⚠[0m  [33mambiguous[0m shared between [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m (trailer: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m)
+│ │  [2m(restructure PRs to resolve — stack one on the other)[0m
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m  [33mDraft[0m  [1m[35mmingwei/dfir-mapped-singletons[0m
+│ │  WIP: refactor: allow #var references to any operator, not just stateful ones
+│ ○    [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m  [33mDraft[0m  [1m[35mmingwei/dfir-push-ops[0m
+│ ├─╮  Fix persist_mut push-side borrow conflict; remove Stratum
+│ │ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2844PR #2844]8;;[0m  [32mReady[0m  [1m[35mmingwei/push-fold[0m
+├───╯  feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2842PR #2842]8;;[0m  [32mReady[0m  [1m[35mmingwei/delete-firstrun[0m
+├─╯  refactor!: remove `is_first_run_this_tick()` — always true in inline DAG mode
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m*  [32mReady[0m  [1m[35mmingwei/delete-subgraph-id[0m
+│ │  refactor(dfir_rs): remove SubgraphTag, LoopTag, slot_vec
+│ [1m[36m◆[0m  [1m[32mtrunk()[0m
+├─╯
+[2m~[0m  [2m(elided revisions)[0m

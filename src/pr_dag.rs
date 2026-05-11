@@ -165,6 +165,7 @@ pub fn build(
                         } else if is_local_side {
                             // Only block on the local side to avoid duplicate insertions.
                             repo_state.bookmarks_blocking.insert(local_bookmark_name.to_owned());
+                            pr_local.insert(pr.number);
                         }
                     } else if local_bookmark.target.as_slice() == [Some(jj_entry.commit.commit_id.clone())] {
                         // Note `local_bookmark.target == vec![Some(jj_entry.commit.commit_id)]`
@@ -244,6 +245,7 @@ pub fn build(
             // We also consider global info:
             // - If the trailer PR num has a local branch tracking it.
             // - If there is already a node for the PR.
+            // - The PR state (e.g. merged) from GitHub data.
             //
             let is_trunk_tip = jj_entry.is_trunk_tip;
             let tip_pr_nums = cid_pr_tip.get(cid).map(Deref::deref).unwrap_or_default();
@@ -267,6 +269,7 @@ pub fn build(
                 trailer_pr_num,
                 &pr_local,
                 &already_found_prs,
+                prs,
             );
 
             // Insert or update
@@ -436,6 +439,7 @@ fn decide(
     trailer_pr_num: Option<PrNum>,
     pr_local: &HashSet<PrNum>,
     already_found_prs: &HashSet<PrNum>,
+    prs: &BTreeMap<PrNum, &GhPr>,
 ) -> (Option<Node>, Option<NodeKey>) {
     if is_trunk_tip {
         return (Some(Node::TrunkTip), None);
@@ -461,8 +465,9 @@ fn decide(
         (node, node_key) = 'a: {
             // Special case: if the `trailer_pr_num` is set but the PR is not tracked locally, try to treat this as the tip
             // of a merged PR with a deleted branch (needs abandoning).
-            // TODO(mingwei): maybe this should only be for merged PRs?
-            if !pr_local.contains(&trailer_pr_num) {
+            if !pr_local.contains(&trailer_pr_num)
+                && prs.get(&trailer_pr_num).is_some_and(|p| p.state == gh::PrState::Merged)
+            {
                 let _maybe_deleted_scope = tracing::info_span!("maybe_deleted", %trailer_pr_num).entered();
                 tracing::debug!("Found trailer PR num for change which may be the tip of a deleted branch");
 

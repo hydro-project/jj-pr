@@ -1,0 +1,62 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false)"
+input_file: src/fixtures/remade-pr-both-branches-exist.json.gz
+---
+○  [1m[35mluuklzktmzky[0m [34m8540d8511b0c[0m [1m[35mmingwei/delete-subgraph-id[0m [1m[35msandbox-d5d0431d-46d9-45d4-9cee-4bbc5cd58f18[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m* [32mReady[0m
+│  Remove unused slot_vec module from dfir_rs
+│ ○  [1m[35mwwzknkzponxn[0m [34m006273d8e6ba[0m [1m[35mmingwei/delete-delaytype[0m [1m[35mmingwei/delete-delaytype2[0m [1m[35msandbox-983e683f-b411-4b48-8268-af9a6da7e5a2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m [31mClosed[0m
+│ │  Remove DelayType::Stratum and DelayType::MonotoneAccum from operator input_delaytype_fn
+│ ○  [1m[35mnpvopmrtwqpt[0m [34m288a11230795[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m [31mClosed[0m
+│ │  Remove DelayType::Stratum and DelayType::MonotoneAccum variants
+│ ○  [1m[35mytupnywsnotm[0m [34md0625d4511e0[0m [1m[35mmingwei/dfir-mapped-singletons[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m [33mDraft[0m
+│ │  Add singleton propagation: allow #var references to derived singletons
+│ ○  [1m[35mnqsqpyyqktpn[0m [34m88494144ba5b[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m [33mDraft[0m
+│ │  refactor: allow #var references to any operator, not just stateful ones
+│ ○  [1m[35mmlpnpmytkllz[0m [34m20442db9f767[0m [1m[35mmingwei/dfir-push-ops[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ │  Remove Stratum from persist_mut and persist_mut_keyed
+│ ○  [1m[35mwsvorvvkqpus[0m [34m5e601ed85dea[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ │  Keep persist_mut and persist_mut_keyed with Stratum (need emit-on-flush)
+│ ○  [1m[35mwqrurskqwpty[0m [34mab3c6fee910c[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ │  Fix persist_mut push-side borrow conflict; remove Stratum
+│ ○  [1m[35mrkpvnlqktpkp[0m [34m9efd4121cc69[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ │  Investigate persist_mut push-side borrow conflict
+│ ○  [1m[35mnkvnkwksstry[0m [34m82de148eae37[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ │  Add push-side codegen for reduce_keyed; persist_mut stays pull-only
+│ ○  [1m[35mylyxylnpuwmp[0m [34m2783a82efcba[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ │  Add push-side codegen for reduce_keyed
+│ ○  [1m[35mlkpqzyknsysm[0m [34me555b988369b[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ │  Add push-side codegen for fold_keyed, fix FoldKeyed type generics
+│ ○  [1m[35mkvonvxptywnv[0m [34m96da8f0153d6[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ │  Add push-side codegen for sort and reduce operators
+│ ○  [1m[35moyqwypsoqono[0m [34m9786d724e003[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ │  Add push-side fold codegen and restore Stratum for persist_mut
+│ ○    [1m[35mltmuumlnlovs[0m [34m4a812cb54e8a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m [33mDraft[0m
+│ ├─╮  [32m(empty)[0m PR: #2849
+│ │ ○  [1m[35mlnsyskrtvnuk[0m [34m1540b5f43a8f[0m [1m[35mmingwei/delete-firstrun[0m [1m[35msandbox-c8509a3d-030d-4f32-aaf7-deb2b7ba256d[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2842PR #2842]8;;[0m [32mReady[0m
+│ │ │  Fix inaccurate doc comment on Context struct
+○ │ │  [1m[35mmzoyxxzzzpuy[0m [34m1accbee0e18e[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m* [32mReady[0m
+│ │ │  cleanup: remove SubgraphId, SubgraphTag, LoopId, LoopTag, simplify StateLifespan
+[1m[36m◆[0m │ │  [1m[35mqvvuprplvprm[0m [34m2c195832ef69[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│ │ │  refactor(dfir_rs): use slotmap SecondaryMap for metrics (#2810)
+│ ○ │  [1m[35moyymkmznptow[0m [34m5d2ac0cf84d0[0m [1m[35mmingwei/push-fold[0m [1m[35msandbox-ff4ea805-edb6-4a68-a9c0-062239670ae2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2844PR #2844]8;;[0m [32mReady[0m
+├─╯ │  feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators
+│   ○  [1m[35mpuzpwxuommrs[0m [34m5b4596307385[0m [1m[35msandbox-7c23386c-e5c4-4ac1-a851-f9344c48cb6e[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2842PR #2842]8;;[0m [32mReady[0m
+├───╯  refactor: remove is_first_run_this_tick() — always true in inline DAG mode
+│ ○  [1m[35mltloqrxtnksl[0m [34m8d8dd5915062[0m [1m[35mmingwei/sqs-rebase[0m [1m[35msandbox-236c6a7a-2597-4c57-95fc-46268f948b7a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  address PR #2746 review comments for AWS SQS support
+│ ○  [1m[35mzqxzmtrvpyzy[0m [34mb32fb1a1427c[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  re-enable aws feature gating
+│ ○  [1m[35mrpnyusryuvux[0m [34m65554c8873a2[0m [1m[35msandbox-2aebe241-661a-4fc0-8b40-bc0740d6c156[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  Fix clippy warnings in hydro_test SQS module
+│ ○  [1m[35mlsuxxwwlvloy[0m [34m09d079c68d44[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  enable credentials-login feature for getting login from `aws` cli
+│ ○  [1m[35mzkpvyxzntswr[0m [34mfe2ea6edd91c[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  enable credentials-login feature for getting login from `aws` cli
+│ ○  [1m[35mowkpmukqqlwx[0m [34m0a0e602baade[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  cleanup sqs one-write code
+│ ○  [1m[35monsovwqumzxm[0m [34m8584f2675e52[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  SQS working!
+│ ○  [1m[35mtuwnswwkwnov[0m [34m2da08fe62dc4[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+├─╯  add aws, sqs hydro_test
+[2m~[0m  [2m(elided revisions)[0m
