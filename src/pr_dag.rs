@@ -737,8 +737,7 @@ pub fn render_show(
                             crate::style::pr_num(*pr_id, url)
                         })
                         .collect();
-                    let label = if branch_prs.len() == 1 { "branch" } else { "branches" };
-                    parts.push(format!("{label}: {}", pr_links.join(", ")));
+                    parts.push(format!("branches: {}", pr_links.join(", ")));
                 }
                 if !trailer_prs.is_empty() {
                     let trailer_strs: Vec<String> = trailer_prs
@@ -748,8 +747,7 @@ pub fn render_show(
                             crate::style::pr_num(*pr_id, url)
                         })
                         .collect();
-                    let label = if trailer_prs.len() == 1 { "trailer" } else { "trailers" };
-                    parts.push(format!("{label}: {}", trailer_strs.join(", ")));
+                    parts.push(format!("trailers: {}", trailer_strs.join(", ")));
                 }
                 let line1 = format!(
                     "{}{sync_indicator} {}",
@@ -884,8 +882,7 @@ pub fn render_log(
                                 crate::style::pr_num(*pr_id, url)
                             })
                             .collect();
-                        let label = if trailer_prs.len() == 1 { "trailer" } else { "trailers" };
-                        parts.push(format!("{label}: {}", trailer_strs.join(", ")));
+                        parts.push(format!("trailers: {}", trailer_strs.join(", ")));
                     }
                     let ambig = format!(
                         "{}{sync_indicator} {}{}{}",

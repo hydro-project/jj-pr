@@ -5,9 +5,9 @@ input_file: src/fixtures/remade-pr-old-branch-deleted.json.gz
 ---
 ○  [1m[35mluuklzktmzky[0m [34m8540d8511b0c[0m [1m[35mmingwei/delete-subgraph-id[0m [1m[35msandbox-d5d0431d-46d9-45d4-9cee-4bbc5cd58f18[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2812PR #2812]8;;[0m* [32mReady[0m
 │  Remove unused slot_vec module from dfir_rs
-│ [33m⚠[0m  [1m[35mwwzknkzponxn[0m [34m006273d8e6ba[0m [1m[35mmingwei/delete-delaytype2[0m [1m[35msandbox-983e683f-b411-4b48-8268-af9a6da7e5a2[0m [33mambiguous[0m [33m[[0mtrailer: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m[33m][0m
+│ [33m⚠[0m  [1m[35mwwzknkzponxn[0m [34m006273d8e6ba[0m [1m[35mmingwei/delete-delaytype2[0m [1m[35msandbox-983e683f-b411-4b48-8268-af9a6da7e5a2[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m[33m][0m
 │ │  Remove DelayType::Stratum and DelayType::MonotoneAccum from operator input_delaytype_fn
-│ [33m⚠[0m  [1m[35mnpvopmrtwqpt[0m [34m288a11230795[0m [33mambiguous[0m [33m[[0mtrailer: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m[33m][0m
+│ [33m⚠[0m  [1m[35mnpvopmrtwqpt[0m [34m288a11230795[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m[33m][0m
 │ │  Remove DelayType::Stratum and DelayType::MonotoneAccum variants
 │ ○  [1m[35mytupnywsnotm[0m [34md0625d4511e0[0m [1m[35mmingwei/dfir-mapped-singletons[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m [33mDraft[0m
 │ │  Add singleton propagation: allow #var references to derived singletons
