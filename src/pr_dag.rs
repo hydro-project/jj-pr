@@ -728,18 +728,18 @@ pub fn render_show(
                 } else {
                     ""
                 };
-                let pr_links: Vec<String> = branch_prs
-                    .iter()
-                    .map(|pr_id| {
-                        let url = prs.get(pr_id).map(|p| p.url.as_str());
-                        crate::style::pr_num(*pr_id, url)
-                    })
-                    .collect();
-                let mut line1 = format!(
-                    "{}{sync_indicator} shared between {}",
-                    crate::style::warn("ambiguous"),
-                    pr_links.join(", "),
-                );
+                let mut parts: Vec<String> = Vec::new();
+                if !branch_prs.is_empty() {
+                    let pr_links: Vec<String> = branch_prs
+                        .iter()
+                        .map(|pr_id| {
+                            let url = prs.get(pr_id).map(|p| p.url.as_str());
+                            crate::style::pr_num(*pr_id, url)
+                        })
+                        .collect();
+                    let label = if branch_prs.len() == 1 { "branch" } else { "branches" };
+                    parts.push(format!("{label}: {}", pr_links.join(", ")));
+                }
                 if !trailer_prs.is_empty() {
                     let trailer_strs: Vec<String> = trailer_prs
                         .iter()
@@ -748,8 +748,14 @@ pub fn render_show(
                             crate::style::pr_num(*pr_id, url)
                         })
                         .collect();
-                    line1.push_str(&format!(" (trailer: {})", trailer_strs.join(", ")));
+                    let label = if trailer_prs.len() == 1 { "trailer" } else { "trailers" };
+                    parts.push(format!("{label}: {}", trailer_strs.join(", ")));
                 }
+                let line1 = format!(
+                    "{}{sync_indicator} {}",
+                    crate::style::warn("ambiguous"),
+                    parts.join(", "),
+                );
                 let has_shared = branch_prs.len() > 1;
                 let has_trailer_mismatch = !trailer_prs.is_subset(branch_prs);
                 let line2 = match (has_shared, has_trailer_mismatch) {
@@ -859,20 +865,17 @@ pub fn render_log(
                     } else {
                         ""
                     };
-                    let pr_strs: Vec<String> = branch_prs
-                        .iter()
-                        .map(|pr_id| {
-                            let url = prs.get(pr_id).map(|p| p.url.as_str());
-                            crate::style::pr_num(*pr_id, url)
-                        })
-                        .collect();
-                    let mut ambig = format!(
-                        "{}{sync_indicator} {}{}{}",
-                        crate::style::warn("ambiguous"),
-                        crate::style::warn("["),
-                        pr_strs.join(", "),
-                        crate::style::warn("]"),
-                    );
+                    let mut parts: Vec<String> = Vec::new();
+                    if !branch_prs.is_empty() {
+                        let pr_strs: Vec<String> = branch_prs
+                            .iter()
+                            .map(|pr_id| {
+                                let url = prs.get(pr_id).map(|p| p.url.as_str());
+                                crate::style::pr_num(*pr_id, url)
+                            })
+                            .collect();
+                        parts.push(pr_strs.join(", "));
+                    }
                     if !trailer_prs.is_empty() {
                         let trailer_strs: Vec<String> = trailer_prs
                             .iter()
@@ -881,8 +884,16 @@ pub fn render_log(
                                 crate::style::pr_num(*pr_id, url)
                             })
                             .collect();
-                        ambig.push_str(&format!(" (trailer: {})", trailer_strs.join(", ")));
+                        let label = if trailer_prs.len() == 1 { "trailer" } else { "trailers" };
+                        parts.push(format!("{label}: {}", trailer_strs.join(", ")));
                     }
+                    let ambig = format!(
+                        "{}{sync_indicator} {}{}{}",
+                        crate::style::warn("ambiguous"),
+                        crate::style::warn("["),
+                        parts.join("; "),
+                        crate::style::warn("]"),
+                    );
                     line1_parts.push(ambig);
                 }
             }

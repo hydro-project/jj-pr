@@ -75,7 +75,7 @@ If there are ambiguous commits, they show up as warnings with hints.
 │  refactor(dfir_lang): double-buffer defer_tick handoffs, remove intermediate subgraphs [ci-bench]
 │ ○  PR #2801*  Draft  mingwei/delete-state-api-usage
 ├─╯  refactor(dfir_lang): operators capture local state instead of using the state API [ci-bench]
-⚠  ambiguous shared between PR #2798, PR #2801 (trailer: PR #2798)
+⚠  ambiguous branches: PR #2798, PR #2801
 │  (restructure PRs to resolve — stack one on the other)
 ◆  trunk()
 ```
