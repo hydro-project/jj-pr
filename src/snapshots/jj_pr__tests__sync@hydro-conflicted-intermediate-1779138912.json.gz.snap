@@ -1,0 +1,8 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/hydro-conflicted-intermediate-1779138912.json.gz
+---
+skip push #2868 (mingwei/singleton-refs) — has content conflicts
+skip push #2872 (mingwei/singleton-refs-all) — ancestor has content conflicts
+push: #2862 (mingwei/handoff-ref), #2844 (mingwei/push-fold)
