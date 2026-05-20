@@ -1087,9 +1087,25 @@ pub fn plan_sync(
     }
 
     // 4. Push — collect all PR bookmarks that need pushing.
+    // Skip nodes that are conflicted or have a conflicted ancestor (can't push children
+    // of a conflicted intermediate).
     {
         let mut push_bookmarks = Vec::new();
+        let mut blocked_by_conflict: HashSet<NodeKey> = HashSet::new();
         for &nk in state.topo_order.iter() {
+            let conflicted_self = state.nodes_conflicted.contains_key(nk);
+            let conflicted_pred = state
+                .node_preds
+                .get(nk)
+                .unwrap()
+                .iter()
+                .any(|pred_nk| blocked_by_conflict.contains(pred_nk));
+
+            // Propagate blocked status from self & predecessors.
+            if conflicted_self || conflicted_pred {
+                blocked_by_conflict.insert(nk);
+            }
+
             if !state.node_needs_sync.contains_key(nk) {
                 continue;
             }
@@ -1102,9 +1118,16 @@ pub fn plan_sync(
                 gh_pr.state,
                 "bug: merged PR {pr_num} in node_needs_sync",
             );
-            if state.nodes_conflicted.contains_key(nk) {
+            if conflicted_self {
                 warnings.push(format!(
                     "skip push {} ({}) — has content conflicts",
+                    pr_num, gh_pr.head_ref_name,
+                ));
+                continue;
+            }
+            if conflicted_pred {
+                warnings.push(format!(
+                    "skip push {} ({}) — ancestor has content conflicts",
                     pr_num, gh_pr.head_ref_name,
                 ));
                 continue;
