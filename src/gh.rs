@@ -1,12 +1,34 @@
 use std::collections::BTreeMap;
 use std::fmt;
 use std::num::NonZeroU64;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::OnceLock;
 
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
 use crate::types::{Bookmark, CommitId};
+
+/// Resolve the git directory via `jj git root` (cached).
+fn git_dir() -> &'static Path {
+    static GIT_DIR: OnceLock<PathBuf> = OnceLock::new();
+    GIT_DIR.get_or_init(|| {
+        let output = Command::new("jj")
+            .args(["git", "root"])
+            .output()
+            .expect("failed to run `jj git root`");
+        assert!(output.status.success(), "jj git root failed");
+        PathBuf::from(String::from_utf8(output.stdout).unwrap().trim().to_owned())
+    })
+}
+
+/// Create a `gh` command with `GIT_DIR` set so it works from any jj workspace.
+fn gh_command() -> Command {
+    let mut cmd = Command::new("gh");
+    cmd.env("GIT_DIR", git_dir());
+    cmd
+}
 /// Newtype for GitHub PR numbers.
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(transparent)]
@@ -251,7 +273,7 @@ pub fn load_prs_and_default_branch<'a>(
         "query($owner: String!, $repo: String!) {{ repository(owner: $owner, name: $repo) {{ defaultBranchRef {{ name }}{pr_fields} }} }}"
     );
 
-    let output = Command::new("gh")
+    let output = gh_command()
         .args([
             "api",
             "graphql",
@@ -353,7 +375,7 @@ pub fn create_pr(
         args.push("--draft");
     }
 
-    let output = Command::new("gh")
+    let output = gh_command()
         .args(&args)
         .output()
         .context("Failed to run `gh pr create`")?;
@@ -378,7 +400,7 @@ pub fn create_pr(
 
 pub fn edit_base(pr_number: u64, base: &Bookmark<str>) -> Result<()> {
     let num = pr_number.to_string();
-    let output = Command::new("gh")
+    let output = gh_command()
         .args(["pr", "edit", &num, "--base", base.as_str()])
         .output()
         .context("Failed to run `gh pr edit`")?;
@@ -398,7 +420,7 @@ pub fn set_ready(pr_number: u64, ready: bool) -> Result<()> {
     } else {
         vec!["pr", "ready", &num, "--undo"]
     };
-    let output = Command::new("gh")
+    let output = gh_command()
         .args(&args)
         .output()
         .context("Failed to run `gh pr ready`")?;
