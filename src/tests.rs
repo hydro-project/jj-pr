@@ -6,11 +6,11 @@ use crate::jj::{JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
 use crate::types::{Bookmark, ChangeId, CommitId};
 
-fn render_show(input: &InputData) -> String {
-    render_show_with_statuses(input, &BTreeMap::new())
+fn render_show(input: &InputData, show_all: bool) -> String {
+    render_show_with_statuses(input, &BTreeMap::new(), show_all)
 }
 
-fn render_show_filtered(input: &InputData) -> String {
+fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, PrStatus>, show_all: bool) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
     let state = pr_dag::build(
@@ -21,22 +21,7 @@ fn render_show_filtered(input: &InputData) -> String {
     )
     .unwrap();
     let mut buf = Vec::new();
-    pr_dag::render_show(&state, &prs, &BTreeMap::new(), false, &mut buf).unwrap();
-    String::from_utf8(buf).unwrap()
-}
-
-fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, PrStatus>) -> String {
-    crate::style::set_force_color(true);
-    let prs = input.prs_map();
-    let state = pr_dag::build(
-        &input.jj_entries,
-        &prs,
-        &input.default_branch,
-        input.tracked_bookmarks.as_ref(),
-    )
-    .unwrap();
-    let mut buf = Vec::new();
-    pr_dag::render_show(&state, &prs, pr_statuses, true, &mut buf).unwrap();
+    pr_dag::render_show(&state, &prs, pr_statuses, show_all, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
@@ -114,7 +99,7 @@ fn fixture_files() {
         let mut json = String::new();
         std::io::Read::read_to_string(&mut decoder, &mut json).unwrap();
         let f: InputData = serde_json::from_str(&json).expect("failed to parse fixture JSON");
-        insta::assert_snapshot!("show", render_show(&f));
+        insta::assert_snapshot!("show", render_show(&f, true));
         insta::assert_snapshot!("log", render_log(&f, false));
         insta::assert_snapshot!("sync", plan_sync(&f));
     });
@@ -242,7 +227,7 @@ fn single_pr() {
         vec![gh_pr(1, "feat", "main")],
         None,
     );
-    insta::assert_snapshot!("single_pr_show", render_show(&f));
+    insta::assert_snapshot!("single_pr_show", render_show(&f, true));
     insta::assert_snapshot!("single_pr_log", render_log(&f, false));
     insta::assert_snapshot!("single_pr_sync", plan_sync(&f));
 }
@@ -265,7 +250,7 @@ fn current_change() {
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
         None,
     );
-    insta::assert_snapshot!("current_change_show", render_show(&f));
+    insta::assert_snapshot!("current_change_show", render_show(&f, true));
     insta::assert_snapshot!("current_change_log", render_log(&f, false));
 }
 
@@ -286,7 +271,7 @@ fn stacked_prs() {
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
         None,
     );
-    insta::assert_snapshot!("stacked_prs_show", render_show(&f));
+    insta::assert_snapshot!("stacked_prs_show", render_show(&f, true));
     insta::assert_snapshot!("stacked_prs_log", render_log(&f, false));
     insta::assert_snapshot!("stacked_prs_sync", plan_sync(&f));
 }
@@ -303,7 +288,7 @@ fn diamond_ambiguous() {
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "main")],
         None,
     );
-    insta::assert_snapshot!("diamond_ambiguous_show", render_show(&f));
+    insta::assert_snapshot!("diamond_ambiguous_show", render_show(&f, true));
     insta::assert_snapshot!("diamond_ambiguous_log", render_log(&f, true));
 }
 
@@ -321,7 +306,7 @@ fn merged_parent() {
         vec![gh_pr_merged(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
         None,
     );
-    insta::assert_snapshot!("merged_parent_show", render_show(&f));
+    insta::assert_snapshot!("merged_parent_show", render_show(&f, true));
     insta::assert_snapshot!("merged_parent_sync", plan_sync(&f));
 }
 
@@ -336,7 +321,7 @@ fn needs_push() {
         vec![gh_pr(1, "feat", "main")],
         None,
     );
-    insta::assert_snapshot!("needs_push_show", render_show(&f));
+    insta::assert_snapshot!("needs_push_show", render_show(&f, true));
     insta::assert_snapshot!("needs_push_sync", plan_sync(&f));
 }
 
@@ -398,7 +383,7 @@ fn base_mismatch() {
         vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "main")], // wrong base for #2
         None,
     );
-    insta::assert_snapshot!("base_mismatch_show", render_show(&f));
+    insta::assert_snapshot!("base_mismatch_show", render_show(&f, true));
     insta::assert_snapshot!("base_mismatch_sync", plan_sync(&f));
 }
 
@@ -459,7 +444,7 @@ fn merge_child() {
         ],
         None,
     );
-    insta::assert_snapshot!("merge_child_show", render_show(&f));
+    insta::assert_snapshot!("merge_child_show", render_show(&f, true));
     insta::assert_snapshot!("merge_child_log", render_log(&f, false));
 }
 
@@ -507,7 +492,7 @@ fn conflicted_bookmark_merged_pr_with_null() {
         vec![gh_pr_merged(1, "feat", "main")],
         None,
     );
-    insta::assert_snapshot!("conflicted_merged_null_show", render_show(&f));
+    insta::assert_snapshot!("conflicted_merged_null_show", render_show(&f, true));
     insta::assert_snapshot!("conflicted_merged_null_sync", plan_sync(&f));
 }
 
@@ -532,7 +517,7 @@ fn conflicted_bookmark_open_pr_blocks_sync() {
         vec![gh_pr(1, "feat", "main")],
         None,
     );
-    insta::assert_snapshot!("conflicted_open_show", render_show(&f));
+    insta::assert_snapshot!("conflicted_open_show", render_show(&f, true));
     insta::assert_snapshot!("conflicted_open_log", render_log(&f, false));
     insta::assert_snapshot!("conflicted_open_blocks_sync", plan_sync(&f));
 }
@@ -555,7 +540,7 @@ fn conflicted_working_copy() {
         vec![gh_pr(1, "feat", "main")],
         None,
     );
-    insta::assert_snapshot!("conflicted_working_copy_show", render_show(&f));
+    insta::assert_snapshot!("conflicted_working_copy_show", render_show(&f, true));
     insta::assert_snapshot!("conflicted_working_copy_log", render_log(&f, false));
 }
 
@@ -617,7 +602,7 @@ fn ci_review_status_indicators() {
             },
         ),
     ]);
-    insta::assert_snapshot!("ci_review_status_show", render_show_with_statuses(&f, &statuses));
+    insta::assert_snapshot!("ci_review_status_show", render_show_with_statuses(&f, &statuses, true));
 }
 
 #[test]
@@ -742,10 +727,10 @@ fn closed_pr_hidden_by_default() {
         vec![gh_pr(1, "feat-a", "main"), gh_pr_closed(2, "feat-b", "feat-a")],
         None,
     );
-    insta::assert_snapshot!("closed_pr_hidden_show", render_show_filtered(&f));
+    insta::assert_snapshot!("closed_pr_hidden_show", render_show(&f, false));
     insta::assert_snapshot!("closed_pr_hidden_log", render_log(&f, false));
     // With --all, closed PR is visible.
-    insta::assert_snapshot!("closed_pr_visible_show", render_show(&f));
+    insta::assert_snapshot!("closed_pr_visible_show", render_show(&f, true));
     insta::assert_snapshot!("closed_pr_visible_log", render_log(&f, true));
 }
 
@@ -767,6 +752,6 @@ fn closed_pr_with_open_child_stays_visible() {
         vec![gh_pr_closed(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
         None,
     );
-    insta::assert_snapshot!("closed_pr_with_open_child_show", render_show_filtered(&f));
+    insta::assert_snapshot!("closed_pr_with_open_child_show", render_show(&f, false));
     insta::assert_snapshot!("closed_pr_with_open_child_log", render_log(&f, false));
 }
