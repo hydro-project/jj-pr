@@ -743,8 +743,10 @@ fn closed_pr_hidden_by_default() {
         None,
     );
     insta::assert_snapshot!("closed_pr_hidden_show", render_show_filtered(&f));
+    insta::assert_snapshot!("closed_pr_hidden_log", render_log(&f, false));
     // With --all, closed PR is visible.
     insta::assert_snapshot!("closed_pr_visible_show", render_show(&f));
+    insta::assert_snapshot!("closed_pr_visible_log", render_log(&f, true));
 }
 
 #[test]
@@ -766,4 +768,5 @@ fn closed_pr_with_open_child_stays_visible() {
         None,
     );
     insta::assert_snapshot!("closed_pr_with_open_child_show", render_show_filtered(&f));
+    insta::assert_snapshot!("closed_pr_with_open_child_log", render_log(&f, false));
 }
