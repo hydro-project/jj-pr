@@ -36,7 +36,7 @@ pub struct ShowArgs {
 
 #[derive(clap::Args, Clone)]
 pub struct LogArgs {
-    /// Show JJ changes that are not associated with any PRs
+    /// Show all JJ changes, including those not associated with any active PRs
     #[arg(long)]
     pub all: bool,
 }
