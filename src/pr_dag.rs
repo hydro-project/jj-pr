@@ -49,7 +49,7 @@ pub struct RepoState {
     pub current_node: Option<NodeKey>,
 
     /// Closed PR nodes that can be hidden from display (leaf-only: all successors also hidden).
-    pub hidden_nodes: HashSet<NodeKey>,
+    pub hidden_nodes: SparseSecondaryMap<NodeKey, ()>,
 }
 
 /// Represents a contiguous set of changes/commits within the JJ graph, usually for a PR.
@@ -116,7 +116,7 @@ pub fn build(
         bookmarks_blocking,
         nodes_conflicted,
         current_node: None,
-        hidden_nodes: HashSet::new(),
+        hidden_nodes: SparseSecondaryMap::new(),
     };
 
     let (cid_pr_tip, pr_local) = {
@@ -436,18 +436,25 @@ pub fn build(
     // Compute hidden_nodes: closed PRs without sync needs whose children are all hidden.
     // Reverse topo order = children before parents, so we know child visibility first.
     for &nk in repo_state.topo_order.iter().rev() {
-        let dominated_by_closed = matches!(repo_state.nodes.get(nk), Some(Node::Pr(pr_id)) if
-            prs.get(pr_id).is_some_and(|p| p.state == gh::PrState::Closed)
-            && !repo_state.node_needs_sync.contains_key(nk));
-        if !dominated_by_closed {
+        // Only PR nodes can be hidden.
+        let Some(Node::Pr(pr_id)) = repo_state.nodes.get(nk) else {
+            continue;
+        };
+        // Only closed PRs are hidden.
+        if !prs.get(pr_id).is_some_and(|p| p.state == gh::PrState::Closed) {
             continue;
         }
+        // Keep visible if there are pending sync actions.
+        if repo_state.node_needs_sync.contains_key(nk) {
+            continue;
+        }
+        // Keep visible if any child is visible.
         let all_succs_hidden = repo_state
             .node_succs
             .get(nk)
-            .is_none_or(|succs| succs.iter().all(|s| repo_state.hidden_nodes.contains(s)));
+            .is_none_or(|succs| succs.iter().all(|&s| repo_state.hidden_nodes.contains_key(s)));
         if all_succs_hidden {
-            repo_state.hidden_nodes.insert(nk);
+            repo_state.hidden_nodes.insert(nk, ());
         }
     }
 
@@ -706,7 +713,7 @@ pub fn render_show(
         .build_box_drawing();
 
     for &node_key in state.topo_order.iter().rev() {
-        if !show_all && state.hidden_nodes.contains(&node_key) {
+        if !show_all && state.hidden_nodes.contains_key(node_key) {
             continue;
         }
 
@@ -835,7 +842,7 @@ pub fn render_log(
             tracing::trace!("Skipping commit not in any PRs.");
             continue;
         };
-        if !show_all && node_key.is_some_and(|nk| state.hidden_nodes.contains(&nk)) {
+        if !show_all && node_key.is_some_and(|nk| state.hidden_nodes.contains_key(nk)) {
             continue;
         }
 
