@@ -10,6 +10,21 @@ fn render_show(input: &InputData) -> String {
     render_show_with_statuses(input, &BTreeMap::new())
 }
 
+fn render_show_filtered(input: &InputData) -> String {
+    crate::style::set_force_color(true);
+    let prs = input.prs_map();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
+    let mut buf = Vec::new();
+    pr_dag::render_show(&state, &prs, &BTreeMap::new(), false, &mut buf).unwrap();
+    String::from_utf8(buf).unwrap()
+}
+
 fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, PrStatus>) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
@@ -21,7 +36,7 @@ fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, Pr
     )
     .unwrap();
     let mut buf = Vec::new();
-    pr_dag::render_show(&state, &prs, pr_statuses, &mut buf).unwrap();
+    pr_dag::render_show(&state, &prs, pr_statuses, true, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
@@ -707,4 +722,48 @@ fn stale_trunk_skips_abandon() {
         existing_merge_commits: Some(std::collections::HashSet::new()), // Empty = nothing fetched.
     };
     insta::assert_snapshot!("stale_trunk_skips_abandon", plan_sync(&f));
+}
+
+#[test]
+fn closed_pr_hidden_by_default() {
+    // Closed leaf PR #2 should be hidden; open PR #1 stays visible.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr_closed(2, "feat-b", "feat-a")],
+        None,
+    );
+    insta::assert_snapshot!("closed_pr_hidden_show", render_show_filtered(&f));
+    // With --all, closed PR is visible.
+    insta::assert_snapshot!("closed_pr_visible_show", render_show(&f));
+}
+
+#[test]
+fn closed_pr_with_open_child_stays_visible() {
+    // Closed PR #1 has open child PR #2 — should NOT be hidden.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr_closed(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+        None,
+    );
+    insta::assert_snapshot!("closed_pr_with_open_child_show", render_show_filtered(&f));
 }

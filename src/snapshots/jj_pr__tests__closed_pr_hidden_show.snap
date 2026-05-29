@@ -1,0 +1,8 @@
+---
+source: src/tests.rs
+expression: render_show_filtered(&f)
+---
+○  [1m[36m]8;;https://github.com/test/repo/pull/1PR #1]8;;[0m  [33mDraft[0m  [1m[35mfeat-a[0m
+│  PR #1
+[1m[36m◆[0m  [1m[32mtrunk()[0m
+[2m~[0m  [2m(elided revisions)[0m

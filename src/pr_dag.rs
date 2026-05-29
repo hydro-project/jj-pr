@@ -670,19 +670,61 @@ fn ci_review_indicators(status: &gh::PrStatus) -> String {
     format!(" {}", parts.join(" "))
 }
 
+/// Compute the set of nodes to hide in `render_show`.
+///
+/// A closed PR is hidden if it has no pending sync actions AND all of its
+/// successors (children) are also hidden. This means hidden nodes are always
+/// at the "leaf tips" of the graph — no visible node will ever reference a
+/// hidden node as a parent, so no edge reconnection is needed.
+fn compute_hidden_nodes(
+    state: &RepoState,
+    prs: &BTreeMap<PrNum, &GhPr>,
+) -> HashSet<NodeKey> {
+    let mut hidden = HashSet::new();
+    // Reverse topo order = children before parents, so we know child visibility first.
+    for &nk in state.topo_order.iter().rev() {
+        let is_closeable = matches!(state.nodes.get(nk), Some(Node::Pr(pr_id)) if
+            prs.get(pr_id).is_some_and(|p| p.state == gh::PrState::Closed)
+            && !state.node_needs_sync.contains_key(nk));
+        if !is_closeable {
+            continue;
+        }
+        // Only hide if all successors are also hidden (or there are none).
+        let all_succs_hidden = state
+            .node_succs
+            .get(nk)
+            .is_none_or(|succs| succs.iter().all(|s| hidden.contains(s)));
+        if all_succs_hidden {
+            hidden.insert(nk);
+        }
+    }
+    hidden
+}
+
 /// Render the PR DAG as a graph.
 pub fn render_show(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
+    show_all: bool,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
+    let hidden = if show_all {
+        HashSet::new()
+    } else {
+        compute_hidden_nodes(state, prs)
+    };
+
     let mut renderer = GraphRowRenderer::new()
         .output()
         .with_min_row_height(1)
         .build_box_drawing();
 
     for &node_key in state.topo_order.iter().rev() {
+        if hidden.contains(&node_key) {
+            continue;
+        }
+
         let parents = state
             .node_preds
             .get(node_key)

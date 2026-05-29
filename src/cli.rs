@@ -28,7 +28,11 @@ pub enum Command {
 }
 
 #[derive(clap::Args, Clone)]
-pub struct ShowArgs {}
+pub struct ShowArgs {
+    /// Show all PRs including closed ones
+    #[arg(long)]
+    pub all: bool,
+}
 
 #[derive(clap::Args, Clone)]
 pub struct LogArgs {

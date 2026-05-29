@@ -80,7 +80,7 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
     let yes = cli.yes;
 
-    let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs {}));
+    let command = cli.command.unwrap_or(Command::Show(cli::ShowArgs { all: false }));
 
     // Handle commands that don't need jj/gh state early.
     if let Command::Util(cli::UtilArgs {
@@ -144,7 +144,7 @@ fn run() -> Result<()> {
     )?;
 
     let result = match command {
-        Command::Show(_args) => pr_dag::render_show(&state, &prs, &pr_statuses, &mut std::io::stdout()),
+        Command::Show(args) => pr_dag::render_show(&state, &prs, &pr_statuses, args.all, &mut std::io::stdout()),
         Command::Log(args) => pr_dag::render_log(
             &state,
             &prs,
