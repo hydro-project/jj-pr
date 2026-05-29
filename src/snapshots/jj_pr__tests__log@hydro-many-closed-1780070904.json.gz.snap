@@ -31,26 +31,10 @@ input_file: src/fixtures/hydro-many-closed-1780070904.json.gz
 │ │  Fix StatePush: cfg-gate module, fix docs, propagate poll_ready/poll_finalize
 │ ○  [1m[35mvxywkykomzsv[0m [34me42ddcb6a8b7[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2883PR #2883]8;;[0m [32mReady[0m
 │ │  cleanups
-│ │ ○  [1m[35mluuzwxmsvylk[0m [34m48f1728d0b68[0m [1m[35mmingwei/blink-experiment[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
-│ │ │  reset alloc at start of tick rather than end
-│ │ │ ○    [1m[35mlpnmkrxuxmwm[0m [34m92f80dd2a253[0m [1m[35mmingwei/bumpalo-experiment-2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m [31mClosed[0m
-│ │ │ ├─╮  [32m(empty)[0m reset and use vec (bumpalo)
-│ │ │ [33m⚠[0m │  [1m[35mykyzqzxoowkq[0m [34m96fc0d1ccfba[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m[33m][0m
-│ │ │ │ │  Fix defer_tick double-buffering to use O(1) mem::swap instead of O(n) drain/extend
-│ │ │ │ [33m⚠[0m  [1m[35mqmowsoonkvzq[0m [34mf34852be5457[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m[33m][0m
-│ │ │ ├─╯  actually reset alloc at end of tick
-│ │ ○ │    [1m[35mouqqvvlqznrk[0m [34mc84699effa9c[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
-│ │ ├───╮  [32m(empty)[0m reset and use vec
-│ │ ○ │ │  [1m[35mkkyxzvrxxnkr[0m [34m7abe5e474a4d[0m [1m[35msandbox-9eed2eb8-ab56-4f48-8f36-1ef7fb2a8902[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
-│ │ │ │ │  Fix defer_tick double-buffering to use O(1) mem::swap instead of O(n) drain/extend
-│ │ │ │ ○  [1m[35muryrxxlznzyv[0m [34m0c67c495cd02[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
-│ │ ├───╯  actually reset alloc at end of tick
-│ │ │ │ [33m⚠[0m  [1m[35mryqstrtpykvo[0m [34m61165f54379d[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2879PR #2879]8;;[0m[33m][0m
-├───────╯  chore(hydro_lang): bump Stageleft version [ci-full]
-│ │ ○ │  [1m[35mnxmvlvosnxlv[0m [34mb2f42ee0b2ec[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
-│ │ │ │  use larger page size
-│ │ ○ │  [1m[35mnmyzyvywqnxn[0m [34m9b34567e9719[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
-│ │ ├─╯  experiment: [ci-bench] replace bumpalo with blink-alloc for dfir handoff buffers
+│ │ [33m⚠[0m  [1m[35mykyzqzxoowkq[0m [34m96fc0d1ccfba[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m[33m][0m
+│ │ │  Fix defer_tick double-buffering to use O(1) mem::swap instead of O(n) drain/extend
+│ │ │ [33m⚠[0m  [1m[35mqmowsoonkvzq[0m [34mf34852be5457[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m[33m][0m
+│ │ ├─╯  actually reset alloc at end of tick
 │ │ [33m⚠[0m  [1m[35mzlmrksqpkprn[0m [34m8daf0166c71b[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
 │ │ │  Simplify non_lazy_buf_idents by storing buf_ident in back_buffer_idents_laziness tuple
 │ │ [33m⚠[0m  [1m[35mtvotpvuzsmxy[0m [34ma9cde23bbbb9[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
@@ -59,34 +43,6 @@ input_file: src/fixtures/hydro-many-closed-1780070904.json.gz
 │ │ │  kinda working?
 │ │ [33m⚠[0m  [1m[35mulskwstupsut[0m [34mbf3b7f57b8e7[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
 ├───╯  wip
-│ │ ○  [1m[35mtuutonplnoll[0m [34mf0cb9fe529c1[0m [1m[35mmingwei/tickslab-experiment[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2887PR #2887]8;;[0m [31mClosed[0m
-│ │ │  Wire TickSlab into DFIR codegen, replacing Vec for non-defer handoffs
-│ │ ○  [1m[35mvwlpxoxwuzkl[0m [34m9670ab18182b[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2887PR #2887]8;;[0m [31mClosed[0m
-│ │ │  Rewrite TickSlab with RefCell interior mutability
-│ │ ○  [1m[35mxrlrnpmysmyy[0m [34m33005d7c156a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2887PR #2887]8;;[0m [31mClosed[0m
-├───╯  Prototype TickSlab allocator with stable slots
-│ │ ○  [1m[35mnrwzzrquqkyv[0m [34m1434c8ce3953[0m [1m[35mmingwei/bumpalo-experiment[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-│ │ │  Drop recv handoffs in reverse (LIFO) order for bump reclamation
-│ │ ○  [1m[35mwpmvxnmstszt[0m [34md72b6aef78a7[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-│ │ │  Drop bump-allocated recv handoffs after subgraph completes
-│ │ ○  [1m[35mwkqvzqtoyuux[0m [34m1c5b6fe1cdad[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-│ │ │  [32m(empty)[0m Revert bump pre-allocation experiment, keep Bump::new()
-│ │ ○  [1m[35mtsslxrynlwsl[0m [34md2e40ccf8b1d[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-│ │ │  Add PushBuf trait and size_hint/reserve support for bumpalo handoffs
-│ │ ○  [1m[35mutosoxkokvls[0m [34mdcd5c7ba89c2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-│ │ │  experiment: use bumpalo for DFIR handoff buffers [ci-bench]
-│ │ ○  [1m[35mkxtpqnrkonmz[0m [34ma0fa146759bf[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-│ │ │  [32m(empty)[0m Forward size_hint from pull to push in SendPush pivot
-│ │ ○  [1m[35mmwxynnszytly[0m [34m5e5bf0a5d731[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-│ │ │  Add bumpalo tests (tests 36-37)
-│ │ ○  [1m[35mlvpsrrnnmvlq[0m [34ma6be121dcd81[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-│ │ │  Add unified codegen path tests (Slab abstraction)
-│ │ ○  [1m[35mloxsxnuszopn[0m [34m909ab700b6b7[0m [1m[35mmingwei/ref-handoff-examples[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-│ │ │  Add borrow checker exploration test source files
-│ │ ○  [1m[35mmvxokzssosrr[0m [34m0352c357d770[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
-├───╯  Add borrow checker exploration tests for DFIR handoff references
-│ │ [33m⚠[0m  [1m[35mqynlxmxoznto[0m [34m023ed3bda0ba[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2851PR #2851]8;;[0m[33m][0m
-├───╯  feat(hydro_lang): add sim_atomic_input with proper scheduler support
 │ ○  [1m[35mmppoxsvnuuzv[0m [34md7bfa4904c43[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2883PR #2883]8;;[0m [32mReady[0m
 │ │  Address PR #2883 review comments: use pin_project_lite for StatePush
 │ ○  [1m[35mywpomskwmwyq[0m [34mc0fc3bda82b4[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2883PR #2883]8;;[0m [32mReady[0m

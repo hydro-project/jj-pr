@@ -47,6 +47,9 @@ pub struct RepoState {
 
     /// The node containing the working copy (`@`), if any.
     pub current_node: Option<NodeKey>,
+
+    /// Closed PR nodes that can be hidden from display (leaf-only: all successors also hidden).
+    pub hidden_nodes: HashSet<NodeKey>,
 }
 
 /// Represents a contiguous set of changes/commits within the JJ graph, usually for a PR.
@@ -113,6 +116,7 @@ pub fn build(
         bookmarks_blocking,
         nodes_conflicted,
         current_node: None,
+        hidden_nodes: HashSet::new(),
     };
 
     let (cid_pr_tip, pr_local) = {
@@ -429,6 +433,24 @@ pub fn build(
         .find(|e| e.is_working_copy)
         .and_then(|e| repo_state.commit_node.get(&*e.commit.commit_id).copied());
 
+    // Compute hidden_nodes: closed PRs without sync needs whose children are all hidden.
+    // Reverse topo order = children before parents, so we know child visibility first.
+    for &nk in repo_state.topo_order.iter().rev() {
+        let dominated_by_closed = matches!(repo_state.nodes.get(nk), Some(Node::Pr(pr_id)) if
+            prs.get(pr_id).is_some_and(|p| p.state == gh::PrState::Closed)
+            && !repo_state.node_needs_sync.contains_key(nk));
+        if !dominated_by_closed {
+            continue;
+        }
+        let all_succs_hidden = repo_state
+            .node_succs
+            .get(nk)
+            .is_none_or(|succs| succs.iter().all(|s| repo_state.hidden_nodes.contains(s)));
+        if all_succs_hidden {
+            repo_state.hidden_nodes.insert(nk);
+        }
+    }
+
     Ok(repo_state)
 }
 
@@ -678,30 +700,14 @@ pub fn render_show(
     show_all: bool,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
-    let mut hidden: HashSet<NodeKey> = HashSet::new();
-
     let mut renderer = GraphRowRenderer::new()
         .output()
         .with_min_row_height(1)
         .build_box_drawing();
 
-    // Reverse topo order = children before parents. By the time we visit a node,
-    // all its children have already been processed, so we know if they were hidden.
     for &node_key in state.topo_order.iter().rev() {
-        if !show_all {
-            let dominated_by_closed = matches!(state.nodes.get(node_key), Some(Node::Pr(pr_id)) if
-                prs.get(pr_id).is_some_and(|p| p.state == gh::PrState::Closed)
-                && !state.node_needs_sync.contains_key(node_key));
-            if dominated_by_closed {
-                let all_succs_hidden = state
-                    .node_succs
-                    .get(node_key)
-                    .is_none_or(|succs| succs.iter().all(|s| hidden.contains(s)));
-                if all_succs_hidden {
-                    hidden.insert(node_key);
-                    continue;
-                }
-            }
+        if !show_all && state.hidden_nodes.contains(&node_key) {
+            continue;
         }
 
         let parents = state
@@ -829,6 +835,9 @@ pub fn render_log(
             tracing::trace!("Skipping commit not in any PRs.");
             continue;
         };
+        if !show_all && node_key.is_some_and(|nk| state.hidden_nodes.contains(&nk)) {
+            continue;
+        }
 
         // Build the glyph.
         let node = node_key.map(|nk| state.nodes.get(nk).unwrap());
