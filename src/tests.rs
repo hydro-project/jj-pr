@@ -21,7 +21,7 @@ fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, Pr
     )
     .unwrap();
     let mut buf = Vec::new();
-    pr_dag::render_show(&state, &prs, pr_statuses, show_all, &mut buf).unwrap();
+    pr_dag::render_show(&state, &prs, pr_statuses, show_all, false, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
@@ -37,7 +37,7 @@ fn render_log(input: &InputData, show_all: bool) -> String {
     .unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
     let mut buf = Vec::new();
-    pr_dag::render_log(&state, &prs, &pr_statuses, &input.jj_entries, show_all, &mut buf).unwrap();
+    pr_dag::render_log(&state, &prs, &pr_statuses, &input.jj_entries, show_all, false, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
