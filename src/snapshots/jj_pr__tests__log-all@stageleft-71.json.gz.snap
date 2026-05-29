@@ -1,0 +1,318 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, true)"
+input_file: src/fixtures/stageleft-71.json.gz
+---
+[1m[32m@[0m  [1m[35mmlsuslpnrwvo[0m [34m83036e391ca0[0m [1m[35mmingwei/fnmut[0m [1m[35msandbox-a4601e4d-b68e-44aa-b04a-8e0e9fcd756a[0m [1m[36m]8;;https://github.com/hydro-project/stageleft/pull/76PR #76]8;;[0m [33mDraft[0m
+│  feat: add FnMut support to stageleft splice methods and type hints
+○  [1m[35mznypwxvsxtqo[0m [34m843dba9bb11c[0m [1m[35msandbox-5d382e2d-58bd-43a1-84d8-d42e347b80b5[0m [1m[36m]8;;https://github.com/hydro-project/stageleft/pull/74PR #74]8;;[0m [32mReady[0m
+│  feat(stageleft): fix q! span attribution via hidden macro_rules! export
+[1m[36m◆[0m  [1m[35mtyyrytrpowyt[0m [34mc0e1bc1f4d11[0m [1m[32mtrunk()[0m
+│  chore: Release
+│ ○  [1m[35mvqtqxqmoltus[0m [34meb8c5efff15c[0m [2m(no PR)[0m
+├─╯  fix(stageleft_tool): correctly handle feature flags on macro entrypoints
+│ ○  [1m[35mwmkxlvumrspv[0m [34mdb73c7684c83[0m [2m(no PR)[0m
+├─╯  fix: suppress panic hook stderr spam from q!() closure
+│ ○  [1m[35mztknomyzpptk[0m [34mf9178fcd5953[0m [2m(no PR)[0m
+├─╯  jj git push --bookmark fix/let-else-structural-binding
+│ ○  [1m[35mozsutntonvqz[0m [34m2e7cd319f430[0m [2m(no PR)[0m
+├─╯  fix: use ::core::panic! to avoid ambiguity errors
+│ ○  [1m[35mwwtxzzyputmt[0m [34m9afbc4bb5173[0m [2m(no PR)[0m
+├─╯  fix: improve the UB situation around with type inference
+│ ○  [1m[35mzrspzzkslqus[0m [34m74648359753f[0m [2m(no PR)[0m
+├─╯  cargo test --workspace 2>&1 | grep -E "^test result:|FAILED"
+│ ○  [1m[35mptlzvtmomvpr[0m [34m7c7b35d9e486[0m [2m(no PR)[0m
+├─╯  [32m(no description set)[0m
+│ ○  [1m[35mslpsolnokvzv[0m [34m32878b6803d4[0m [2m(no PR)[0m
+├─╯  fix(stageleft): add BTreeSet and BTreeMap private reexport mappings
+│ ○    [1m[35mqksplporqpuz[0m [34m11cb6bd0f4c6[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mwnnrktuqqrvr[0m [34m33e3f12bcd91[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft): correctly handle rewriting `self::` references in crate root
+│ ○ │  [1m[35mnyvuqwkrzxtu[0m [34mca9a252c650a[0m [2m(no PR)[0m
+│ │ │  to_owned
+│ ○ │  [1m[35mryzpnpynyqvz[0m [34m588b60f292b6[0m [2m(no PR)[0m
+├─╯ │  chore: enable many lints, comply
+│ ○ │  [1m[35mokttmzlpmlzn[0m [34mb16693cb61cc[0m [2m(no PR)[0m
+│ │ │  handle weather staged is included within crate or from a separate crate
+│ ○ │  [1m[35mszzntssvrskw[0m [34m1cd60f3b4b35[0m [2m(no PR)[0m
+│ │ │  other module
+│ ○ │  [1m[35mxowsvqzwnqku[0m [34mb802da9c10c1[0m [2m(no PR)[0m
+│ │ │  Apply suggestions from code review
+│ ○ │  [1m[35mmpkxvoymxkpz[0m [34mf15101289b14[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): track `pub`ness of entire module stack
+│   ○  [1m[35mqslymvosmpwy[0m [34mb8217e047055[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge e2978e258085f933ffec55c8ae5e5f65f21b7126 into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mtvrlmrvkptkp[0m [34me2978e258085[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): mutate `__staged` mod contents in-place when adding deps module
+│   ○  [1m[35mzltmymlkplvp[0m [34m49d5e2687a2c[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 1fc90ef3f8116ccace902eac1e06b557072be5eb into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mmspsmvlzlppm[0m [34m1fc90ef3f811[0m [2m(no PR)[0m
+│ │ │  fix(stageleft_tool): mutate `__staged` mod contents in-place when adding deps module
+│ ○ │  [1m[35muxupkwlqqmpy[0m [34m2269a6619819[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool)!: remove `top_level_mod` and unused double-parsing code for trybuild mode
+│   ○  [1m[35mklxrztnwllxt[0m [34m39c0c091ba56[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 5aad1bf0e365dbe988e637344adb99d0eb2d713f into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mknrlovmszoqq[0m [34m5aad1bf0e365[0m [2m(no PR)[0m
+│ │ │  fix(stageleft_tool): mutate `__staged` mod contents in-place when adding deps module
+│ ○ │  [1m[35mxqlstyxostyy[0m [34m4a8abf72fa98[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): remove unused double-parsing code for trybuild mode
+│   ○  [1m[35mzqnrllsqptlx[0m [34md8e6a49604be[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge fc2508623d1cc6f1e7d9470694e742aa280d9c55 into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mppwqozyvuuvx[0m [34mfc2508623d1c[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): remove unused double-parsing code for trybuild mode
+│ ○ │  [1m[35mqpumuwpynzor[0m [34m15a2e320d060[0m [2m(no PR)[0m
+│ │ │  fixup! Update stageleft_tool/src/lib.rs
+│ │ │ ○  [1m[35mwxnuntoomvqy[0m [34med48c0e3cdbd[0m [2m(no PR)[0m
+│ ├───╯  stageleft macro 2
+│ ○ │  [1m[35mvutpyrvmpkxw[0m [34mb168ce163078[0m [2m(no PR)[0m
+│ │ │  Update stageleft_tool/src/lib.rs
+│ ○ │  [1m[35mkmtuyopxzqtu[0m [34m89b428ed77a0[0m [2m(no PR)[0m
+│ │ │  Update stageleft_macro/src/lib.rs
+│ ○ │  [1m[35mulnkkstslxlx[0m [34m5084fc5323b9[0m [2m(no PR)[0m
+│ │ │  Update stageleft_test_no_entry/src/lib.rs
+│ ○ │  [1m[35mvkqnqyvwrxyx[0m [34m7f6a1956d835[0m [2m(no PR)[0m
+│ │ │  fixup! feat: add `#[stageleft::export(Foo, Bar)]` to pub-export macro-generated items
+│ ○ │  [1m[35mktvqmouutznm[0m [34ma81c2c1eb406[0m [2m(no PR)[0m
+├─╯ │  feat: add `#[stageleft::export(Foo, Bar)]` to pub-export macro-generated items
+│   ○  [1m[35mxznzlwmomsln[0m [34mba8b85f8f760[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mpquqyrrlntzk[0m [34m2c2d8849f9d3[0m [2m(no PR)[0m
+├───╯  feat(stageleft): add support for property annotations in `q!` macro
+│ ○    [1m[35mmswyywolmxlr[0m [34ma06165d3f2bf[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mztulyvvuuuyt[0m [34m1930e683f0e1[0m [2m(no PR)[0m
+├─╯ │  feat(stageleft): add support for property annotations in `q!` macro
+│   ○  [1m[35mkynmkkpztzxk[0m [34me95eecb77d7e[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 14db8b1644ec455a718b2b9aef7018b4b8f6fdb9 into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mqmoktkymxmyr[0m [34m14db8b1644ec[0m [2m(no PR)[0m
+├─╯ │  feat(stageleft): add support for property annotations in `q!` macro
+│   ○  [1m[35mlwrlkyosslru[0m [34maf449df1fc65[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mlrkxlwrsltmy[0m [34me448591871b8[0m [2m(no PR)[0m
+├───╯  feat(stageleft): add support for property annotations in `q!` macro
+│ ○    [1m[35mqwszptzwtznl[0m [34mfe4fcba44ede[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge 76ea711879d4f5f4e2d5160e9538e02ecd5e16e1 into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mrstrspowsvzs[0m [34m76ea711879d4[0m [2m(no PR)[0m
+├───╯  feat(stageleft): add support for property annotations in `q!` macro
+│ ○    [1m[35mmvpzwmlswusn[0m [34mbc93a089346f[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge 9b486156d2ec0b23e8103c814a6567805620a59e into sapling-pr-archive-shadaj
+│ │ ○  [1m[35msqpuzvtpzylt[0m [34m9b486156d2ec[0m [2m(no PR)[0m
+├───╯  feat(stageleft): implement `FreeVariableWithContext` for owned `String`
+│ ○    [1m[35mpnmpmyqyutkp[0m [34md048d3eba498[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge b4fabc3ed4bdc0493e7dcd24c9d8e91581d5bdb7 into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mlmomporyprqs[0m [34mb4fabc3ed4bd[0m [2m(no PR)[0m
+├───╯  fix(stageleft_tool): handle custom `lib.path` in project manifest
+│ ○    [1m[35mortykutxvovv[0m [34m130527b77e6a[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mtlzlxuvrxppw[0m [34me8b92103f6db[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): handle custom `lib.path` in project manifest
+│   ○  [1m[35msyntsnvuvwzr[0m [34m7682fdc8cb31[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 4a5b3316ca69ed8df163106a94cc4ccadfa0cfeb into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mmskwzukouwwx[0m [34m4a5b3316ca69[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): handle custom `lib.path` in project manifest
+│   ○  [1m[35molwwqkknuqro[0m [34mae00883509a8[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 8d6f5ab8d79a0def552ce423509125c48614ec6a into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mutwsxrtyxwpv[0m [34m8d6f5ab8d79a[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): handle absolute type paths inside type arguments
+│   ○  [1m[35mrukqmwymyxzr[0m [34ma163f3e915c2[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 465068411eeaf70ec6eca4283eccd2c5921c17ba into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mumlrwrvqpwvo[0m [34m465068411eea[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): handle absolute type paths inside type arguments
+│   ○  [1m[35myultwnqovnow[0m [34m7c29f35af9d4[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mpkuzwwrxutyz[0m [34ma2a610cc9aa7[0m [2m(no PR)[0m
+├───╯  feat(stageleft_tool)!: use features to gate test-mode staged code
+│ ○    [1m[35moxmtpnslouts[0m [34m472cefc3c17c[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge ab56200feec621222b28e08a858c804a843aa15d into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mopruunxyuxzy[0m [34mab56200feec6[0m [2m(no PR)[0m
+├───╯  feat(stageleft_tool)!: handle test-mode staging with an environment variable
+│ ○    [1m[35moksuurkzpvzq[0m [34mbc0e98c9071f[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge 3b74983dac113db23812920711191a2c0b072ff6 into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mtkkvlzmzwvur[0m [34m3b74983dac11[0m [2m(no PR)[0m
+├───╯  fix(stageleft_tool): handle `#[cfg(stageleft_runtime)]` on function declarations
+│ ○    [1m[35mwzuooxxzktwz[0m [34m17403496a4f1[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge e5d83fee42da14199b99abde94b9611149395cff into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mkkwpqnqxrrrt[0m [34me5d83fee42da[0m [2m(no PR)[0m
+├───╯  fix(stageleft_tool): handle `#[cfg(stageleft_runtime)]` on function declarations
+│ ○    [1m[35mrpynvpnstwvy[0m [34m9846df8d4fc4[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge 9ee165071340d00428e572f5137503acc35876d4 into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mxotlypnwwunz[0m [34m9ee165071340[0m [2m(no PR)[0m
+├───╯  fix(stageleft_tool): handle `#[cfg(stageleft_runtime)]` on function declarations
+│ ○    [1m[35mpkkvwvnkvvqr[0m [34m484d30a77ca4[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge fcf890db8e31ec40d8aee08bc030e3d423228ec2 into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mvwsyvvnvxons[0m [34mfcf890db8e31[0m [2m(no PR)[0m
+├───╯  feat(stageleft): appropriately span free variables for not-found errors
+│ ○    [1m[35mxmuuxlruqnvz[0m [34m33c87573f27f[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge e9000fb4f74e90834d6bbcb9baca18bab041f43a into sapling-pr-archive-shadaj
+│ │ ○  [1m[35munxkrxzmumyr[0m [34me9000fb4f74e[0m [2m(no PR)[0m
+├───╯  fix(stageleft_tool): rewrite visibility for `type` declarations
+│ ○    [1m[35mktpttylmsukk[0m [34md9c91e2af4b8[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mvvtkuxvrklku[0m [34m3aad097b9d69[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): properly handle exported macros when generating `__staged` module
+│   ○  [1m[35muowkttqwzurn[0m [34m4a62ae162367[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mpxmnvuzuolrn[0m [34mbf705710ef06[0m [2m(no PR)[0m
+├───╯  fix(stageleft_tool): properly handle exported macros when generating `__staged` module
+│ ○    [1m[35mqspounszqzoo[0m [34m471d077b79bb[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mnuszumqulouz[0m [34m1e31efb15e0d[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft): process rewrites before`__deps` rewrites
+│   ○  [1m[35mskwtrnsluotv[0m [34m41ed3694b8e2[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 8e789b0364e4322cf606d03d9c6c210a81722e69 into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mqtsvvlryuzrv[0m [34m8e789b0364e4[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft): process rewrites before`__deps` rewrites
+│   ○  [1m[35mwupqqkroppqr[0m [34m623a2a1579b6[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mwxzmqwpkuqzz[0m [34m8ba4fdc20cb5[0m [2m(no PR)[0m
+├───╯  fix(stageleft_tool): re-run build scripts when trybuild mode changes
+│ ○    [1m[35mywmwtrxsytox[0m [34m7465f1ccd95f[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge 1f9fad0c141388bb39b0e237850e4cecc51aa45b into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mmpxuurpwwswx[0m [34m1f9fad0c1413[0m [2m(no PR)[0m
+├───╯  chore: bump `proc-macro-crate`
+│ ○    [1m[35muovvtwmtslou[0m [34mfbc9346fdaab[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mnyxsvtoponnv[0m [34m948520c75aad[0m [2m(no PR)[0m
+├─╯ │  feat(stageleft,stageleft_tool): use an environment variable to trigger trybuild mode
+│   ○  [1m[35mqoktqzxrywvn[0m [34m86b1c3160381[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mmwvlvvunowpp[0m [34me13f6755d2a5[0m [2m(no PR)[0m
+├───╯  feat(stageleft): handle macro invocations when rewriting relative paths
+│ ○    [1m[35mrwsntsztyoqx[0m [34m1fdfe19c8507[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mwuprvxwzzxtk[0m [34m8f8185dd7d9e[0m [2m(no PR)[0m
+├─╯ │  feat(stageleft): handle macro invocations when rewriting relative paths
+│   ○  [1m[35mvyrmoqwlnlss[0m [34m2d42ffc17242[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 98ebb61cd64067c446ba4e20037316bb047b7578 into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mylplmlxzmmtr[0m [34m98ebb61cd640[0m [2m(no PR)[0m
+├─╯ │  feat(stageleft): handle macro invocations when rewriting relative paths
+│   ○  [1m[35mupkxqzsqsqvn[0m [34me25fa05e666e[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mrwwqvyrmrqum[0m [34m899546e119be[0m [2m(no PR)[0m
+├───╯  fix(stageleft,stageleft_tool): properly handle dashes in crate names
+│ ○    [1m[35mmtvwklrptwqk[0m [34m064de116df02[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mmxxmvknunrst[0m [34m1978d5ab011f[0m [2m(no PR)[0m
+├─╯ │  feat(stageleft)!: remove `stageleft_devel`, make macro entrypoints opt-in via a feature
+│   ○  [1m[35mpwnukvmnxqtl[0m [34mc567e73605f6[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mmzzktkkxktnt[0m [34m2d6e6b5ca039[0m [2m(no PR)[0m
+├───╯  feat(stageleft)!: remove `stageleft_devel`, make macro entrypoints opt-in via a feature
+│ ○    [1m[35mytyytwsosvqs[0m [34m834fbea70f49[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge 66fe6fd2d2af5ec5eea2d3e4a9152d8c47863344 into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mxxnntylxwyov[0m [34m66fe6fd2d2af[0m [2m(no PR)[0m
+├───╯  feat(stageleft)!: remove `stageleft_devel`, make macro entrypoints opt-in via a feature
+│ ○    [1m[35mtyszrqopovur[0m [34m47cb94886567[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mlvmqzqtyynqs[0m [34mb73dd42e33d5[0m [2m(no PR)[0m
+├─╯ │  feat(stageleft)!: remove `stageleft_devel`, make macro entrypoints opt-in via a feature
+│   ○  [1m[35mtqxzzowsvult[0m [34m260db707281b[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mnvpmwwxnmrnw[0m [34mdffcb4f2e098[0m [2m(no PR)[0m
+├───╯  fix: convert `crate`, `self`, and `super` references into absolute paths
+│ ○    [1m[35myrlypyywrysk[0m [34m9d8336341a1c[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mzpkzrktsrvlz[0m [34md1419190723d[0m [2m(no PR)[0m
+├─╯ │  fix: convert `crate`, `self`, and `super` references into absolute paths
+│   ○  [1m[35mzwszqktmnlzo[0m [34m286fdbb8f2dd[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mskstutowkrkt[0m [34mae8c175484f1[0m [2m(no PR)[0m
+├───╯  fix: convert `crate`, `self`, and `super` references into absolute paths
+│ ○    [1m[35mmpummrqyommp[0m [34mab1f3d623254[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mlqwxqlnqsppr[0m [34m92844163d315[0m [2m(no PR)[0m
+├─╯ │  fix: convert `crate`, `self`, and `super` references into absolute paths
+│   ○  [1m[35muvtmornwnxss[0m [34mc9e80aac78d0[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 6326a9ac595dcda79e744aceab9a1257f695e5a0 into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mzupspqtklpvr[0m [34m6326a9ac595d[0m [2m(no PR)[0m
+├─╯ │  fix: convert `crate`, `self`, and `super` references into absolute paths
+│   ○  [1m[35mmwnwqtyktmyr[0m [34mb583928ad0a0[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mwypotvwkqlvo[0m [34m0bfc13cce1ab[0m [2m(no PR)[0m
+├───╯  fix: convert `crate`, `self`, and `super` references into absolute paths
+│ ○    [1m[35mumutsukxvrom[0m [34mb5c0bf9a9589[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge 4680d604690e0adc20b8730485176972ee36d4fe into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mskxotnssvlqt[0m [34m4680d604690e[0m [2m(no PR)[0m
+├───╯  fix: convert `crate` and `self` references into absolute paths
+│ ○    [1m[35msmuqsmqzvzlp[0m [34m4ea3ec9aed14[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge 5e5843bc9251c4a2cf20b43aa23152ab0f5fb3d0 into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mzonmkpkzmuvp[0m [34m5e5843bc9251[0m [2m(no PR)[0m
+│ │ │  fix: convert `crate` and `self` references into absolute paths
+│ ○ │  [1m[35mvtqmmxyyvxwo[0m [34m0ad6439c7669[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ │ ○  [1m[35mzxumspwqvmoz[0m [34m6dc83471e2f0[0m [2m(no PR)[0m
+├───╯  fix: restore ability to reference statics/consts in a quoted context
+│ ○    [1m[35mmnxyzkpwoxto[0m [34m4d7927a17f1f[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mqspvykokvovt[0m [34mab8ada7bc659[0m [2m(no PR)[0m
+├─╯ │  refactor: group all quoted outputs into a single struct
+│   ○  [1m[35mkokpxwsmopto[0m [34m63b83ec1882d[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mmvpqsxnymwtx[0m [34m0ecbfbfb24cc[0m [2m(no PR)[0m
+├───╯  refactor: group all quoted outputs into a single struct
+│ ○    [1m[35mozqswlltrrst[0m [34m1342214fa968[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mvxmspqmzntys[0m [34m3839e62d0179[0m [2m(no PR)[0m
+├─╯ │  refactor: group all quoted outputs into a single struct
+│   ○  [1m[35mmtsnkzrqymkv[0m [34m2d6224823ef9[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35monwvoupvstvt[0m [34mb9e836b6640b[0m [2m(no PR)[0m
+├───╯  feat: make code-completion work with Rust Analyzer
+│ ○    [1m[35mnwkrxzzvmqtz[0m [34m772b4d3013f4[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35muxqszzruustt[0m [34m06893e124d75[0m [2m(no PR)[0m
+├─╯ │  feat: make code-completion work with Rust Analyzer
+│   ○  [1m[35msymwkxznwuzk[0m [34m4f734cfad9a7[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge fb5a718f37cdd6b4f2a0f2e9c01915f6f36d4c8c into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mwywxotnktkpr[0m [34mfb5a718f37cd[0m [2m(no PR)[0m
+├─╯ │  feat: make code-completion work with Rust Analyzer
+│   ○  [1m[35myrrkytqnpzuv[0m [34mcd12f59f8bc7[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mmmkrnzqzlmrz[0m [34m20e607c63899[0m [2m(no PR)[0m
+├───╯  fix(stageleft_tool): generate deps module in trybuild mode
+│ ○    [1m[35mmxtlyskskolk[0m [34m2e771b548160[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge da9a26ad04f5def71245c234e766661741faa359 into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mqpnuukrxlrtt[0m [34mda9a26ad04f5[0m [2m(no PR)[0m
+├───╯  feat: make code-completion work with Rust Analyzer
+│ ○    [1m[35mrrksrmyqvrzk[0m [34m309a0da68699[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mpxrxoywurolq[0m [34m7a9dd75d8551[0m [2m(no PR)[0m
+│ │ │  feat: make code-completion work with Rust Analyzer
+│ ○ │  [1m[35mntorwsznrpyt[0m [34m90348d35d4f8[0m [2m(no PR)[0m
+├─╯ │  fix(stageleft_tool): generate deps module in trybuild mode
+│   ○  [1m[35mmmnurzukuymo[0m [34m08eee650325c[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 5d56e38f63c21fd32f879548138b041226697f30 into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mznklqttvvrxz[0m [34m5d56e38f63c2[0m [2m(no PR)[0m
+├─╯ │  fix: allow quoted code to reference dependencies
+│   ○  [1m[35mrzptomnozqlo[0m [34m15a8d23e5138[0m [2m(no PR)[0m
+│ ╭─┤  [32m(empty)[0m Merge 297b157840943a39ef1608f868c46e4c15a87421 into sapling-pr-archive-shadaj
+│ ○ │  [1m[35mrvxlyuprwxst[0m [34m297b15784094[0m [2m(no PR)[0m
+├─╯ │  fix: allow quoted code to reference dependencies
+│   ○  [1m[35mounvttxosnpn[0m [34m551579ad7e9d[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35murqxypkzmutm[0m [34m2a2e268a3e31[0m [2m(no PR)[0m
+├───╯  fix: allow quoted code to reference dependencies
+│ ○    [1m[35msuszuyuuzykr[0m [34m7cb5513cc022[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mplksptoukvts[0m [34mc3a0a52ed0a0[0m [2m(no PR)[0m
+├─╯ │  fix: allow quoted code to reference dependencies
+│   ○  [1m[35mkvypvwpzruzq[0m [34m01aeb6816aa4[0m [2m(no PR)[0m
+│ ╭─┤  merge commit for archive created by Sapling
+│ │ ○  [1m[35mllzuqspszxkp[0m [34m45647a034e04[0m [2m(no PR)[0m
+├───╯  fix: allow quoted code to reference dependencies
+│ ○    [1m[35mrlxyonuqpqwn[0m [34mff3c3c5d16d2[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge c8daa30067d935e3f9e1687d337d02087ccab93a into sapling-pr-archive-shadaj
+│ │ ○  [1m[35munqmuwwlyzvz[0m [34mc8daa30067d9[0m [2m(no PR)[0m
+├───╯  fix: allow quoted code to reference dependencies
+│ ○    [1m[35muvzvlqmnwnvy[0m [34m40cc87ea1b47[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge 21bf7242068817fc64fa654c98c52d56fdc9178c into sapling-pr-archive-shadaj
+│ │ ○  [1m[35mwylrqwoktpov[0m [34m21bf72420688[0m [2m(no PR)[0m
+├───╯  chore: enable sccache in CI
+│ ○    [1m[35mlxsslkmyrvrk[0m [34m00f5242c3735[0m [2m(no PR)[0m
+│ ├─╮  merge commit for archive created by Sapling
+│ ○ │  [1m[35mnxlvmutlmmqm[0m [34m9db9c25731d5[0m [2m(no PR)[0m
+├─╯ │  fix: improve ergonomics when referring to functions from quoted code
+│   ○  [1m[35mkqzynzsorwur[0m [34macde265ce12f[0m [2m(no PR)[0m
+├───╯  fix: improve ergonomics when referring to functions from quoted code
+[2m~[0m  [2m(elided revisions)[0m

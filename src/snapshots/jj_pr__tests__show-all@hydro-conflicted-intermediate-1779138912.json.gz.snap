@@ -1,0 +1,22 @@
+---
+source: src/tests.rs
+expression: "render_show(&f, true)"
+input_file: src/fixtures/hydro-conflicted-intermediate-1779138912.json.gz
+---
+○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m  [32mReady[0m  [1m[35mmingwei/sqs-rebase[0m
+│  feat(hydro_test): add example of AWS + SQS support
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2871PR #2871]8;;[0m  [32mReady[0m  [1m[35mmingwei/gigamatch[0m
+├─╯  refactor(dfir_lang): use a single match case for node metadata
+│ [31m⚠[0m  [33mambiguous[0m* trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m
+│ │  [2m(edit commit description to fix PR: trailer)[0m
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2844PR #2844]8;;[0m*  [31mClosed[0m  [1m[35mmingwei/push-fold[0m
+├─╯  feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2872PR #2872]8;;[0m*  [32mReady[0m  [1m[35mmingwei/singleton-refs-all[0m
+│ │  feat(hydro_lang): support singleton refs on all operators via `ClosureExpr`, fix #2713
+│ [31m✗[0m  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2868PR #2868]8;;[0m*  [32mReady[0m  [1m[35mmingwei/singleton-refs[0m
+│ │  feat(dfir_lang): implement singleton references for `map` closure
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2862PR #2862]8;;[0m*  [32mReady[0m  [1m[35mmingwei/handoff-ref[0m
+│ │  feat(dfir_lang): support `#var` references to `singleton()` handoffs
+│ [1m[36m◆[0m  [1m[32mtrunk()[0m
+├─╯
+[2m~[0m  [2m(elided revisions)[0m

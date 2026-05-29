@@ -1,0 +1,16 @@
+---
+source: src/tests.rs
+expression: "render_show(&f, true)"
+input_file: src/fixtures/jj-pr-rebase-1777940339.json.gz
+---
+○    [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/36PR #36]8;;[0m*  [33mDraft[0m  [1m[35mhandle-forks[0m
+├─╮  Remove bookmark_track from create, update README for fork workflows
+│ ○  [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/35PR #35]8;;[0m  [32mReady[0m  [1m[35mdiscover-prs[0m
+│ │  fix: discover PRs by branch name in the same GraphQL call
+○ │  [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/34PR #34]8;;[0m  [2mMerged[0m  [1m[35minstall-aliases[0m
+├─╯  feat: add `util` subcommand with `dump` and `install-aliases`
+│ ○  [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/37PR #37]8;;[0m  [2mMerged[0m  [1m[35mfix-name-collide[0m
+├─╯  fix: bookmark name collision: use separate jj call for tracked bookmarks
+│ [1m[36m◆[0m  [1m[32mtrunk()[0m
+├─╯
+[2m~[0m  [2m(elided revisions)[0m

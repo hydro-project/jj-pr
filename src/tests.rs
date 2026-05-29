@@ -99,8 +99,10 @@ fn fixture_files() {
         let mut json = String::new();
         std::io::Read::read_to_string(&mut decoder, &mut json).unwrap();
         let f: InputData = serde_json::from_str(&json).expect("failed to parse fixture JSON");
-        insta::assert_snapshot!("show", render_show(&f, true));
+        insta::assert_snapshot!("show", render_show(&f, false));
+        insta::assert_snapshot!("show-all", render_show(&f, true));
         insta::assert_snapshot!("log", render_log(&f, false));
+        insta::assert_snapshot!("log-all", render_log(&f, true));
         insta::assert_snapshot!("sync", plan_sync(&f));
     });
 }
