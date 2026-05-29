@@ -1,0 +1,6 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/stageleft-71.json.gz
+---
+

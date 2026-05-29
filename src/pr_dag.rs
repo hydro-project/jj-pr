@@ -232,6 +232,12 @@ pub fn build(
         // Traverse in reverse topological order (children to parents to `trunk()`).
         let mut already_found_prs = HashSet::new();
         for jj_entry in jj_entries.iter() {
+            // Skip immutable commits that aren't trunk tip — these are historical/foreign
+            // commits (e.g., other people's PRs fetched from origin) that shouldn't produce nodes.
+            if jj_entry.immutable && !jj_entry.is_trunk_tip {
+                continue;
+            }
+
             let cid = &*jj_entry.commit.commit_id;
             let _cid_scope = tracing::info_span!("commit", %cid).entered();
 
