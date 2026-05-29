@@ -1,10 +1,12 @@
 ---
 source: src/tests.rs
-expression: "render_show(&f, false)"
-input_file: src/fixtures/remade-pr-both-branches-exist.json.gz
+expression: "render_show(&f, true)"
+input_file: src/fixtures/remade-pr-new-pr-created.json.gz
 ---
 ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m  [32mReady[0m  [1m[35mmingwei/sqs-rebase[0m
 │  feat(hydro_test): add example of AWS + SQS support
+│ [33m⚠[0m  [33mambiguous[0m branches: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m, trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m
+│ │  [2m(restructure PRs to resolve — stack one on the other)[0m
 │ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m  [33mDraft[0m  [1m[35mmingwei/dfir-mapped-singletons[0m
 │ │  WIP: refactor: allow #var references to any operator, not just stateful ones
 │ ○    [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m  [33mDraft[0m  [1m[35mmingwei/dfir-push-ops[0m

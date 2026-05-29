@@ -28,11 +28,15 @@ pub enum Command {
 }
 
 #[derive(clap::Args, Clone)]
-pub struct ShowArgs {}
+pub struct ShowArgs {
+    /// Show all PRs including closed ones
+    #[arg(long)]
+    pub all: bool,
+}
 
 #[derive(clap::Args, Clone)]
 pub struct LogArgs {
-    /// Show JJ changes that are not associated with any PRs
+    /// Show all JJ changes, including those not associated with any active PRs
     #[arg(long)]
     pub all: bool,
 }

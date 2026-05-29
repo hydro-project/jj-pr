@@ -1,0 +1,166 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, true)"
+input_file: src/fixtures/jj-pr-ambiguous.json.gz
+---
+○  [1m[35mvloryrxqmrrw[0m [34m43ecf88502b8[0m [2m(no PR)[0m
+│  [32m(no description set)[0m
+│ ○  [1m[35mynsvrzrsmoru[0m [34m24a0f20e91d2[0m [1m[35msandbox-ec8c27d3-7056-4bf6-90f3-767c738708b2[0m [2m(no PR)[0m
+├─╯  [32m(no description set)[0m
+○  [1m[35mxmkvryvvqxty[0m [34mcd08f3d90f41[0m [2m(no PR)[0m
+│  Enable ANSI color codes in test snapshots
+○  [1m[35mowvlttmrsowr[0m [34m9ce6941fefd5[0m [2m(no PR)[0m
+│  Add snapshot testing with insta, dump command, and writer refactor
+○  [1m[35mxrlntpyorurq[0m [34me2263e5726c2[0m [2m(no PR)[0m
+│  Fix needs_sync propagation: base mismatch no longer propagates to children
+○  [1m[35mkquntysnqrsp[0m [34m0da79889ae3d[0m [2m(no PR)[0m
+│  Add DESIGN_3.md and update README.md to reflect current architecture
+○  [1m[35mmkortsqryqrk[0m [34m6e2823756a34[0m [2m(no PR)[0m
+│  Add TODO for multiple PRs sharing the same bookmark
+○  [1m[35mtluxmttowqwp[0m [34m4e9a42f6f435[0m [2m(no PR)[0m
+│  Panic on multiple PRs sharing the same bookmark name
+○  [1m[35mquvoomlnzkyl[0m [34m3c50e8a6c5ec[0m [2m(no PR)[0m
+│  Make needs_sync the source of truth for push and base update planning
+○  [1m[35mnosprvtrwvpp[0m [34mdb2784185f96[0m [2m(no PR)[0m
+│  Exclude Merged PRs from needs_sync computation
+○  [1m[35mvvktuoznzzun[0m [34mb7645f761b95[0m [2m(no PR)[0m
+│  Include Closed PRs in sync push and base update actions
+○  [1m[35msmzkrolxlmqx[0m [34m6c65857024df[0m [2m(no PR)[0m
+│  Fix render_show doc comment
+○  [1m[35mnwwkunuunqvo[0m [34m5240732070e4[0m [2m(no PR)[0m
+│  Show PR numbers and bookmark names in sync push action display
+○  [1m[35mwnyzpolqxklz[0m [34m0a89cc7c584f[0m [2m(no PR)[0m
+│  Implement `sync` command
+○  [1m[35myyrkznxltrru[0m [34m9b30de49cda1[0m [2m(no PR)[0m
+│  Add "ambiguous" label to show view, reposition sync indicator
+○  [1m[35munlqportwnop[0m [34me987dd87bea4[0m [2m(no PR)[0m
+│  Move sync indicator `*` to suffix PR number, add to ambiguous nodes
+○  [1m[35mllwsrrlutwvr[0m [34mf8b9c0bc0b60[0m [2m(no PR)[0m
+│  Refactor sync helpers to use NodeKey instead of PrNum, remove pr_node
+○  [1m[35mxqwtsolktzyr[0m [34mef788e592fc9[0m [2m(no PR)[0m
+│  Fix: populate pr_node map during build()
+○  [1m[35mpwqrnzsosspq[0m [34m64f9522558b5[0m [2m(no PR)[0m
+│  Move topo sort and needs_sync computation into build()
+○  [1m[35mvupspxttxoyy[0m [34mdf4c65c088c5[0m [2m(no PR)[0m
+│  Add sync-status helpers and show `*` for all pending sync actions
+○  [1m[35mxmvyzzmtyxnx[0m [34m83d8eaaf4fee[0m [2m(no PR)[0m
+│  Fix rendering bugs in show and log views
+│ ○  [1m[35mtovynyrurprp[0m [34ma4e2df517db9[0m [1m[35mmingwei/clickable-pr[0m [1m[35msandbox-b0006e5d-13ed-4a6e-9d34-82765660fe60[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/5PR #5]8;;[0m* [33mDraft[0m
+│ │  Make PR # references into clickable URL links in create output
+○ │  [1m[35mqwtyvxsryoun[0m [34mc68ba0627398[0m [2m(no PR)[0m
+│ │  Show context-sensitive hints for ambiguous nodes in `show` view
+○ │  [1m[35mqmtmvxrsvutq[0m [34m2ea6172a3289[0m [2m(no PR)[0m
+│ │  Fix bug in decide_combine_child_nodes: break -> continue
+○ │  [1m[35mvvmrswyyqplw[0m [34mebc2d5c5296d[0m [1m[35msandbox-1f246ea3-d1cf-4ccf-b168-61b92a5cc505[0m [2m(no PR)[0m
+│ │  add bookmarks_conflicted
+○ │  [1m[35msqpslpnoovxo[0m [34mcbe4fd7c2348[0m [2m(no PR)[0m
+│ │  Show * indicator for PRs that need pushing in show and log views
+○ │  [1m[35mtplnnlqronmk[0m [34m55095836107b[0m [2m(no PR)[0m
+│ │  Add needs_push: HashSet<PrNum> to RepoState
+○ │  [1m[35mymuopkrlkynp[0m [34mc680bc201c3e[0m [2m(no PR)[0m
+│ │  Render Node::Ambiguous properly in show view
+○ │  [1m[35mxtouzqoooort[0m [34m61cf8511dff8[0m [2m(no PR)[0m
+│ │  Extract glyphs and labels to style consts, add green trunk/root styling
+○ │  [1m[35mlrlluuqnwpny[0m [34m8201241aa960[0m [2m(no PR)[0m
+│ │  add root() separate from trunk()
+○ │  [1m[35mpmkyynlpvwon[0m [34md43cc7e4a600[0m [2m(no PR)[0m
+│ │  Rename Node::Trunk to Node::Root, trunk_node to root_node
+○ │  [1m[35mzuomwlzzyktw[0m [34mef149c6ed1db[0m [2m(no PR)[0m
+│ │  Make `show` the default subcommand
+○ │  [1m[35mquqwrnxzysnz[0m [34m7312253a91f8[0m [2m(no PR)[0m
+│ │  Use tuple variants with arg structs for all subcommands
+○ │  [1m[35mlwznovplxzzm[0m [34m996a56b8ff41[0m [2m(no PR)[0m
+│ │  Rename log -> show, log-changes -> log
+○ │  [1m[35mxonnruortkqw[0m [34m408b556c168c[0m [2m(no PR)[0m
+│ │  trunk -> trunk()
+○ │  [1m[35mvxutpooywzrz[0m [34m198195dd6791[0m [2m(no PR)[0m
+│ │  Add is_trunk_tip field to JjLogEntry
+○ │  [1m[35moozrvzmspxvx[0m [34m11ccec39b21b[0m [2m(no PR)[0m
+│ │  cleanup jj change view
+○ │  [1m[35mmyrzzyzplukz[0m [34m90db6a0c9a3a[0m [2m(no PR)[0m
+│ │  Improve log-changes: jj-like styling and trunk node
+○ │  [1m[35mmomnqlkwkpxu[0m [34m9b7779d36db1[0m [2m(no PR)[0m
+│ │  cleanups, add log-changes
+○ │  [1m[35mwoxnqrkxupqy[0m [34m8b10cdbe0630[0m [2m(no PR)[0m
+│ │  pull out functions, format
+│ │ ○  [1m[35mzxsrqoxurkyq[0m [34m9fc950c266e8[0m [1m[35mmingwei/confirm[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/4PR #4]8;;[0m* [31mClosed[0m
+│ │ │  Add confirmation prompts to sync, import, and track create
+│ │ ○  [1m[35mwkusrytxnoxt[0m [34m563c00e0fa0d[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/4PR #4]8;;[0m* [31mClosed[0m
+│ ├─╯  Make y/yes confirmation case-insensitive
+│ [33m⚠[0m  [1m[35mpvmxnwquyyoq[0m [34m19313a696d81[0m [33mambiguous[0m* [33m[[0m[1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/4PR #4]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/5PR #5]8;;[0m[33m][0m
+│ │  Add -y/--yes global flag and confirmation prompt for reclaiming
+│ ○  [1m[35muxllmtmpypns[0m [34m609c28f0194e[0m [1m[35mmingwei/pull-parent-pr-out-of-child[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/7PR #7]8;;[0m* [31mClosed[0m
+│ │  Fix reclaim mode: only activate when tip is foreign-stamped
+○ │  [1m[35mssxmzpulzmvk[0m [34me3644d7bdfed[0m [2m(no PR)[0m
+│ │  log working, single compute step
+○ │  [1m[35mppmmvvqxmmpm[0m [34mf4ef2f64a9bd[0m [2m(no PR)[0m
+│ │  Add comment about orphaned nodes from Node::combine
+○ │  [1m[35mnqopxoxznpll[0m [34m06153a096d49[0m [2m(no PR)[0m
+│ │  jj log working
+○ │  [1m[35myoltmmzmplpr[0m [34me3cf09d316e2[0m [2m(no PR)[0m
+│ │  normalize wip
+○ │  [1m[35myyxlnkxtlkxo[0m [34m2cd29d8d7b37[0m [2m(no PR)[0m
+│ │  Update design doc: trailers are primary for merged PRs
+○ │  [1m[35mnsuslrzlzwmm[0m [34m064cfb0c0c15[0m [2m(no PR)[0m
+│ │  wip fix graph alg
+│ │ ○  [1m[35myvwlrqortnvs[0m [34mb7f66fa70995[0m [2m(no PR)[0m
+├───╯  Fix render_log topo sort: collapse non-displayed predecessors to Trunk
+○ │  [1m[35mxwtnysrwtkkm[0m [34mccdb61e08968[0m [2m(no PR)[0m
+│ │  hand-typed graph algorithm
+○ │  [1m[35mqwxutkpqmzrt[0m [34m2504f4fcda16[0m [2m(no PR)[0m
+│ │  ignore .infinity
+○ │  [1m[35mqwrszrnnwnos[0m [34m0dea9b9ffe17[0m [2m(no PR)[0m
+│ │  Add inline comments to build() top-level variables, use mut+freeze pattern
+○ │  [1m[35mwywusummyrvo[0m [34m149a2fec1964[0m [2m(no PR)[0m
+│ │  Refactor build() with block-scoped sections
+○ │  [1m[35mqxtnsquzkqzu[0m [34m633487e83f46[0m [2m(no PR)[0m
+│ │  Document build() postconditions
+○ │  [1m[35mxxqylswtsxup[0m [34mb4fdd629173d[0m [2m(no PR)[0m
+│ │  Fix parent detection for merge children, improve UpdateBase display
+○ │  [1m[35mlxwwtkmtswnm[0m [34m2a06aea0a264[0m [2m(no PR)[0m
+│ │  Fix: treat parents not in state as trunk (beyond revset boundary)
+○ │  [1m[35mqxyxnrmprlyx[0m [34mf46f112b7a3e[0m [2m(no PR)[0m
+│ │  hydro.jj, .gh
+○ │  [1m[35muspotzpsovsn[0m [34mfcd55dc30757[0m [2m(no PR)[0m
+│ │  Handle diverged bookmarks: diagnostic, sync refusal, null targets
+○ │  [1m[35mtonopxqqxmwl[0m [34m3eb081930db5[0m [2m(no PR)[0m
+│ │  Replace design doc and README for v2
+○ │  [1m[35mvrxsklmylpks[0m [34m45d9b85be3af[0m [2m(no PR)[0m
+│ │  Step 4: Add track, tidy commands and CLI restructuring
+○ │  [1m[35mxzumyolwozzo[0m [34md7bf4b9ffc94[0m [2m(no PR)[0m
+│ │  Replace has_trunk_parent with Option<PrId> in parent_prs
+○ │  [1m[35msnwzwmlowrzs[0m [34mde6acf066589[0m [2m(no PR)[0m
+│ │  v2: Rewrite RepoState with graph-primary membership and PrId
+○ │  [1m[35mxtyvlynrxnpk[0m [34mef10a193bed2[0m [2m(no PR)[0m
+│ │  Add architectural invariants to v2 design doc
+│ │ ○  [1m[35mqtoqqllsqzkk[0m [34m65cfc48da8b5[0m [2m(no PR)[0m
+│ │ │  [32m(no description set)[0m
+○ │ │  [1m[35mnpnrrpnqulrk[0m [34m294d22607027[0m [2m(no PR)[0m
+├───╯  Update v2 design doc with implementation notes
+○ │  [1m[35mzrmnyvysmvtz[0m [34m61f1d2d40296[0m [2m(no PR)[0m
+│ │  Update v2 design doc: RepoState restructure and implementation plan
+○ │  [1m[35mymnrxmrnylkv[0m [34m1c2227d845a4[0m [2m(no PR)[0m
+│ │  Update v2 design doc: CLI restructuring and confirmation prompts
+│ │ ○  [1m[35mkrtnvvqyokul[0m [34m3ab3dc39565a[0m [2m(no PR)[0m
+│ │ │  Tighten v2 design doc: precise membership algorithm with revset
+│ │ ○  [1m[35mkwnyquqtqnmp[0m [34ma899897b3dd9[0m [2m(no PR)[0m
+│ │ │  Add v2 design doc: graph-primary PR membership
+│ │ ○  [1m[35mvowqzzpwqwzk[0m [34m9b07578adb3b[0m [2m(no PR)[0m
+│ │ │  Unify all sync state into diagnostics, remove computed fields
+│ │ ○  [1m[35mltxnuzwnssvx[0m [34m13ca82318f4c[0m [2m(no PR)[0m
+│ │ │  Rename PrDag to RepoState
+│ │ ○  [1m[35mtqurpsyttnys[0m [34m468b7f12a747[0m [2m(no PR)[0m
+│ │ │  Step 3: Unify all commands behind PrDag as single world view
+│ │ ○  [1m[35msmvlxlpltovr[0m [34mda3af247323e[0m [2m(no PR)[0m
+│ │ │  Step 2: Move expected base branch into PrNode, plan_sync takes only &PrDag
+│ │ ○  [1m[35mokqtponltqnt[0m [34mb2980b4da83f[0m [2m(no PR)[0m
+│ │ │  Step 1: Move bookmark push detection into PrDag
+│ │ ○  [1m[35mxlsusooszzxo[0m [34m48084b15c284[0m [2m(no PR)[0m
+│ │ │  Add diagnostics to PrDag, detect merged parent PRs needing rebase
+│ │ ○  [1m[35mxlwtvlsplvsm[0m [34m2bfed7b21200[0m [2m(no PR)[0m
+│ │ │  Add failing test for merged parent PR rebase detection
+│ │ [1m[36m◆[0m  [1m[35mkwnsklrzwtpr[0m [34mf32f28d8c322[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+├───╯  feat: handle out-of-order PR creation with mode-based trailer walk (#3)
+│ ○  [1m[35mwqwvxmmuyxlx[0m [34m97ab83d61724[0m [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/3PR #3]8;;[0m [2mMerged[0m
+├─╯  feat: handle out-of-order PR creation with mode-based trailer walk
+[2m~[0m  [2m(elided revisions)[0m

@@ -1,0 +1,10 @@
+---
+source: src/tests.rs
+expression: "render_show(&f, true)"
+input_file: src/fixtures/jj-pr-diverged-remote-appended-deleted.json.gz
+---
+○  [1m[36m]8;;https://github.com/hydro-project/jj-pr/pull/24PR #24]8;;[0m  [2mMerged[0m  [1m[35mfix-deleted-branches[0m
+│  fix: properly detect deleted (merged) branches that have multuple commits
+│ [1m[36m◆[0m  [1m[32mtrunk()[0m
+├─╯
+[2m~[0m  [2m(elided revisions)[0m

@@ -43,10 +43,13 @@ pub struct RepoState {
     pub bookmarks_blocking: BTreeSet<Bookmark>,
 
     /// Nodes containing at least one commit with content conflicts.
-    pub nodes_conflicted: SparseSecondaryMap<NodeKey, ()>,
+    pub node_conflicted: SparseSecondaryMap<NodeKey, ()>,
+
+    /// Closed PR nodes that can be hidden from display (leaf-only: all successors also hidden).
+    pub node_hidden: SparseSecondaryMap<NodeKey, ()>,
 
     /// The node containing the working copy (`@`), if any.
-    pub current_node: Option<NodeKey>,
+    pub node_current: Option<NodeKey>,
 }
 
 /// Represents a contiguous set of changes/commits within the JJ graph, usually for a PR.
@@ -99,8 +102,16 @@ pub fn build(
     let mut node_preds = SecondaryMap::new();
     node_preds.insert(root_node, Vec::new()); // `root()` has no parent nodes.
 
-    let (node_succs, commit_node, pr_needs_push, node_needs_sync, bookmarks_blocking, nodes_conflicted) =
-        Default::default();
+    let (
+        node_succs,
+        commit_node,
+        pr_needs_push,
+        node_needs_sync,
+        bookmarks_blocking,
+        node_conflicted,
+        node_current,
+        node_hidden,
+    ) = Default::default();
     let mut repo_state = RepoState {
         nodes,
         root_node,
@@ -111,8 +122,9 @@ pub fn build(
         pr_needs_push,
         node_needs_sync,
         bookmarks_blocking,
-        nodes_conflicted,
-        current_node: None,
+        node_conflicted,
+        node_hidden,
+        node_current,
     };
 
     let (cid_pr_tip, pr_local) = {
@@ -317,7 +329,7 @@ pub fn build(
                 };
                 repo_state.commit_node.insert(cid.to_owned(), node_key);
                 if jj_entry.conflict {
-                    repo_state.nodes_conflicted.insert(node_key, ());
+                    repo_state.node_conflicted.insert(node_key, ());
                 }
             }
         }
@@ -423,11 +435,40 @@ pub fn build(
         }
     }
 
-    // Set current_node from the working copy entry.
-    repo_state.current_node = jj_entries
+    // Set node_current from the working copy entry.
+    repo_state.node_current = jj_entries
         .iter()
         .find(|e| e.is_working_copy)
         .and_then(|e| repo_state.commit_node.get(&*e.commit.commit_id).copied());
+
+    // Compute node_hidden: closed PRs without sync needs whose children are all hidden.
+    // Reverse topo order = children before parents, so we know child visibility first.
+    for &nk in repo_state.topo_order.iter().rev() {
+        // Keep visible if there are pending sync actions.
+        if repo_state.node_needs_sync.contains_key(nk) {
+            continue;
+        }
+        // Only PR nodes can be hidden.
+        let Some(Node::Pr(pr_id)) = repo_state.nodes.get(nk) else {
+            continue;
+        };
+        // Only closed PRs are hidden.
+        if !prs.get(pr_id).is_some_and(|p| p.state == gh::PrState::Closed) {
+            continue;
+        }
+        // Keep visible if any child is visible.
+        if repo_state
+            .node_succs
+            .get(nk)
+            .into_iter()
+            .flatten()
+            .any(|&s| !repo_state.node_hidden.contains_key(s))
+        {
+            continue;
+        }
+        // Otherwise hide it.
+        repo_state.node_hidden.insert(nk, ());
+    }
 
     Ok(repo_state)
 }
@@ -638,7 +679,7 @@ impl RepoState {
 
     /// Whether a node is conflicted (content conflicts or bookmark conflicts).
     pub fn is_node_conflicted(&self, nk: NodeKey, prs: &BTreeMap<PrNum, &GhPr>) -> bool {
-        if self.nodes_conflicted.contains_key(nk) {
+        if self.node_conflicted.contains_key(nk) {
             return true;
         }
         matches!(self.nodes.get(nk), Some(Node::Pr(pr_id)) if prs
@@ -675,6 +716,7 @@ pub fn render_show(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
+    show_all: bool,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
     let mut renderer = GraphRowRenderer::new()
@@ -683,6 +725,10 @@ pub fn render_show(
         .build_box_drawing();
 
     for &node_key in state.topo_order.iter().rev() {
+        if !show_all && state.node_hidden.contains_key(node_key) {
+            continue;
+        }
+
         let parents = state
             .node_preds
             .get(node_key)
@@ -691,7 +737,7 @@ pub fn render_show(
             .map(|&dag_node| Ancestor::Parent(dag_node))
             .collect::<Vec<_>>();
 
-        let is_current = state.current_node == Some(node_key);
+        let is_current = state.node_current == Some(node_key);
 
         let node = state.nodes.get(node_key).unwrap();
         let conflicted = state.is_node_conflicted(node_key, prs);
@@ -808,6 +854,9 @@ pub fn render_log(
             tracing::trace!("Skipping commit not in any PRs.");
             continue;
         };
+        if !show_all && node_key.is_some_and(|nk| state.node_hidden.contains_key(nk)) {
+            continue;
+        }
 
         // Build the glyph.
         let node = node_key.map(|nk| state.nodes.get(nk).unwrap());
@@ -1099,7 +1148,7 @@ pub fn plan_sync(
         let mut push_bookmarks = Vec::new();
         let mut blocked_by_conflict: HashSet<NodeKey> = HashSet::new();
         for &nk in state.topo_order.iter() {
-            let conflicted_self = state.nodes_conflicted.contains_key(nk);
+            let conflicted_self = state.node_conflicted.contains_key(nk);
             let conflicted_pred = state
                 .node_preds
                 .get(nk)

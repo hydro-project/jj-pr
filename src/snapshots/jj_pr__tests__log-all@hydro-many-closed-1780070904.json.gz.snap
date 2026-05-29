@@ -1,0 +1,2702 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, true)"
+input_file: src/fixtures/hydro-many-closed-1780070904.json.gz
+---
+○  [1m[35mvqtxsovlkzmp[0m [34m3d98fa4d1c10[0m [2m(no PR)[0m
+│  [32m(empty)[0m [32m(no description set)[0m
+│ ○  [1m[35mntvwzmkmzqvs[0m [34ma24428ef025c[0m [2m(no PR)[0m
+│ │  [32m(no description set)[0m
+│ ○  [1m[35movltwsqmwzlr[0m [34ma6d6079bc6e0[0m [1m[35mmingwei/paxos-ref[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2903PR #2903]8;;[0m* [33mDraft[0m
+│ │  refactor(hydro_test): migrate paxos cross_singleton to by_ref() singleton mechanism [ci-bench]
+│ ○  [1m[35mpsnpnnvlsrxt[0m [34m4fd16688d216[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2903PR #2903]8;;[0m* [33mDraft[0m
+├─╯  Add by_ref() singleton capture support to Stream::filter_map
+│ [1m[32m@[0m  [1m[35myvoslutvqqrm[0m [34m23d7e033dcd3[0m [1m[35mmingwei/hydro-mut[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2899PR #2899]8;;[0m [33mDraft[0m
+│ │  cleanup unsafe
+│ ○  [1m[35mmxsvqqnkkskw[0m [34m93e3626bbfbc[0m [1m[35msandbox-a63453f2-950d-4a8f-9d54-3986f5c18a1f[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2899PR #2899]8;;[0m [33mDraft[0m
+│ │  feat(hydro_lang): Add mutable singleton references (`by_ref_mut`) to Hydro
+│ │ ○  [1m[35mlrqmoolprpos[0m [34ma808d8aebeda[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-05-28 851640e3e6799cd178e51246f30e03df25aa3773
+[1m[36m◆[0m │ │  [1m[35mnllnuupvkonz[0m [34m851640e3e679[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+├─╯ │  refactor(hydro_lang): replace raw usize counters in Hydro IR with newtype_counter! types (#2898)
+│ ○ │  [1m[35mynyynpvkoqvm[0m [34m8bac09f34ae2[0m [2m(no PR)[0m
+│ │ │  (update nightly snapshots)
+│ │ │ ○  [1m[35mlxrrqqoyovxp[0m [34m6c7ef9dc4ceb[0m [1m[35msandbox-719751d3-2615-484d-b173-a2752b25f8f1[0m [2m(no PR)[0m
+│ ├───╯  [32m(empty)[0m [32m(no description set)[0m
+│ ○ │  [1m[35mkqrlnktyzoss[0m [34m021c506860b6[0m [1m[35mmingwei/dfir-handoff-refs[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2901PR #2901]8;;[0m [32mReady[0m
+│ │ │  Add compile-fail test for iter_ref and fix affected existing tests
+│ ○ │  [1m[35mprpnxnwnwzrq[0m [34md9868f0de915[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2901PR #2901]8;;[0m [32mReady[0m
+│ │ │  Add validation to iter_ref: require `#handoff_name` reference argument
+│ ○ │  [1m[35mwzpruuynkyqy[0m [34mcda4571b9b37[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2901PR #2901]8;;[0m [32mReady[0m
+│ │ │  Add `iter_ref(#handoff)` operator for zero-copy iteration over vec handoffs
+│ ○ │  [1m[35mpurkwrvkvuxy[0m [34mdfe4492820f6[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2901PR #2901]8;;[0m [32mReady[0m
+│ │ │  Add vec handoff (`handoff()`) reference support via `#var` and `#mut var` syntax
+│ ○ │  [1m[35mmyrwtlxpzqyk[0m [34md62d09a713c3[0m [1m[35mmingwei/bumpalo-experiment-3[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2894PR #2894]8;;[0m [32mReady[0m
+│ │ │  Fix review comments on PR #2894
+│ ○ │  [1m[35mkwxousmuunmy[0m [34mf5ddfbc93780[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2894PR #2894]8;;[0m [32mReady[0m
+│ │ │  cleanups
+│ ○ │  [1m[35mvmryovlyppzu[0m [34m5b136b2fb5b3[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2894PR #2894]8;;[0m [32mReady[0m
+├─╯ │  feat(dfir_rs): use `bumpalo` for intra-tick handoffs [ci-bench]
+│ ○ │  [1m[35musyplztuvuqx[0m [34md7e54d5473e9[0m [2m(no PR)[0m
+├─╯ │  chore: update nightly snapshots
+│   ○  [1m[35mxxvlwsswxopt[0m [34m7c0829acd3db[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-28 a4ab5bdf847f09b25ee24bb541b0a5bf1e8475d9
+│   ○  [1m[35msruyvmrwkruk[0m [34m2281c11fd099[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-27 a4ab5bdf847f09b25ee24bb541b0a5bf1e8475d9
+│   ○  [1m[35mmlpvmyqqzvqo[0m [34m6f54dbc6a61a[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-27 dcef67d9572055f7eeb64f92fa95fa4babebd6c8
+│ [31m✗[0m │  [1m[35mkkqoulwrkylp[0m [34me6b69218c72d[0m [2m(no PR)[0m
+│ │ │  should alloc be in context? maybe not
+│ [31m✗[0m │  [1m[35mzxplktykloqw[0m [34m5ad33e8e1aca[0m [2m(no PR)[0m
+╭─┤ │  [32m(no description set)[0m
+│ │ │ ○  [1m[35mtrnmxlpuxrvl[0m [34m7e0b354ede12[0m [2m(no PR)[0m
+├─────╯  lattices no_std wip
+│ │ │ ○  [1m[35mwolxmplyoqwp[0m [34m5756de4d0f86[0m [1m[35msandbox-67f5e500-0cbc-44cd-90ed-79e5260e8d4d[0m [2m(no PR)[0m
+│ │ │ │  [32m(empty)[0m Fix StatePush: cfg-gate module, fix docs, propagate poll_ready/poll_finalize
+│ │ │ ○  [1m[35mxtwonrxyrssn[0m [34m6f1429bd902c[0m [1m[35mmingwei/state-outputs[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2883PR #2883]8;;[0m [32mReady[0m
+│ │ │ │  Fix StatePush: cfg-gate module, fix docs, propagate poll_ready/poll_finalize
+│ │ │ ○  [1m[35mvxywkykomzsv[0m [34me42ddcb6a8b7[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2883PR #2883]8;;[0m [32mReady[0m
+│ │ │ │  cleanups
+│ │ │ │ ○  [1m[35mwzuuooyokmwy[0m [34mf7346bf3b35c[0m [2m(no PR)[0m
+│ │ │ │ │  actual reset at start of tick
+│ │ │ │ │ ○  [1m[35mqukokmsyrzuw[0m [34m0a6ef7785601[0m [2m(no PR)[0m
+├─────────╯  [32m(empty)[0m [32m(no description set)[0m
+│ │ ○ │ │  [1m[35mpuoqokkmxtml[0m [34mb70811c757a6[0m [2m(no PR)[0m
+│ │ │ │ │  Update rustdoc 2026-05-27 142612b247f76389ef986c1fcb27e204b2e2e722
+│ │ ○ │ │  [1m[35mvttnmsntpzlv[0m [34m68cb4241b575[0m [2m(no PR)[0m
+│ │ │ │ │  Update rustdoc 2026-05-27 099e36e44503320f7115c2ff0d1cc8ad2657969c
+│ │ ○ │ │  [1m[35mmsyuvrpznxtt[0m [34m7cbfb31fba4d[0m [2m(no PR)[0m
+│ │ │ │ │  Update Benchmarks 2026-05-27 881a101cbf91011ab9262a6ba72c489d03197780
+│ │ │ │ │ ○  [1m[35moswvlxukvwnu[0m [34m74c19461afb0[0m [2m(no PR)[0m
+├─────────╯  [32m(empty)[0m [32m(no description set)[0m
+│ ○ │ │ │  [1m[35mxppoqqvkxkto[0m [34mb1154e19ec72[0m [2m(no PR)[0m
+│ │ │ │ │  work on no_std up to lattices in dfir_rs/Cargo.toml
+│ ○ │ │ │  [1m[35mrtrwklmmqyyt[0m [34m917305eb3112[0m [2m(no PR)[0m
+├─╯ │ │ │  copy of blink-alloc luuzwxms
+│ ○ │ │ │  [1m[35mluuzwxmsvylk[0m [34m48f1728d0b68[0m [1m[35mmingwei/blink-experiment[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
+│ │ │ │ │  reset alloc at start of tick rather than end
+│ │ │ │ ○    [1m[35mlpnmkrxuxmwm[0m [34m92f80dd2a253[0m [1m[35mmingwei/bumpalo-experiment-2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m [31mClosed[0m
+│ │ │ │ ├─╮  [32m(empty)[0m reset and use vec (bumpalo)
+│ │ │ │ [33m⚠[0m │  [1m[35mykyzqzxoowkq[0m [34m96fc0d1ccfba[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m[33m][0m
+│ │ │ │ │ │  Fix defer_tick double-buffering to use O(1) mem::swap instead of O(n) drain/extend
+│ │ │ │ │ [33m⚠[0m  [1m[35mqmowsoonkvzq[0m [34mf34852be5457[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m[33m][0m
+│ │ │ │ ├─╯  actually reset alloc at end of tick
+│ ○ │ │ │    [1m[35mouqqvvlqznrk[0m [34mc84699effa9c[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
+│ ├───────╮  [32m(empty)[0m reset and use vec
+│ ○ │ │ │ │  [1m[35mkkyxzvrxxnkr[0m [34m7abe5e474a4d[0m [1m[35msandbox-9eed2eb8-ab56-4f48-8f36-1ef7fb2a8902[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
+│ │ │ │ │ │  Fix defer_tick double-buffering to use O(1) mem::swap instead of O(n) drain/extend
+│ │ │ │ │ ○  [1m[35muryrxxlznzyv[0m [34m0c67c495cd02[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
+│ ├───────╯  actually reset alloc at end of tick
+│ │ │ │ │ ○  [1m[35mryqstrtpykvo[0m [34m61165f54379d[0m [2m(no PR)[0m
+├─────────╯  chore(hydro_lang): bump Stageleft version [ci-full]
+│ │ ○ │ │  [1m[35mqqwykxxtnnxy[0m [34md39211ee4402[0m [2m(no PR)[0m
+│ │ │ │ │  Update rustdoc 2026-05-26 881a101cbf91011ab9262a6ba72c489d03197780
+│ │ │ │ │ ○  [1m[35mlxonowkqkvkp[0m [34me41b93ec3e14[0m [2m(no PR)[0m
+├─────────╯  hydro_transparent_replicate: nonce-based coordinator FD with ping
+│ │ │ │ │ ○  [1m[35mlunyotylxlrv[0m [34m892754359c7f[0m [1m[35msandbox-9ce0f84f-1545-4157-a488-16d862969258[0m [2m(no PR)[0m
+├─────────╯  Expand async Drop candidates report with manual async drop patterns and async-ssh2-russh analysis
+│ ○ │ │ │  [1m[35mnxmvlvosnxlv[0m [34mb2f42ee0b2ec[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
+│ │ │ │ │  use larger page size
+│ ○ │ │ │  [1m[35mnmyzyvywqnxn[0m [34m9b34567e9719[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m [31mClosed[0m
+│ ├─────╯  experiment: [ci-bench] replace bumpalo with blink-alloc for dfir handoff buffers
+│ [33m⚠[0m │ │  [1m[35mzlmrksqpkprn[0m [34m8daf0166c71b[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
+│ │ │ │  Simplify non_lazy_buf_idents by storing buf_ident in back_buffer_idents_laziness tuple
+│ [33m⚠[0m │ │  [1m[35mtvotpvuzsmxy[0m [34ma9cde23bbbb9[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
+│ │ │ │  Fix bumpalo-based dfir handoffs: two bugs in back-edge handoff handling
+│ │ │ │ ○  [1m[35mpnsnzqlynvnu[0m [34m9c58b301c7db[0m [2m(no PR)[0m
+│ │ │ │ │  goofy attempt to make custom allocator
+│ │ │ │ ○  [1m[35mvvzqxzxywvps[0m [34mf7f0618ef52e[0m [2m(no PR)[0m
+│ ├─────╯  idk
+│ [33m⚠[0m │ │  [1m[35msrprmqzvsnsv[0m [34m627ab948887b[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
+│ │ │ │  kinda working?
+│ [33m⚠[0m │ │  [1m[35mulskwstupsut[0m [34mbf3b7f57b8e7[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
+├─╯ │ │  wip
+│   ○ │  [1m[35mykpursmxyovn[0m [34m70b53266c7b7[0m [2m(no PR)[0m
+│   │ │  Update Benchmarks 2026-05-26 57b9fb4e54797c350f3634a884e00b5dfb5ac052
+│   ○ │  [1m[35mouzopmmtytkx[0m [34m8feedd2b991d[0m [2m(no PR)[0m
+│   │ │  Update rustdoc 2026-05-25 57b9fb4e54797c350f3634a884e00b5dfb5ac052
+│   ○ │  [1m[35mxuztlplyywsx[0m [34m646046b7c0a4[0m [2m(no PR)[0m
+│   │ │  Update Benchmarks 2026-05-25 56ca7e115f20bfacbc4b401bab71e6a35cad13ce
+│   ○ │  [1m[35mmnxtyyxvturv[0m [34m5b5607bd3b87[0m [2m(no PR)[0m
+│   │ │  Update Benchmarks 2026-05-24 56ca7e115f20bfacbc4b401bab71e6a35cad13ce
+│   ○ │  [1m[35mwvvmnqwtmsxs[0m [34mc9af45c57642[0m [2m(no PR)[0m
+│   │ │  Update Benchmarks 2026-05-23 56ca7e115f20bfacbc4b401bab71e6a35cad13ce
+│ ○ │ │  [1m[35msmmuklyrmwmk[0m [34md86f407733e3[0m [1m[35msandbox-484e1474-0869-4e16-b2de-455bb8e264a2[0m [2m(no PR)[0m
+│ │ │ │  [32m(no description set)[0m
+│ ○ │ │  [1m[35mtuutonplnoll[0m [34mf0cb9fe529c1[0m [1m[35mmingwei/tickslab-experiment[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2887PR #2887]8;;[0m [31mClosed[0m
+│ │ │ │  Wire TickSlab into DFIR codegen, replacing Vec for non-defer handoffs
+│ ○ │ │  [1m[35mvwlpxoxwuzkl[0m [34m9670ab18182b[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2887PR #2887]8;;[0m [31mClosed[0m
+│ │ │ │  Rewrite TickSlab with RefCell interior mutability
+│ ○ │ │  [1m[35mxrlrnpmysmyy[0m [34m33005d7c156a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2887PR #2887]8;;[0m [31mClosed[0m
+├─╯ │ │  Prototype TickSlab allocator with stable slots
+│ ○ │ │  [1m[35mnrwzzrquqkyv[0m [34m1434c8ce3953[0m [1m[35mmingwei/bumpalo-experiment[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+│ │ │ │  Drop recv handoffs in reverse (LIFO) order for bump reclamation
+│ ○ │ │  [1m[35mwpmvxnmstszt[0m [34md72b6aef78a7[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+│ │ │ │  Drop bump-allocated recv handoffs after subgraph completes
+│ ○ │ │  [1m[35mwkqvzqtoyuux[0m [34m1c5b6fe1cdad[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+│ │ │ │  [32m(empty)[0m Revert bump pre-allocation experiment, keep Bump::new()
+│ ○ │ │  [1m[35mtsslxrynlwsl[0m [34md2e40ccf8b1d[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+│ │ │ │  Add PushBuf trait and size_hint/reserve support for bumpalo handoffs
+│ ○ │ │  [1m[35mutosoxkokvls[0m [34mdcd5c7ba89c2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+│ │ │ │  experiment: use bumpalo for DFIR handoff buffers [ci-bench]
+│ ○ │ │  [1m[35mkxtpqnrkonmz[0m [34ma0fa146759bf[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+│ │ │ │  [32m(empty)[0m Forward size_hint from pull to push in SendPush pivot
+│ ○ │ │  [1m[35mmwxynnszytly[0m [34m5e5bf0a5d731[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+│ │ │ │  Add bumpalo tests (tests 36-37)
+│ ○ │ │  [1m[35mlvpsrrnnmvlq[0m [34ma6be121dcd81[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+│ │ │ │  Add unified codegen path tests (Slab abstraction)
+│ ○ │ │  [1m[35mloxsxnuszopn[0m [34m909ab700b6b7[0m [1m[35mmingwei/ref-handoff-examples[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+│ │ │ │  Add borrow checker exploration test source files
+│ ○ │ │  [1m[35mmvxokzssosrr[0m [34m0352c357d770[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m [31mClosed[0m
+├─╯ │ │  Add borrow checker exploration tests for DFIR handoff references
+│ ○ │ │  [1m[35mlssyknmxzzyz[0m [34madd5f7732d6e[0m [1m[35msandbox-9e62be45-b243-4896-950c-52bf6863f973[0m [2m(no PR)[0m
+├─╯ │ │  [32m(empty)[0m [32m(no description set)[0m
+│   ○ │  [1m[35mrwowqqkskorw[0m [34m1ac80fd42542[0m [2m(no PR)[0m
+│   │ │  Update Benchmarks 2026-05-22 56ca7e115f20bfacbc4b401bab71e6a35cad13ce
+│   ○ │  [1m[35mvqtswwmmvovm[0m [34m79e51b830c81[0m [2m(no PR)[0m
+│   │ │  Update rustdoc 2026-05-22 56ca7e115f20bfacbc4b401bab71e6a35cad13ce
+│   ○ │  [1m[35mnkkmkunuvkps[0m [34m80a37b79e5b6[0m [2m(no PR)[0m
+│   │ │  Update rustdoc 2026-05-22 938cf91f4adff7b96f3f3536f4427f38f07f4ea6
+│   ○ │  [1m[35motsrokslttws[0m [34m10ca2158d2b5[0m [2m(no PR)[0m
+│   │ │  Update Benchmarks 2026-05-22 fc8add41380f856316b7b356ecc2c398740b5f58
+│   ○ │  [1m[35muvnzxvsqrpvm[0m [34m73e025ab8d40[0m [2m(no PR)[0m
+│   │ │  Update rustdoc 2026-05-21 fc8add41380f856316b7b356ecc2c398740b5f58
+│   ○ │  [1m[35msmvoknkollmo[0m [34m3b710dc8d874[0m [2m(no PR)[0m
+│   │ │  Update Benchmarks 2026-05-21 447effd1b6bb9d8ae6600b282351b2fc9c1d0c2a
+│ ○ │ │  [1m[35mqynlxmxoznto[0m [34m023ed3bda0ba[0m [2m(no PR)[0m
+├─╯ │ │  feat(hydro_lang): add sim_atomic_input with proper scheduler support
+│   │ ○  [1m[35mmppoxsvnuuzv[0m [34md7bfa4904c43[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2883PR #2883]8;;[0m [32mReady[0m
+│   │ │  Address PR #2883 review comments: use pin_project_lite for StatePush
+│ ○ │ │  [1m[35mlnuxvnmwoypl[0m [34md467944519e8[0m [1m[35msandbox-2846e41a-a5b7-43f0-a5cf-7b48fec33ed5[0m [2m(no PR)[0m
+│ ├───╯  [32m(empty)[0m [32m(no description set)[0m
+│ ○ │  [1m[35mywpomskwmwyq[0m [34mc0fc3bda82b4[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2883PR #2883]8;;[0m [32mReady[0m
+├─╯ │  feat: Add two mandatory output ports (`[items]`, `[state]`) to `state`/`state_by` operators
+│   ○  [1m[35mmvqnxlvllwmr[0m [34m7ad218e198d5[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-20 447effd1b6bb9d8ae6600b282351b2fc9c1d0c2a
+│   ○  [1m[35mvtpmttxwkxtl[0m [34m24f7e775ae70[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-20 617cf64a8004fd5e53de68736cf03d53b1ab16a7
+│   ○  [1m[35mspwwwmwxpsul[0m [34mc6071b21db7d[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-19 617cf64a8004fd5e53de68736cf03d53b1ab16a7
+│   ○  [1m[35mqqsrwmulpkwl[0m [34m93f26f1a7c77[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-19 31eb4ba0a541906e69425ba3eff3b0cb78a64941
+│   ○  [1m[35movloxslxrtnq[0m [34m06ab520bf77f[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-19 b9aca9b6e191e6b2d023e256088bbb269066fcb7
+│   ○  [1m[35mqpslronlsyrq[0m [34mc1fe185b5543[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-19 755469a79470adbc502a44e6bf9d67193a2b6582
+│   ○  [1m[35mkmykrmqszzpz[0m [34m1a8f247555fa[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-19 220fb49faaf41f01b607c3b6e654a8937a1361a8
+│ ○ │  [1m[35myupovooxtnnt[0m [34m6fe01e2229d1[0m [1m[35msandbox-e22bc158-a1ef-4daa-9f68-1076744dc18c[0m [2m(no PR)[0m
+├─╯ │  [32m(empty)[0m [32m(no description set)[0m
+│   ○  [1m[35mzluurywkrruz[0m [34md3bd5faeda81[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-19 9861ae7ed89e446ff34876cb4cfd903de6627ed6
+│   ○  [1m[35mstpnkuzswrox[0m [34mcd2aa3551fcf[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-18 9861ae7ed89e446ff34876cb4cfd903de6627ed6
+│   ○  [1m[35mzyqruoqnzkzn[0m [34ma6f0d382cd41[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-18 918c42881c6b7474c6dfed3dee2bb76f8a66630e
+│ ○ │  [1m[35mvtuysuzwpoun[0m [34mf24b7811e090[0m [2m(no PR)[0m
+╭─┤ │  [32m(no description set)[0m
+│ │ ○  [1m[35mnquqnxuworss[0m [34m493b36d1f7e8[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-05-18 27a9aecedee2eac6a8d8ed4a3f53a47675795298
+│ ○ │  [1m[35msnurxrlyprxs[0m [34m6d7253215e23[0m [2m(no PR)[0m
+│ │ │  try to make fold return &mut
+│ ○ │  [1m[35mzwyzrxolmyvt[0m [34m90c8d3e89de8[0m [2m(no PR)[0m
+│ │ │  unify push accum
+│ │ │ ○  [1m[35mtkznsupxnwtv[0m [34m9ef4fe861c84[0m [2m(no PR)[0m
+├─────╯  [32m(empty)[0m [32m(no description set)[0m
+│ │ │ [33m⚠[0m  [1m[35mwotlxqsxrzqr[0m [34m2f085762c223[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Remove DelayType::Stratum and DelayType::MonotoneAccum from operator input_delaytype_fn
+│ │ │ [33m⚠[0m  [1m[35mmywosvqpporq[0m [34me725e09eec30[0m [1m[35msandbox-1b29a495-7851-480a-89b8-dc7f297b500a[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Remove DelayType::Stratum and DelayType::MonotoneAccum variants
+│ │ │ [31m⚠[0m  [1m[35mloxrupzwqsst[0m [34md3aa4c0575f6[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Add singleton propagation: allow #var references to derived singletons
+│ │ │ [31m⚠[0m  [1m[35mskpkvuxwmntx[0m [34m6b06bbd070b4[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  refactor: allow #var references to any operator, not just stateful ones
+│ │ │ [31m⚠[0m  [1m[35mtsoutuqvnsmx[0m [34mc23ba6ab886c[0m [1m[35msandbox-fb2e97fd-91cb-4477-a560-a5731ecebe29[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Fix precheck.bash --dfir clippy and compile errors from rebasing
+│ │ │ [33m⚠[0m  [1m[35mmlpnpmytkllz[0m [34m0cebcf0bb6eb[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Remove Stratum from persist_mut and persist_mut_keyed
+│ │ │ [33m⚠[0m  [1m[35mwsvorvvkqpus[0m [34m97e30882e3fc[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Keep persist_mut and persist_mut_keyed with Stratum (need emit-on-flush)
+│ │ │ [33m⚠[0m  [1m[35mwqrurskqwpty[0m [34m9581723f3c93[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Fix persist_mut push-side borrow conflict; remove Stratum
+│ │ │ [33m⚠[0m  [1m[35mrkpvnlqktpkp[0m [34m6a2cb3aae6b6[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Investigate persist_mut push-side borrow conflict
+│ │ │ [33m⚠[0m  [1m[35mnkvnkwksstry[0m [34m8fdca125483a[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Add push-side codegen for reduce_keyed; persist_mut stays pull-only
+│ │ │ [33m⚠[0m  [1m[35mylyxylnpuwmp[0m [34m0703241d97f5[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ │  Add push-side codegen for reduce_keyed
+│ │ │ [33m⚠[0m  [1m[35mlkpqzyknsysm[0m [34m527f9738bd27[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ ├───╯  Add push-side codegen for fold_keyed, fix FoldKeyed type generics
+│ [33m⚠[0m │  [1m[35mvxwrpsrpnxnv[0m [34m51c085865aae[0m [1m[35mmingwei/push-codegen[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │  accumulate size_hint
+│ [33m⚠[0m │  [1m[35muzxvymzkwsoo[0m [34m546481188e09[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │  combine regular and borrow fold
+│ │ │ [31m✗[0m  [1m[35mrlxyoxzrtywx[0m [34m8030432675ec[0m [2m(no PR)[0m
+│ ├───╯  [32m(no description set)[0m
+│ [33m⚠[0m │  [1m[35mkvonvxptywnv[0m [34m867630ba803f[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │  Add push-side codegen for sort and reduce operators
+│ [33m⚠[0m │  [1m[35moyqwypsoqono[0m [34m5ae86576552e[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │  Add push-side fold codegen and restore Stratum for persist_mut
+│ [33m⚠[0m │  [1m[35monkpmnltlskr[0m [34mbedf4e182c44[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │  cleanup Fold
+│ ○ │  [1m[35moyymkmznptow[0m [34m86148bb30a94[0m [1m[35mmingwei/push-fold[0m [1m[35msandbox-ff4ea805-edb6-4a68-a9c0-062239670ae2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2844PR #2844]8;;[0m [31mClosed[0m
+├─╯ │  feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators
+│   ○  [1m[35mzmlqlvxpzukr[0m [34m4d4c99d683ea[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-18 d4ff79f02f6ab1981f671e364e02c089a4990735
+│   ○  [1m[35mzpmstvsmplzn[0m [34md4f27a69db5b[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-17 d4ff79f02f6ab1981f671e364e02c089a4990735
+│   ○  [1m[35mzsuuznowsqvy[0m [34m38d8c6041d44[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-16 d4ff79f02f6ab1981f671e364e02c089a4990735
+│   ○  [1m[35mmwpxnknspuou[0m [34m4d78ce171bc9[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-15 d4ff79f02f6ab1981f671e364e02c089a4990735
+│   ○  [1m[35mzpqlvxommupv[0m [34me2368aa54d66[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-15 71a1a5e952dbff6c62914aaefda3204f85a593e4
+│   ○  [1m[35mvpmystwsontt[0m [34m5ca6b3424c56[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-15 33a606afb3f123f01e4b9ce916c75cf9aa03e5fd
+│   ○  [1m[35mmlwnmzkvtpwq[0m [34mcb764faaf8d9[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-15 9496de98d5bc4d4ba961e12f251c244148672fcd
+│   ○  [1m[35mntpvnokrmukt[0m [34m3584edf51941[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-14 9496de98d5bc4d4ba961e12f251c244148672fcd
+│   ○  [1m[35mumsrumtnxxku[0m [34m7ba63a060343[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-14 7161b32a4dca04ca7c163a974d792552308b3a13
+│   ○  [1m[35mttunywyrqqpm[0m [34m40fc14779e1d[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-14 7a3fc45b43b5737d0a604e05ab9142c0df183d92
+│   ○  [1m[35mtswlyrzxlpvv[0m [34me561e2cacf2b[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-13 7a3fc45b43b5737d0a604e05ab9142c0df183d92
+│   ○  [1m[35mnmvyowlsuomv[0m [34m6fe64e36cdc4[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-12 7a3fc45b43b5737d0a604e05ab9142c0df183d92
+│ ○ │  [1m[35msnvrxsnkuvqr[0m [34ma8d761822442[0m [2m(no PR)[0m
+├─╯ │  mingwei/handoff-op handoff checks
+│ ○ │  [1m[35mqxuopzxkmpoz[0m [34m9fe6f09b0db2[0m [2m(no PR)[0m
+├─╯ │  WIP: singleton output boundary enforcement in flat_to_partitioned.rs
+│ ○ │  [1m[35mltloqrxtnksl[0m [34m50a7be44a8ae[0m [1m[35mmingwei/sqs-rebase[0m [1m[35msandbox-236c6a7a-2597-4c57-95fc-46268f948b7a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │ │  address PR #2746 review comments for AWS SQS support
+│ ○ │  [1m[35mzqxzmtrvpyzy[0m [34m4e04d8cf6b6a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │ │  re-enable aws feature gating
+│ ○ │  [1m[35mrpnyusryuvux[0m [34m8d5372a8cc78[0m [1m[35msandbox-2aebe241-661a-4fc0-8b40-bc0740d6c156[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │ │  Fix clippy warnings in hydro_test SQS module
+│ ○ │  [1m[35mlsuxxwwlvloy[0m [34m0cd687eaddb7[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │ │  enable credentials-login feature for getting login from `aws` cli
+│ ○ │  [1m[35mzkpvyxzntswr[0m [34meb0ed928d77d[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │ │  enable credentials-login feature for getting login from `aws` cli
+│ ○ │  [1m[35mowkpmukqqlwx[0m [34m5c80acb70889[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │ │  cleanup sqs one-write code
+│ ○ │  [1m[35monsovwqumzxm[0m [34m81df6b86b6e8[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │ │  SQS working!
+│ ○ │  [1m[35mtuwnswwkwnov[0m [34maa7a009bea3c[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+├─╯ │  add aws, sqs hydro_test
+│   ○  [1m[35mlzpvzykwyuzz[0m [34m04fd330cdd53[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-12 d8afd0bc71fa4e24ea2597d6b30b029911682219
+│   ○  [1m[35mmtvksmoktyyo[0m [34md8eef7867d22[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-12 b0bdfe63f4b1d2e9c28c5e916e2330bbbb15755e
+│   ○  [1m[35mqyqzyynvnltr[0m [34m9924f99c6ae9[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-11 b0bdfe63f4b1d2e9c28c5e916e2330bbbb15755e
+│ ○ │  [1m[35mlklvmyotssuu[0m [34mecdbbe1c5500[0m [2m(no PR)[0m
+│ │ │  feat: add --graph ir-json flag to serialize raw IR from examples
+│ │ ○  [1m[35mlvxxtvqulxwv[0m [34m2405d58aa033[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-05-11 d1f89203215cb223aac3aa9cba27e487d1b46c24
+│ │ ○  [1m[35mqzutytvkyppw[0m [34m41cb5b80c0d7[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-05-11 bfec02db5b1176505770eb30db6d0ce537696f8b
+│ │ ○  [1m[35mynzooxxoumnk[0m [34m50cb1a8105fc[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-05-11 87b8e95ca50e6a30bcc7adb968530a5cd09ed44b
+│ │ ○  [1m[35mwplnuuqznplo[0m [34m872b82bb3ced[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-05-11 1ca3cd1def6f2e80d4a7536e542d3c48c84e1085
+│ │ ○  [1m[35mrlvplppxlzzr[0m [34md5c589abcf1a[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-05-10 1ca3cd1def6f2e80d4a7536e542d3c48c84e1085
+│ │ ○  [1m[35mpotsoqywmryu[0m [34mbdfee2632ffe[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-05-09 1ca3cd1def6f2e80d4a7536e542d3c48c84e1085
+│ ○ │  [1m[35mzwpwkmptuvvr[0m [34m4b66057c36c4[0m [2m(no PR)[0m
+├─╯ │  feat(hydro_lang): ungate ir_json from runtime_support
+│   ○  [1m[35mupvrtlsrvznu[0m [34m6ce0d706e318[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-08 1ca3cd1def6f2e80d4a7536e542d3c48c84e1085
+│   ○  [1m[35mvyputvpunzry[0m [34m9ab935f35cdf[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-08 ebfa2adb00153bc26af5cf0c9eb14bfed6eb5188
+│   ○  [1m[35mlotnsqzyptkl[0m [34m113c634a401b[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-07 ebfa2adb00153bc26af5cf0c9eb14bfed6eb5188
+│   ○  [1m[35mprqtzyvsmokr[0m [34m0ad24e3ee927[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-06 ebfa2adb00153bc26af5cf0c9eb14bfed6eb5188
+│ ○ │  [1m[35mwzrwzorzwtty[0m [34m3af2eccdb309[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): Enable TaglessMemberId::Docker variant under ecs_runtime feature
+│ ○ │  [1m[35mstzusmkzxuum[0m [34mf382441dcfea[0m [2m(no PR)[0m
+│ │ │  [32m(empty)[0m fix(hydro_lang): Skip backtrace frames with no symbol name instead of panicking
+│ ○ │  [1m[35mmllpvyvrpvvl[0m [34m7bd6c477d814[0m [2m(no PR)[0m
+│ │ │  something???
+│ │ ○  [1m[35mvnqpktlpyomn[0m [34m0f157dad0f6b[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-05-06 2c195832ef6940c1adc8beef18dcb1527515a229
+│ │ ○  [1m[35mwvqpvlrnktst[0m [34m8201e2500e5f[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-05-06 2c195832ef6940c1adc8beef18dcb1527515a229
+│ ○ │  [1m[35mnvwqsuvwlptn[0m [34ma42dd23cea74[0m [2m(no PR)[0m
+│ │ │  fix(hydro_lang): Skip backtrace frames with no symbol name instead of panicking
+│ ○ │  [1m[35mklrwqyswlzut[0m [34m57e255035414[0m [2m(no PR)[0m
+│ │ │  cdk stuff, integ test for kvs
+│ ○ │  [1m[35mpnzvylkrrttv[0m [34m513f4119fe4b[0m [2m(no PR)[0m
+│ │ │  kvs
+│ ○ │          [1m[35mpzlvnspvsryx[0m [34mba0c8b12a9e6[0m [2m(no PR)[0m
+╭─┼───┬─┬─┬─╮  [32m(empty)[0m megamerge
+│ │ │ │ ○ │ │  [1m[35mwtptqusustxt[0m [34mb0de8fd66131[0m [2m(no PR)[0m
+│ │ │ │ │ │ │  chore: Local-only noise (commented code, whitespace, tokio snapshot, Cargo.toml pin, docs)
+│ │ │ │ ○ │ │  [1m[35mwwlzurwspovy[0m [34mc367f9abf6d2[0m [2m(no PR)[0m
+├───────╯ │ │  feat(hydro_lang): Add bidi_external_sidecar, bidi_external_many_bytes, source_map, and Docker/ECS deploy improvements
+│ │ │ │   │ ○  [1m[35msmounuqvlzyx[0m [34m5b8389e90117[0m [2m(no PR)[0m
+├───────────╯  fix(hydro_lang): remove cdk example, update ecs manifest format, add ecs manifest format test
+│ │ ○ │   │  [1m[35mxvmynvzlznsy[0m [34m7e3f418354b9[0m [2m(no PR)[0m
+│ │ │ │   │  Update rustdoc 2026-05-05 22ec9a1891536f4c84721cbe2d44af1e0dfc6cae
+│ │ ○ │   │  [1m[35mqrkpzpvxpxnv[0m [34m2266bb90c9d3[0m [2m(no PR)[0m
+│ │ │ │   │  Update rustdoc 2026-05-05 a953061308d670c673143319fed8b66de1230744
+│ │ ○ │   │  [1m[35mzwvrtrvpuqro[0m [34mc96175368058[0m [2m(no PR)[0m
+│ │ │ │   │  Update rustdoc 2026-05-05 4a4b747e7782a2700d4c4bdc7e52d835eaff201c
+│ │ ○ │   │  [1m[35mrksqoyulryon[0m [34m4ecd3b82ffeb[0m [2m(no PR)[0m
+│ │ │ │   │  Update rustdoc 2026-05-05 d0f4968e0db60a89f26f6dbb8e351ba58469d0ff
+│ │ ○ │   │  [1m[35moortoyznmrll[0m [34ma368faa22daa[0m [2m(no PR)[0m
+│ │ │ │   │  Update Benchmarks 2026-05-05 d7d70ebcc90cc365b92402757e7821e8bb54be74
+│ ○ │ │   │  [1m[35mqpkoqqwxzxlz[0m [34m8d62710ddfe3[0m [2m(no PR)[0m
+├─╯ │ │   │  fix(hydro_lang, sim): Allow empty singletons in the simulator to release nothing
+│   ○ │   │  [1m[35msontouyvkpnx[0m [34mcdaf270fd8b2[0m [2m(no PR)[0m
+│   │ │   │  Update rustdoc 2026-05-04 d7d70ebcc90cc365b92402757e7821e8bb54be74
+│   ○ │   │  [1m[35mlprylytnrkrm[0m [34m3ad771d259a7[0m [2m(no PR)[0m
+│   │ │   │  Update Benchmarks 2026-05-04 e57d42befe42ad97b9cee0cbd072274a72184f41
+│   │ ○   │  [1m[35moytqourluulv[0m [34m719dbf064feb[0m [2m(no PR)[0m
+├─────╯   │  fix(lattices): make dom_pair and ord pub so that they can be used by stageleft
+│   │     ○  [1m[35msrquyvnllowm[0m [34md4b763f7f789[0m [2m(no PR)[0m
+├─────────╯  fix(hydro_lang, ecs): Extract task-id from ECS metadata URI without runtime_id suffix
+│   ○  [1m[35mtqzrwnkqyqxz[0m [34m00973a928f70[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-03 e57d42befe42ad97b9cee0cbd072274a72184f41
+│   ○  [1m[35mpqqnmwlvtrxo[0m [34mfb202992c64e[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-03 e57d42befe42ad97b9cee0cbd072274a72184f41
+│   ○  [1m[35mqrltplqvrkvw[0m [34m51a86e0b54f4[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-02 fc37f388f378b265387e88af5c5b37f7ca6c896d
+│   ○  [1m[35mqpzzroyzsrrq[0m [34me26ea3260345[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-02 5efd2a8315a0b403b1a82dcdce349ef0ec255d46
+│   ○  [1m[35mlyuxwrtrluxz[0m [34m818194a91b22[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-01 5efd2a8315a0b403b1a82dcdce349ef0ec255d46
+│   ○  [1m[35mtzmmnwsnsurk[0m [34m16c49ecc9341[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-01 5efd2a8315a0b403b1a82dcdce349ef0ec255d46
+│   ○  [1m[35mzxvskxtznout[0m [34me263c0698730[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-01 f96e4d2590875352ad560f79e96dff1a04a4727a
+│   ○  [1m[35mxoyoxwkopzzl[0m [34m07d71eb20500[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-01 27a69758b81159d3ecc064ca74c8d01d66025a0f
+│   ○  [1m[35mpllnmmpkrwus[0m [34m11a65631e2cf[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-01 c9d078e533de7ee7d85b5f4c31c9cc049fb230e3
+│   ○  [1m[35mwkkzyqxotqor[0m [34m45f162ca3412[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-01 c20757ae0e9e10463b2a499de4b7d37ab02269d0
+│   ○  [1m[35mzmtvprorqovz[0m [34mf8255053808e[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-01 c1619d053448fa0e5a7ef41833400be759be8fa5
+│   ○  [1m[35mrwowsqmnprox[0m [34mcd545f928bd6[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-01 c1619d053448fa0e5a7ef41833400be759be8fa5
+│   ○  [1m[35mrtyxpusuqwos[0m [34md9a4e7d3f03f[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-01 31b2161962e10f5828dab33b6c67fa2edb3db314
+│   ○  [1m[35mnyrvvruukupv[0m [34m38b278328506[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-05-01 9a94b266ad7d4c123bd148da1920e2dca455a7eb
+│   ○  [1m[35mlkzqykzrsmlq[0m [34m05262e1ef90d[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-05-01 ba2eee3633034e18ffb619954d3277ce69c9344b
+│ ○ │  [1m[35msltzwqklsxpx[0m [34m879a685f1111[0m [2m(no PR)[0m
+│ │ │  fix(viz): handle Ir format in GraphApi instead of panicking
+│ │ ○  [1m[35mrysyuwrxkwlv[0m [34m88d8b4f8d156[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-30 ba2eee3633034e18ffb619954d3277ce69c9344b
+│ │ ○  [1m[35mynluouwnmwwv[0m [34m0588aa1c7b7a[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-30 a9a8e584f7bc6c1cf778bdf692f3fe4a6c3ae52c
+│ │ ○  [1m[35mwovzmttyzzvv[0m [34meb6229a19645[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-30 1855bcd4b8e212bf74f2036c1b5a3802c31a20a7
+│ ○ │  [1m[35mnupkwonoymmo[0m [34m04805e391c77[0m [2m(no PR)[0m
+├─╯ │  feat(hydro_lang): add --graph ir CLI option for IR JSON export
+│   ○  [1m[35mtxvrmlxvlvlu[0m [34mada3a1412fa8[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-30 5aa43241a504d73b4578ef4b552ed21630264f4e
+│   ○  [1m[35mozosorkmnosx[0m [34mcb9ecdc508c3[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-30 35c2d95f080ce9438246d264b95d30f7c74b3a18
+│   ○  [1m[35mxzzlsvozlowt[0m [34m6b01b07182da[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-30 33dfda8a16ee7628c4cde0fcd1ecf833baba4cd3
+│   ○  [1m[35mlzxvltxwxypl[0m [34mf954dc9d6c1b[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-30 34893c20c53499dd4c4de0a99d6d15778af7825d
+│   ○  [1m[35mssuruxrskzny[0m [34m5a3ad468be29[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-30 6803fcdf57cf06ca9f76fda4bd98f194d38deecc
+│   ○  [1m[35mswomvzxoytok[0m [34m906d5308107c[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-29 6803fcdf57cf06ca9f76fda4bd98f194d38deecc
+│   ○  [1m[35mwvwkxwsvzzrm[0m [34m83e96307e357[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-29 2b33b73b996837c0492ef260ebb826f75a24e5fd
+│   ○  [1m[35mtrnrvyzwnyuo[0m [34m6de1c0ad972d[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-29 bde98d4df8d23448a1b70f60ddc187638bcfeb50
+│   ○  [1m[35mspzsopyyxpso[0m [34md8a10845d855[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-29 b6cc1bc658d98d335cfad5d08dfda0023a8aa0b3
+│   ○  [1m[35mlrwuvnstxrns[0m [34mc0b3933f6906[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-29 6e3c8d20abb5d07b8a265cbbbb8648398581e637
+│   ○  [1m[35mrzwnymnzqkmz[0m [34m15b8c2f6db80[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-29 6e3c8d20abb5d07b8a265cbbbb8648398581e637
+│   ○  [1m[35mkqxmxoszvyns[0m [34meaed18422acd[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-28 37cdd7a24df89eed07401fd8cec1f7dd80955f02
+│   ○  [1m[35mxtqvnqryxkwn[0m [34md2dbc19357b6[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-28 2cdb91888d60d35dd7788efbf4a392872830c4f8
+│   ○  [1m[35mwzkvvmnpyxqy[0m [34m1a2ed2176523[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-28 90cc8cdcc451ee9e307b2204d3b797c93791d37d
+│   ○  [1m[35moxnzlyxsrnvq[0m [34ma3e6b81c5055[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-28 dbfab17a472655d18cdba6ec8b91ca5c0f9e3811
+│   ○  [1m[35mrmqqvuzrxkrx[0m [34md16c089eb498[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-28 dbfab17a472655d18cdba6ec8b91ca5c0f9e3811
+│   ○  [1m[35mtyvnvvvmwozo[0m [34m5d1941c8c8ae[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-27 7e90a1f283884067ee74d86c1690404c74d47cc2
+│   ○  [1m[35morywxqoyuzpy[0m [34m295931d70387[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-27 394327fc1344b8fde0964e28db15aff3f62b5cd7
+│   ○  [1m[35mxprkxxvvsvsw[0m [34m156b9e571a2d[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-27 bafcb57e02f0b538a2bedc9051dd36a05f3ad7e9
+│   ○  [1m[35mkwwxvtsnssty[0m [34m8ae0f8798c87[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-26 bafcb57e02f0b538a2bedc9051dd36a05f3ad7e9
+│   ○  [1m[35mmwumsrsvmuwt[0m [34m9a77befb5783[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-25 bafcb57e02f0b538a2bedc9051dd36a05f3ad7e9
+│   ○  [1m[35moyprnmzyowvm[0m [34mea24f5842b3a[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-24 bafcb57e02f0b538a2bedc9051dd36a05f3ad7e9
+│   ○  [1m[35mxluznvxvvksu[0m [34m9757ae0c9c0f[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-24 16f1c0bf960c3b4238adb020a833f214bd3fd064
+│ ○ │  [1m[35mkvouzumstwrq[0m [34m651476c17c26[0m [2m(no PR)[0m
+├─╯ │  feat(hydro_lang): thread algebraic properties into IR nodes
+│   ○  [1m[35mwulyuvnrnrxo[0m [34mf8acd30390d3[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-23 16f1c0bf960c3b4238adb020a833f214bd3fd064
+│   ○  [1m[35muxnoknllxqtv[0m [34mc27048fa797b[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-23 9cb780085e19197381653eb010d8abdaeb23729d
+│   ○  [1m[35mnxxuowvrxzry[0m [34m1ecafbcdacb4[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-23 4020ec7ca1a3bc663eaadaf6fa30533bc1b27efb
+│ ○ │  [1m[35mvlplttwlulrz[0m [34mba6744d37886[0m [2m(no PR)[0m
+│ │ │  prototype: Consistency type parameter with MinConsistency
+│ │ ○  [1m[35mylpkskrzploq[0m [34m3d579aec22da[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-23 4020ec7ca1a3bc663eaadaf6fa30533bc1b27efb
+│ ○ │  [1m[35mszkqxvvwoxrk[0m [34mba7eb5eda3b4[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): add lean analysis JSON emitter for coordination analysis
+│ │ ○  [1m[35mtxqzotyuovww[0m [34mae389f87122d[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-04-22 296a491c80546eb7f48327b48f9d50951abdf172
+│ ○ │  [1m[35mnktxwwunrkts[0m [34m41c7c6a5e5a6[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): thread algebraic properties into IR nodes
+│ │ ○  [1m[35musupxnozuoqz[0m [34m8eae65c79f6a[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-22 296a491c80546eb7f48327b48f9d50951abdf172
+│ │ ○  [1m[35mrpqqmnxvsynt[0m [34m20e3f928f941[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-22 23cc2e6d9590942af774cab3ec31cd5fed89ba84
+│ │ ○  [1m[35moktpozskswmu[0m [34md740fe1e4d35[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-22 4eea87b5466e52d8b7ea7709f0a19836b18440ca
+│ ○ │  [1m[35msmvxyktyvzqx[0m [34ma082ede62240[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): add durable_broadcast API and ChannelDelivery semantics
+│ ○ │  [1m[35molpzsnzykrrp[0m [34m1f12daff0775[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): add StaticCluster location type with complete networking
+│ ○ │  [1m[35mutqllzmsxlvu[0m [34m12e563150f3d[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): cross_product accepts mixed boundedness
+│ │ ○  [1m[35myzusorzukmou[0m [34m109538405f3b[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-22 b6fc12e3a8b174f251a491fad12020da030e0dfe
+│ │ │ ○  [1m[35mymprlkorrokq[0m [34maff2ca72f933[0m [2m(no PR)[0m
+│ │ │ │  feat: complete StaticCluster support
+│ │ │ ○  [1m[35mmqvptlxorowr[0m [34mb12448c6c655[0m [2m(no PR)[0m
+│ │ │ │  fix: CLUSTER_SELF_ID to_tokens handles StaticCluster LocationId
+│ │ │ ○  [1m[35mmrlktrtwyquk[0m [34mf15d56bc4e9e[0m [2m(no PR)[0m
+│ │ │ │  fix: add NoAtomic impl for StaticCluster
+│ │ │ ○  [1m[35mwlpsuvnonllu[0m [34m735766afee73[0m [2m(no PR)[0m
+│ │ │ │  feat(hydro_lang): add StaticCluster networking methods
+│ │ │ ○  [1m[35mkouxkoqrzlmw[0m [34mcf8c33d53a8a[0m [2m(no PR)[0m
+│ │ │ │  feat(coordination): Chain with bounded first preserves goal for both branches
+│ │ │ ○  [1m[35mwkvsltqroqmv[0m [34m8f3eede63cbc[0m [2m(no PR)[0m
+│ │ │ │  feat(coordination): handle JoinBounded in coordination analysis
+│ │ │ ○  [1m[35mzysuqykpynst[0m [34md7e70831e73c[0m [2m(no PR)[0m
+│ │ │ │  Add is_associative to IR node docs in COORDINATION.md
+│ │ │ ○  [1m[35mtptlrzltqqmm[0m [34md91c35e35ec9[0m [2m(no PR)[0m
+│ │ │ │  Remove stale docs: COORD_CRITERION_TODO.md and RECOVERY.md
+│ │ │ ○  [1m[35mmkupzvnyrouk[0m [34m22c3fe1cde65[0m [2m(no PR)[0m
+│ │ │ │  Update COORD_CRITERION_TODO.md with current status
+│ │ │ ○  [1m[35mnwsvtqpusptz[0m [34m3d374fc34c65[0m [2m(no PR)[0m
+│ │ │ │  Update COORDINATION.md with new labels, associativity, and delivery docs
+│ │ │ ○  [1m[35mwmlwyqqquvus[0m [34md454e451e0d6[0m [2m(no PR)[0m
+│ │ │ │  Add PER_KEY SEQ CONSISTENT label for per-key sequential consistency
+│ │ │ ○  [1m[35myvqvvktnloss[0m [34me3510d566f0b[0m [2m(no PR)[0m
+│ │ │ │  Use existing tag field for sink names in coordination analysis
+│ │ │ ○  [1m[35mxwzottwvtrvn[0m [34m941e99c05c03[0m [2m(no PR)[0m
+│ │ │ │  Use Stream::name() in coordination analysis output
+│ │ │ ○  [1m[35mupqzqoxlskyx[0m [34mc619912ddf14[0m [2m(no PR)[0m
+│ │ │ │  Rename SelfConsistent to Local, use full words in labels
+│ │ │ ○  [1m[35mkwlukompmzmk[0m [34m4d10a75604d3[0m [2m(no PR)[0m
+│ │ │ │  Rebase on main; add test for KeyedStream::get preserving Prefix
+│ │ │ ○  [1m[35mslsrzlqlpnwk[0m [34mb890da113769[0m [2m(no PR)[0m
+│ │ │ │  Add tests for associativity check on bounded folds
+│ │ │ ○  [1m[35mukqmktlsornn[0m [34mc1c82aabf2f9[0m [2m(no PR)[0m
+│ │ │ │  Check associativity for bounded folds under Prefix goal
+│ │ │ ○  [1m[35mvtxzlxxlvupp[0m [34me2289906aa45[0m [2m(no PR)[0m
+│ │ │ │  Thread is_associative through IR nodes and coordination analysis
+│ │ │ ○  [1m[35mnpyvyqppqxql[0m [34m26919638befe[0m [2m(no PR)[0m
+│ │ │ │  Improve durable_broadcast docs: enumerate proof obligations
+│ │ │ ○  [1m[35mxuqnzunpvzmt[0m [34m2546e06e277b[0m [2m(no PR)[0m
+│ │ │ │  Refactor: property-based complete_delivery instead of bespoke is_durable checks
+│ │ │ ○  [1m[35mrkwzkrsmortn[0m [34m7213d4a76299[0m [2m(no PR)[0m
+│ │ │ │  Cleanup: lazy coordination analysis, rename proof methods, doc fixes
+│ │ │ ○  [1m[35muxyzqnsxwmvl[0m [34mb25c3983d14c[0m [2m(no PR)[0m
+│ │ │ │  Add durable_broadcast API and ChannelDelivery semantics
+│ │ │ ○  [1m[35mrnouqlrtpkpn[0m [34mc1baefba6da0[0m [2m(no PR)[0m
+│ │ │ │  Fix broadcast_static: use commutative fold instead of track_membership
+│ │ │ ○  [1m[35mwmrwsotrmlqu[0m [34mbbd464e8a87a[0m [2m(no PR)[0m
+│ │ │ │  Add NoTick impl for StaticCluster
+│ │ │ ○  [1m[35mvkssmkklupww[0m [34m558b35ee2c5f[0m [2m(no PR)[0m
+│ │ │ │  Coordination analysis: distinguish StaticCluster from dynamic Cluster
+│ │ │ ○  [1m[35myllvkrtpkrtq[0m [34m075d0ecee5c7[0m [2m(no PR)[0m
+│ │ │ │  Simulator coordination tests: INCON, CONV, SEQ
+│ │ │ ○  [1m[35mmkyqnrtnowpv[0m [34m46522c242675[0m [2m(no PR)[0m
+│ │ │ │  Cleanup: fix warnings, add missing docs, remove dead code
+│ │ │ ○  [1m[35myyokpnswryks[0m [34m50c636035248[0m [2m(no PR)[0m
+│ │ │ │  Simulator finds coordination inconsistency: concrete counterexample
+│ │ │ ○  [1m[35mpyqquqnuowyt[0m [34m344536e751e3[0m [2m(no PR)[0m
+│ │ │ │  Fix propagation: Process sinks inherit upstream consistency
+│ │ │ ○  [1m[35muqolurvnwvup[0m [34mfc57d8d9455c[0m [2m(no PR)[0m
+│ │ │ │  Add ConsistencyCollector for simulator cross-run checking
+│ │ │ ○  [1m[35mnyoyzzqqlzvt[0m [34mdda6b6d6e648[0m [2m(no PR)[0m
+│ │ │ │  Store CoordinationReport in BuiltFlow/SimFlow, env var for output
+│ │ │ ○  [1m[35mksuykpqosuqw[0m [34m19174c031c3b[0m [2m(no PR)[0m
+│ │ │ │  Auto-print coordination analysis on finalize()
+│ │ │ ○  [1m[35musmvwyztkyzn[0m [34mf08dd1341ad3[0m [2m(no PR)[0m
+│ │ │ │  Fix consistency label propagation (Definition 6.2) and dual-membership reporting
+│ │ │ ○  [1m[35mwkqlslxskrvr[0m [34md83a63ac641a[0m [2m(no PR)[0m
+│ │ │ │  Document upstream-INCON limitation in propagation (Remark 6.3)
+│ │ │ ○  [1m[35mmylkrmooyzwt[0m [34mfc7d860e6ac8[0m [2m(no PR)[0m
+│ │ │ │  Strip common path prefix from spans in coordination report
+│ │ │ ○  [1m[35mlywsszmqmnly[0m [34mbc6fb3f6eab5[0m [2m(no PR)[0m
+│ │ │ │  Compact display: short labels (SEQ/CONV/SELF/INCON), short location names, sink spans
+│ │ │ ○  [1m[35mvunwntryqszs[0m [34m59010d6b4c3c[0m [2m(no PR)[0m
+│ │ │ │  Fix batch analysis: preserve Prefix on TotalOrder input, fix Cluster location detection
+│ │ │ ○  [1m[35mpynmorypmmqn[0m [34m1926f3ed023d[0m [2m(no PR)[0m
+│ │ │ │  Consistency label propagation with location-aware rules and ascii-dag display
+│ │ │ ○  [1m[35mxzupqovqtxwm[0m [34m0f19eb7bc683[0m [2m(no PR)[0m
+│ │ │ │  Add replication analysis to coordination criterion
+│ │ │ ○  [1m[35mukymqowqqwlk[0m [34m7a42d60d7f88[0m [2m(no PR)[0m
+│ │ │ │  Fix rebase: add ScanAsyncBlocking to coordination analysis
+│ │ │ ○  [1m[35msowvxwyqpnok[0m [34m636ea67156de[0m [2m(no PR)[0m
+│ │ │ │  Revert blessing mechanism: nondet! means genuinely non-deterministic
+│ │ │ ○  [1m[35mzvrzrrmwzsyv[0m [34mdc5f7658cfe5[0m [2m(no PR)[0m
+│ │ │ │  Add conditional pass (blessing) and multi-goal exploration to coordination analysis
+│ │ │ ○  [1m[35mvupszwvumtop[0m [34mfe176c414211[0m [2m(no PR)[0m
+│ │ │ │  Fix rebase: add FlatMapStreamBlocking to coordination analysis
+│ │ │ ○  [1m[35mkylxotmwpwzw[0m [34m0df533eeb794[0m [2m(no PR)[0m
+│ │ │ │  Add cluster/broadcast reasoning to coordination analysis
+│ │ │ ○  [1m[35mztxmssrvqspr[0m [34md035c7da0b23[0m [2m(no PR)[0m
+│ │ │ │  Reframe analysis in terms of lattice joins, not commutativity/idempotency
+│ │ │ ○  [1m[35mqxnunpluylrr[0m [34m73afa850741c[0m [2m(no PR)[0m
+│ │ │ │  Add is_idempotent to ReduceKeyedWatermark IR node
+│ │ │ ○  [1m[35mlyxznvsvqqrl[0m [34m2762ef727949[0m [2m(no PR)[0m
+│ │ │ │  Always update cycle proof trace, track convergence on success only
+│ │ │ ○  [1m[35mrqpyrpoyorzv[0m [34md3a80b6bc160[0m [2m(no PR)[0m
+│ │ │ │  Clear seen_tees cache each fixpoint iteration and before pass 2
+│ │ │ ○  [1m[35mzvktlykoszow[0m [34m757f902b2a38[0m [2m(no PR)[0m
+│ │ │ │  Seed cycle proofs with optimistic placeholders before fixpoint
+│ │ │ ○  [1m[35mytpymsnmokul[0m [34md45ea2fba1f8[0m [2m(no PR)[0m
+│ │ │ │  Final review fixes: stale docs, unused var, soundness, allocations
+│ │ │ ○  [1m[35mspzvkysxrzro[0m [34mfb788b15bbac[0m [2m(no PR)[0m
+│ │ │ │  Add multi-cycle fixpoint tests: monotone and non-monotone propagation
+│ │ │ ○  [1m[35mtmvmryrlmony[0m [34m0f5fe15d7bed[0m [2m(no PR)[0m
+│ │ │ │  Cycle analysis: fixpoint iteration instead of arbitrary two passes
+│ │ │ ○  [1m[35mzkszxylnuyqy[0m [34m15206cb33429[0m [2m(no PR)[0m
+│ │ │ │  Replace fragile usize sink indices with string-based sink identifiers
+│ │ │ ○  [1m[35mmruwqounqllx[0m [34meb0ace4808ce[0m [2m(no PR)[0m
+│ │ │ │  Refactor prove() with classify() dispatch table
+│ │ │ ○  [1m[35mtxllvpzvuppw[0m [34mecc3846d6d1e[0m [2m(no PR)[0m
+│ │ │ │  Combine match arms: Enumerate|Unique, Difference|AntiJoin
+│ │ │ ○  [1m[35mwlzwrxlkkwpy[0m [34m17d27112c5c4[0m [2m(no PR)[0m
+│ │ │ │  DRY up prove() with shared helpers for recurring patterns
+│ │ │ ○  [1m[35mqvmxmmvwzvkl[0m [34m616fea2d798c[0m [2m(no PR)[0m
+│ │ │ │  Add negative tests for operator rules: 8 counter-examples
+│ │ │ ○  [1m[35mpxkxotovnsnu[0m [34mf52cdc64fc8a[0m [2m(no PR)[0m
+│ │ │ │  CrossSingleton preserves Prefix on the stream side (not just SetInclusion)
+│ │ │ ○  [1m[35mkpnlzqmpxoqk[0m [34mc18777cd36e0[0m [2m(no PR)[0m
+│ │ │ │  Network preserves Prefix when transport guarantees ordering (TCP FailStop)
+│ │ │ ○  [1m[35mvqvlvuprqyzv[0m [34m7cbd03ff7b27[0m [2m(no PR)[0m
+│ │ │ │  CycleSource without matching CycleSink is a bug, not a silent pass
+│ │ │ ○  [1m[35mowuknptzvzqo[0m [34mcfc0b0b8e5a0[0m [2m(no PR)[0m
+│ │ │ │  Extract Backtrace::format_span() shared utility, remove duplicate from coordination.rs
+│ │ │ ○  [1m[35mykqmznuozpzy[0m [34m4e6d832a46f3[0m [2m(no PR)[0m
+│ │ │ │  Clarify bounded/unbounded bullet in COORDINATION.md — it's sound, not a weakness
+│ │ │ ○  [1m[35mlxrovpotsywn[0m [34m89d04c57147a[0m [2m(no PR)[0m
+│ │ │ │  Move Scan to Preserved section in COORDINATION.md
+│ │ │ ○  [1m[35mxuuztrosmyry[0m [34mf048a47b9af9[0m [2m(no PR)[0m
+│ │ │ │  Scan preserves (not discharges) — it's a transform, not a source
+│ │ │ ○  [1m[35murlxpwlkqxyy[0m [34m2c9b83072c1e[0m [2m(no PR)[0m
+│ │ │ │  Add COORDINATION.md documenting the analysis design and limitations
+│ │ │ ○  [1m[35mpstkwmmwqkry[0m [34mfa06cfb2cb81[0m [2m(no PR)[0m
+│ │ │ │  Avoid allocation in short_name: match on variant, return &'static str
+│ │ │ ○  [1m[35mzporxwloplxs[0m [34m660e3c8e34d9[0m [2m(no PR)[0m
+│ │ │ │  Clean up remaining nits from code review
+│ │ │ ○  [1m[35mosvnnkrtlskq[0m [34md88c58168d4a[0m [2m(no PR)[0m
+│ │ │ │  Address second code review: 18 of 20 issues fixed
+│ │ │ ○  [1m[35mttkmwtmmqotp[0m [34m40d2617cc8d4[0m [2m(no PR)[0m
+│ │ │ │  Add 20 unit tests for coordination analysis operator rules
+│ │ │ ○  [1m[35mnoquvsvoxzsx[0m [34m89428f5b8990[0m [2m(no PR)[0m
+│ │ │ │  Code review fixes: 8 issues addressed
+│ │ │ ○  [1m[35mnmkvltyxpozs[0m [34m90ffcfe98395[0m [2m(no PR)[0m
+│ │ │ │  Remove old forward analysis (v1), rename v2 to coordination.rs
+│ │ │ ○  [1m[35mxlkkvvskyqyq[0m [34m5dd877f75947[0m [2m(no PR)[0m
+│ │ │ │  Add proc_macro2::Span capture and diagnostics API for future IDE integration
+│ │ │ ○  [1m[35msyruvprzrkpn[0m [34mcdef061dda2c[0m [2m(no PR)[0m
+│ │ │ │  Add rust-analyzer integration for coordination diagnostics
+│ │ │ ○  [1m[35mzutyvmxqzvmm[0m [34mbf15b52c7bb4[0m [2m(no PR)[0m
+│ │ │ │  Rich diagnostic traces for coordination analysis
+│ │ │ ○  [1m[35mrnrotuzoyqtv[0m [34mff5f494fabed[0m [2m(no PR)[0m
+│ │ │ │  Scan on TotalOrder discharges both Prefix and SetInclusion goals
+│ │ │ ○  [1m[35mnwosozkvvzrr[0m [34m2a3c441b4603[0m [2m(no PR)[0m
+│ │ │ │  Fix backward analysis: commutative+idempotent fold discharges any goal
+│ │ │ ○  [1m[35mzqyyllntzmsv[0m [34maa6f35ce5939[0m [2m(no PR)[0m
+│ │ │ │  Add backward goal-seeking coordination analysis (v2)
+│ │ │ ○  [1m[35mnonyrvwvypmv[0m [34m70367243783e[0m [2m(no PR)[0m
+│ │ │ │  Add commutativity/idempotency proof info to Fold/Reduce IR nodes
+│ │ │ ○  [1m[35mpzlymtpzwvmk[0m [34m73594d32c532[0m [2m(no PR)[0m
+│ │ │ │  Fix coordination analysis: SendExternal is observable, CycleSource inherits sink monotonicity
+│ │ │ ○  [1m[35mznymzsrnzmnp[0m [34m2a6663a81949[0m [2m(no PR)[0m
+│ │ │ │  Add Coordination Criterion static analysis
+│ │ │ ○  [1m[35morpuvkryxptn[0m [34m9fe16f9dd6ed[0m [2m(no PR)[0m
+│ │ │ │  Add StaticCluster location type and broadcast_static API
+│ │ │ ○  [1m[35mqlsrornotswn[0m [34m3d36bfd7630f[0m [2m(no PR)[0m
+│ │ │ │  Add RECOVERY.md: design doc for cluster broadcast recovery guarantees
+│ │ │ ○  [1m[35mwkxvppuzmvyz[0m [34m29405c9b8e3c[0m [2m(no PR)[0m
+│ │ │ │  Add associative annotation to AggFuncAlgebra
+│ │ │ ○  [1m[35mqxwkkqnwuppt[0m [34meb61d42711a6[0m [2m(no PR)[0m
+│ │ │ │  fix(hydro_lang): fix simulator hole for Stream::merge_ordered (#2755)
+│ │ │ ○  [1m[35myspvvkvumnxo[0m [34mc697a8c5ef1e[0m [2m(no PR)[0m
+│ │ │ │  refactor(dfir_rs): switch 26 test files to dfir_syntax_inline! codegen path (#2763)
+│ │ │ ○  [1m[35movxnllpyrvmq[0m [34m1d947c5fe755[0m [2m(no PR)[0m
+│ │ │ │  ci: benchmark page render higher-is-better throughput metrics in blue [ci-bench] (#2749)
+│ │ │ ○  [1m[35mqroxlkkzyllp[0m [34m42b950d78ede[0m [2m(no PR)[0m
+│ ├───╯  feat(hydro_lang): pass through orderedness in KeyedStream::get (#2757)
+│ │ ○  [1m[35mrnuvvqxvoorp[0m [34mce653f6fce4c[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-22 e00dc57f07f5af20021263d74cae291de5434e04
+│ │ ○  [1m[35mlxlvknxpoptl[0m [34m8ac107479ff9[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-04-22 67c066ef77042b337100de5e119f20ced0cae394
+│ ○ │  [1m[35mvvplsxyqppvo[0m [34m20d6c45bbbf7[0m [2m(no PR)[0m
+├─╯ │  feat(hydro_lang): smart join that preserves ordering when right side is bounded (#2761)
+│   ○  [1m[35mxlmxkvoxsuox[0m [34m4753658b8154[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-21 67c066ef77042b337100de5e119f20ced0cae394
+│   ○  [1m[35mnruoyvxtzkpn[0m [34mbb5ca2adc57e[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-21 829bfeee51c21e20ef1e9bc9be37f8c63ebd951a
+│   ○  [1m[35mvkqvqrrqknlp[0m [34mf81fce871ed4[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-21 0f5a7378a845a419d629a3121ecc8a518d796071
+│ ○ │  [1m[35mnqklmsrtklnq[0m [34md1c0e83aca74[0m [2m(no PR)[0m
+├─╯ │  Add Stream::name() and LiveCollection::name() for labeling dataflow edges
+│   ○  [1m[35mwvvntzqrvpmp[0m [34m3dcbcee270c0[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-21 a675af6236dbc0d9bac22cb08b787d5085f299b9
+│ ○ │  [1m[35mxsznwqtxwtru[0m [34med1be0d8400c[0m [2m(no PR)[0m
+├─╯ │  Add associative annotation to AggFuncAlgebra
+│   ○  [1m[35mnvzuppotqkms[0m [34meb92c9dfa9de[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-20 a675af6236dbc0d9bac22cb08b787d5085f299b9
+│   ○  [1m[35mpotnpxnowwkz[0m [34m101c844f4144[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-20 2fcd738a6e6f4a74b33cf2d13d491e927a9db906
+│ ○ │  [1m[35mywqpvnklklkw[0m [34m6b79357f723b[0m [2m(no PR)[0m
+│ │ │  Add StaticCluster location type and broadcast_static API
+│ ○ │  [1m[35mpvpztyxrvron[0m [34m838debbee6a0[0m [2m(no PR)[0m
+├─╯ │  Add RECOVERY.md: design doc for cluster broadcast recovery guarantees
+│   ○  [1m[35msxqwytrooqtm[0m [34md6fe16a9a763[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-20 4ee874df57cb87b099c91a57cd85f79743e25a2f
+│   ○  [1m[35mxmpzwvovtopk[0m [34m9ffc7bdd0cb7[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-20 4ee874df57cb87b099c91a57cd85f79743e25a2f
+│   ○  [1m[35murunvmklrwlz[0m [34medfafbec3dd3[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-20 a23b09b26c0c501254d82eb609a942cd1b21ab73
+│   ○  [1m[35mvkltvytyxntl[0m [34mf1aa7485bd12[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-20 caf6993925fb7b6d4aad720966c28602432aec17
+│   ○  [1m[35mktrxyvmlypyx[0m [34mf136b0c33d2e[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-19 caf6993925fb7b6d4aad720966c28602432aec17
+│ ○ │  [1m[35mkpxmwkylstst[0m [34mc5634f4c8924[0m [2m(no PR)[0m
+│ │ │  source_iter returns Consistent<Seq>, complete forwarding, no into_inner needed
+│ ○ │  [1m[35mkouyzwmkvrnz[0m [34m5d21c7ab9dc8[0m [2m(no PR)[0m
+│ │ │  source_iter returns Consistent<Seq>, full forwarding for all collection types
+│ ○ │  [1m[35mnzxzmptxqsnn[0m [34mb82d158760c0[0m [2m(no PR)[0m
+│ │ │  Add Consistent forwarding for KeyedStream, Singleton, Optional
+│ ○ │  [1m[35myppspnppkwno[0m [34m26feabdb4151[0m [2m(no PR)[0m
+│ │ │  Forward networking operators on Consistent wrapper
+│ ○ │  [1m[35mkttpxszlyswq[0m [34m02e55a625522[0m [2m(no PR)[0m
+│ │ │  Complete all operator forwarding, remove Deref
+│ ○ │  [1m[35motupnxynlptq[0m [34m278dd0e1a026[0m [2m(no PR)[0m
+│ │ │  Complete operator forwarding on Consistent wrapper
+│ ○ │  [1m[35mzutlzqpxtmwy[0m [34m253c036edee2[0m [2m(no PR)[0m
+│ │ │  Add Consistent<C, S> wrapper for typed consistency tracking
+│ │ │ ○  [1m[35mokvovmupulqq[0m [34mae26bc9abd24[0m [2m(no PR)[0m
+│ │ │ │  Document Rust limitation with typed consistency parameter
+│ │ │ ○  [1m[35mmmrtymwlwqto[0m [34mfd445104ce7a[0m [2m(no PR)[0m
+│ │ │ │  Fix into_keyed resolution: unseal Consistency, erase C at keyed boundaries
+│ │ │ ○  [1m[35mnqyzwksxztqv[0m [34mbc7700686196[0m [2m(no PR)[0m
+│ │ │ │  Thread C: Consistency through networking, sliced, and hydro_std
+│ │ │ ○  [1m[35mrrvsmtyztxuy[0m [34mb83981135bf7[0m [2m(no PR)[0m
+│ │ │ │  source_iter returns Seq; fix cascading type changes in stream/mod.rs
+│ │ │ ○  [1m[35mlsusnzzmmtoq[0m [34m8d17a3e42ef5[0m [2m(no PR)[0m
+│ │ │ │  Thread C: Consistency parameter through Stream impl blocks
+│ │ │ ○  [1m[35mkzwnptopvnnu[0m [34mbd6bf2ccff45[0m [2m(no PR)[0m
+│ ├───╯  Add Consistency type parameter to Stream (default UnknownCon)
+│ ○ │  [1m[35msnqxvkvvwqvw[0m [34m1cfab5381013[0m [2m(no PR)[0m
+│ │ │  Fix consistency label propagation (Definition 6.2) and dual-membership reporting
+│ ○ │  [1m[35mpvxtorlpyyos[0m [34m0f483469a051[0m [2m(no PR)[0m
+│ │ │  Document upstream-INCON limitation in propagation (Remark 6.3)
+│ ○ │  [1m[35mkmuzywxknklv[0m [34m7b4b1590f00d[0m [2m(no PR)[0m
+│ │ │  Strip common path prefix from spans in coordination report
+│ ○ │  [1m[35mmzmmuznuwvlv[0m [34m0d38264d36a2[0m [2m(no PR)[0m
+│ │ │  Compact display: short labels (SEQ/CONV/SELF/INCON), short location names, sink spans
+│ ○ │  [1m[35mlnzokmpxwtus[0m [34mecf5e74f19b2[0m [2m(no PR)[0m
+│ │ │  Fix batch analysis: preserve Prefix on TotalOrder input, fix Cluster location detection
+│ ○ │  [1m[35mnuvrwnpzurss[0m [34mf845ac70cf52[0m [2m(no PR)[0m
+│ │ │  Consistency label propagation with location-aware rules and ascii-dag display
+│ │ ○  [1m[35mrqmxkzyyklrz[0m [34m2296ed1ebb72[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-04-18 caf6993925fb7b6d4aad720966c28602432aec17
+│ ○ │  [1m[35mktpoxyrzznqw[0m [34m9365ffda6934[0m [2m(no PR)[0m
+│ │ │  Add replication analysis to coordination criterion
+│ │ ○  [1m[35mmsppuvkplqyk[0m [34m08c903c6c0cb[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-17 caf6993925fb7b6d4aad720966c28602432aec17
+│ │ ○  [1m[35mmuvvsoqzvxlp[0m [34m752d4066cbad[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-17 48febffe0869454fe721ecd878ac157e7eae76a2
+│ │ ○  [1m[35mnrpnuovnnymy[0m [34m52e40d82b5ae[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-17 b393e4e81a97815ba15f89b79965d88c2db0e575
+│ │ ○  [1m[35mtortmxvvsnrv[0m [34m9b4d1232e895[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-17 57a8a570187c0afe5204d8b71e8f29473aa915ba
+│ │ ○  [1m[35mulvonprqsppw[0m [34m8e4a7c97d17e[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-04-17 fcb7513764312521d19ec69b087ce86344e380cb
+│ ○ │  [1m[35mpyukyxnzklnq[0m [34mbe0386319a10[0m [2m(no PR)[0m
+│ │ │  Fix rebase: add ScanAsyncBlocking to coordination analysis
+│ ○ │  [1m[35mokkyrmusvvxz[0m [34m2b08ecf77931[0m [2m(no PR)[0m
+│ │ │  Revert blessing mechanism: nondet! means genuinely non-deterministic
+│ ○ │  [1m[35mptmnyvkzrmlq[0m [34mc1ca0a3d5fed[0m [2m(no PR)[0m
+│ │ │  Add conditional pass (blessing) and multi-goal exploration to coordination analysis
+│ ○ │  [1m[35mqwwktuwzotrn[0m [34mf13aaaa70721[0m [2m(no PR)[0m
+│ │ │  Fix rebase: add FlatMapStreamBlocking to coordination analysis
+│ ○ │  [1m[35mkllwtowuqwvu[0m [34m799ff8570c27[0m [2m(no PR)[0m
+│ │ │  Add cluster/broadcast reasoning to coordination analysis
+│ ○ │  [1m[35muxsotknvstrl[0m [34m7905420216a4[0m [2m(no PR)[0m
+│ │ │  Reframe analysis in terms of lattice joins, not commutativity/idempotency
+│ ○ │  [1m[35mpvptrrtosoxz[0m [34mdc9bcaa82870[0m [2m(no PR)[0m
+│ │ │  Add is_idempotent to ReduceKeyedWatermark IR node
+│ ○ │  [1m[35mlptssloosmpz[0m [34m51069e84770a[0m [2m(no PR)[0m
+│ │ │  Always update cycle proof trace, track convergence on success only
+│ ○ │  [1m[35msvkuvpwunumn[0m [34m6fe9b7c7b885[0m [2m(no PR)[0m
+│ │ │  Clear seen_tees cache each fixpoint iteration and before pass 2
+│ ○ │  [1m[35mntuxmrypntwk[0m [34m90ebaedef786[0m [2m(no PR)[0m
+│ │ │  Seed cycle proofs with optimistic placeholders before fixpoint
+│ ○ │  [1m[35mlrxzlnplorry[0m [34m1d655f89c8b3[0m [2m(no PR)[0m
+│ │ │  Final review fixes: stale docs, unused var, soundness, allocations
+│ ○ │  [1m[35mqokpzupkmuuy[0m [34m23711ccbb3cc[0m [2m(no PR)[0m
+│ │ │  Add multi-cycle fixpoint tests: monotone and non-monotone propagation
+│ ○ │  [1m[35mmyqtxzrqpkmk[0m [34m377ff729cfe2[0m [2m(no PR)[0m
+│ │ │  Cycle analysis: fixpoint iteration instead of arbitrary two passes
+│ ○ │  [1m[35mzwrpoxmzyszs[0m [34m3c53062147a5[0m [2m(no PR)[0m
+│ │ │  Replace fragile usize sink indices with string-based sink identifiers
+│ ○ │  [1m[35mysxsusoysvzr[0m [34m4e4e0cf93dc8[0m [2m(no PR)[0m
+│ │ │  Refactor prove() with classify() dispatch table
+│ ○ │  [1m[35mmznpyzvvtqow[0m [34m1be46a9287b2[0m [2m(no PR)[0m
+│ │ │  Combine match arms: Enumerate|Unique, Difference|AntiJoin
+│ ○ │  [1m[35mokkrvpouqsyq[0m [34m8610cc706cf1[0m [2m(no PR)[0m
+│ │ │  DRY up prove() with shared helpers for recurring patterns
+│ ○ │  [1m[35mxxrswwttorru[0m [34m8332f65417d3[0m [2m(no PR)[0m
+│ │ │  Add negative tests for operator rules: 8 counter-examples
+│ ○ │  [1m[35moktuqrtwpuxy[0m [34mb3b9a9f224cd[0m [2m(no PR)[0m
+│ │ │  CrossSingleton preserves Prefix on the stream side (not just SetInclusion)
+│ ○ │  [1m[35mtpxurkyxxkmw[0m [34mdf09834fd8a6[0m [2m(no PR)[0m
+│ │ │  Network preserves Prefix when transport guarantees ordering (TCP FailStop)
+│ ○ │  [1m[35mzvmxqlptpqtp[0m [34m52a7c7f87d58[0m [2m(no PR)[0m
+│ │ │  CycleSource without matching CycleSink is a bug, not a silent pass
+│ ○ │  [1m[35msyxlyzvnlymu[0m [34mb70be92b5b57[0m [2m(no PR)[0m
+│ │ │  Extract Backtrace::format_span() shared utility, remove duplicate from coordination.rs
+│ ○ │  [1m[35mqonwxtsxytuz[0m [34m1bdceed7d4e5[0m [2m(no PR)[0m
+│ │ │  Clarify bounded/unbounded bullet in COORDINATION.md — it's sound, not a weakness
+│ ○ │  [1m[35muoruqmnvtrzq[0m [34m9ebdcf0862ba[0m [2m(no PR)[0m
+│ │ │  Move Scan to Preserved section in COORDINATION.md
+│ ○ │  [1m[35mvwwsvvmzsroz[0m [34m0d7f57db9c13[0m [2m(no PR)[0m
+│ │ │  Scan preserves (not discharges) — it's a transform, not a source
+│ ○ │  [1m[35mxppplmmzyqzn[0m [34m7e0fbe177338[0m [2m(no PR)[0m
+│ │ │  Add COORDINATION.md documenting the analysis design and limitations
+│ ○ │  [1m[35mkklqouxkustm[0m [34mcfd361aa7627[0m [2m(no PR)[0m
+│ │ │  Avoid allocation in short_name: match on variant, return &'static str
+│ ○ │  [1m[35mmstolxkpwwkp[0m [34m819547095d0e[0m [2m(no PR)[0m
+│ │ │  Clean up remaining nits from code review
+│ ○ │  [1m[35mkzqxslolzxxk[0m [34mc9bea567ff0d[0m [2m(no PR)[0m
+│ │ │  Address second code review: 18 of 20 issues fixed
+│ ○ │  [1m[35mnyszsnpktusy[0m [34mf7b2f8ed94f8[0m [2m(no PR)[0m
+│ │ │  Add 20 unit tests for coordination analysis operator rules
+│ ○ │  [1m[35mqxqpoqplnnnz[0m [34m7924c60207b9[0m [2m(no PR)[0m
+│ │ │  Code review fixes: 8 issues addressed
+│ ○ │  [1m[35mutmzosxszusm[0m [34mdf4c08dbbd28[0m [2m(no PR)[0m
+│ │ │  Remove old forward analysis (v1), rename v2 to coordination.rs
+│ ○ │  [1m[35mzuunkwlmqpvk[0m [34m0f694a953d9c[0m [2m(no PR)[0m
+│ │ │  Add proc_macro2::Span capture and diagnostics API for future IDE integration
+│ ○ │  [1m[35mrwzxknzvkwnz[0m [34mdc7dceae94e6[0m [2m(no PR)[0m
+│ │ │  Add rust-analyzer integration for coordination diagnostics
+│ ○ │  [1m[35mrovolktnlnsn[0m [34m9d73b427aafc[0m [2m(no PR)[0m
+│ │ │  Rich diagnostic traces for coordination analysis
+│ ○ │  [1m[35mmmwspxzppqvw[0m [34md55b2d8c0a92[0m [2m(no PR)[0m
+│ │ │  Scan on TotalOrder discharges both Prefix and SetInclusion goals
+│ ○ │  [1m[35mtsyolsqmqpsz[0m [34m3086c363f9bf[0m [2m(no PR)[0m
+│ │ │  Fix backward analysis: commutative+idempotent fold discharges any goal
+│ ○ │  [1m[35muqkunkxklmpv[0m [34m422b8735770a[0m [2m(no PR)[0m
+│ │ │  Add backward goal-seeking coordination analysis (v2)
+│ ○ │  [1m[35msrmyqnzvvoxw[0m [34mba56c9d3889d[0m [2m(no PR)[0m
+│ │ │  Add commutativity/idempotency proof info to Fold/Reduce IR nodes
+│ ○ │  [1m[35mmyvskxsrlmpm[0m [34me3220ebe349b[0m [2m(no PR)[0m
+│ │ │  Fix coordination analysis: SendExternal is observable, CycleSource inherits sink monotonicity
+│ ○ │  [1m[35mlrroquuwssol[0m [34mc9d0da806c37[0m [2m(no PR)[0m
+├─╯ │  Add Coordination Criterion static analysis
+│   ○  [1m[35mtvqkvtouqppy[0m [34ma25b285b380d[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-17 e5099aaa93d1bfa188fc28acf2af75c6230329d1
+│ ○ │  [1m[35mtuvyzmowmksv[0m [34m067f6df6815d[0m [2m(no PR)[0m
+│ │ │  Update hydro_lang/src/live_collections/keyed_stream/mod.rs
+│ ○ │  [1m[35mnwzzykskkqyy[0m [34m9be7b7994c9d[0m [2m(no PR)[0m
+│ │ │  ci comments
+│ ○ │  [1m[35moynxkmyouwut[0m [34m548365045a8d[0m [2m(no PR)[0m
+│ │ │  simplify, postpone Cast to last step
+│ ○ │  [1m[35mktypwwuwyrmw[0m [34ma15c7586a842[0m [2m(no PR)[0m
+│ │ │  fix: add back the Clone bound on KeyedStream::get
+│ ○ │  [1m[35mmrrnurqznlty[0m [34m52e4c5354d60[0m [2m(no PR)[0m
+│ │ │  avoid Clone add regression tests
+│ ○ │  [1m[35mrttqxpqtwnol[0m [34m85f6c6a20f7d[0m [2m(no PR)[0m
+├─╯ │  fix: KeyedStream::get now handles Unbounded input and preserves Order
+│   ○  [1m[35mzynvulvozmvl[0m [34m2dfcd9ec563c[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-16 e5099aaa93d1bfa188fc28acf2af75c6230329d1
+│   ○  [1m[35mkrnwsywxutyt[0m [34m39ad944f2aac[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-16 ab7840cf72e50586de34c54696e1e1ca91ac2e77
+│   ○  [1m[35mkpsmwmmqoplm[0m [34mf6e53a7672a8[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-16 f04e3630eaa28bc0ffbd752f148586b389ce4ac3
+│   ○  [1m[35mszuxrylntrwu[0m [34mb2147f139db1[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-16 91e02ee15fede232489f992a48419b5f170b329d
+│   ○  [1m[35moyuoxtuypmlp[0m [34mff2c9553f0f0[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-16 91e02ee15fede232489f992a48419b5f170b329d
+│   ○  [1m[35mzqrrlpymovtz[0m [34m2a5cee381b44[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-15 09c67ed9f31a31347f50100c17227adf7e2ef7a3
+│   ○  [1m[35mmkrmtqlzvqql[0m [34me67661e13be5[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-15 4398c4d99eae342fe0c8b713ffe4e9bdb862511f
+│   ○  [1m[35mmlwpukkzvsur[0m [34m2c2383b340a5[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-15 eacc3cd85a0a9bdd70c9f6b9da4da312059f3c5a
+│   ○  [1m[35mputxuwlywvvw[0m [34m39d63eefe60e[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-15 2633db89ef2768285219a0e5af18f5a971a9aa1c
+│   ○  [1m[35mzlvqqpokkqlr[0m [34m24ebf159cbf1[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-15 73b542f559c74274ca419080b91ab66b548565c1
+│   ○  [1m[35mzqmvrqvsvszy[0m [34m2472fa692464[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-15 476e22fe79049d5f92a066937b18fe4abc7d4cc0
+│   ○  [1m[35mokkmxtuqtllu[0m [34m12217b8ebb35[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-15 c58036ed8833b947640c3f034ab99566e6a55766
+│   ○  [1m[35mkrnqqwyxwlqk[0m [34mfafe9aaced74[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-15 de0fa9767573e2968b7e7f6e271bf371c3207775
+│   ○  [1m[35mxntwkulsylyo[0m [34m4ef1006aeaa4[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-15 de0fa9767573e2968b7e7f6e271bf371c3207775
+│   ○  [1m[35msspvkvomtqwu[0m [34m84d0e96e73d7[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-15 bf0dc2d8d9675e0a31a3f2e8e148bdb6d02f9686
+│   ○  [1m[35mnouovqrospst[0m [34m6448b6f46812[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-14 bf0dc2d8d9675e0a31a3f2e8e148bdb6d02f9686
+│   ○  [1m[35mnwqsprpmzpxz[0m [34m8b35913fa92e[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-14 2b32044d28b047d8f34c62a8cff6adfc52f21110
+│   ○  [1m[35mootvwvpwqtoy[0m [34m766ddde54e0f[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-14 4f76b1f1fee7faa60c873f72afc4e43ef3b8d3b6
+│   ○  [1m[35mrtvnvwloxonu[0m [34m08cf0c3dd8ca[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-13 4f76b1f1fee7faa60c873f72afc4e43ef3b8d3b6
+│   ○  [1m[35moltnoqsvwotu[0m [34m18bb7f977733[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-13 b1b2c8f80d9033daf6019004fe9ba7f946396eba
+│   ○  [1m[35mmpwuokwotkzp[0m [34mab7cc92da74b[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-13 7181305785e9f69fc07258b07d38d7bdc805794f
+│   ○  [1m[35mlnmyplozoxrs[0m [34md4ec9a182aa6[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-12 7181305785e9f69fc07258b07d38d7bdc805794f
+│   ○  [1m[35mwszvslnxtkxl[0m [34m1f62c603810a[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-11 7181305785e9f69fc07258b07d38d7bdc805794f
+│   ○  [1m[35mklyomkmylukn[0m [34md04f94d226dd[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-10 7181305785e9f69fc07258b07d38d7bdc805794f
+│   ○  [1m[35muosqxkzsqxuy[0m [34mc3207bdc4e7a[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-10 7181305785e9f69fc07258b07d38d7bdc805794f
+│   ○  [1m[35mzpnlswrnppwt[0m [34m6c3417621468[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-10 8246ab845905f888a8d70c6c19bfb79689b10c7e
+│   ○  [1m[35mkkullqzzzqmz[0m [34m1fa6a7d80111[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-10 8f29a22d3b57ab5371ab56f421b279f5fe0da34f
+│   ○  [1m[35msyzpkxkqnvmz[0m [34mf96510cc6f66[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-10 8f29a22d3b57ab5371ab56f421b279f5fe0da34f
+│   ○  [1m[35mlkwwpwwqvqkr[0m [34m2779568f4b2a[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-09 caf0d2c9755eda76c46dae2496946777968d3e20
+│   ○  [1m[35myvoxwxyrupym[0m [34m722e970d391f[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-09 4df9096626b1cd01905c2c4658125d70eb2e4c5f
+│   ○  [1m[35mzwnrpomnywvs[0m [34m152dd5d12a13[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-09 e2d93fbec169c596ca92ebc928dbb3dddbca0be2
+│   ○  [1m[35mqzlwolowwrnp[0m [34md7473af8bb92[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-09 31db971961c4bee9d2da1de2ca3975b8b5a2d189
+│   ○  [1m[35mwmuqpsvyyuty[0m [34mcf81d78c5854[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-09 8bd4e31869bc32c9b8176789d236ec4981be28dd
+│   ○  [1m[35mulknyqpvwunw[0m [34m5a2fb525720e[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-09 096050c4720c465dc88b5f21d51189aeac299fe5
+│   ○  [1m[35mtrtyzsvuulyv[0m [34m2fd2458d08d5[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-09 354ede54dc007131fe7adbb355017019cd39b13a
+│   ○  [1m[35mnnwrrxkwxotq[0m [34m13e93bbf6970[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-08 354ede54dc007131fe7adbb355017019cd39b13a
+│   ○  [1m[35myynqukqqnwwu[0m [34m069169fbd804[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-07 354ede54dc007131fe7adbb355017019cd39b13a
+│   ○  [1m[35mxqzwmyqttuvp[0m [34m14bca3b9834f[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-06 354ede54dc007131fe7adbb355017019cd39b13a
+│   ○  [1m[35mqxrzkroypwnr[0m [34m476be0183c68[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-06 c823479960a3823d6c2427faa949257f4ffdd152
+│   ○  [1m[35mkxnxttrwpvok[0m [34m54b469dba6f6[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-06 f104f2b3d4f78ccd05465d2af69b1be34d5ea7a5
+│   ○  [1m[35molypssuvzxvk[0m [34m8e0ac5a4169c[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-05 f104f2b3d4f78ccd05465d2af69b1be34d5ea7a5
+│   ○  [1m[35mztkqoyuwlyrv[0m [34mc93e23a4a40f[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-04 f104f2b3d4f78ccd05465d2af69b1be34d5ea7a5
+│   ○  [1m[35mnxxsxmzqnrur[0m [34mb786781650f1[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-04 f104f2b3d4f78ccd05465d2af69b1be34d5ea7a5
+│   ○  [1m[35mxnvrwtrmnyyt[0m [34m4e02bfee029d[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-04 78e0afac3e02cfd3ba7c549bdcb4d4eac1a6026a
+│ ○ │  [1m[35mptzlwlulupnu[0m [34mce701dc36c08[0m [2m(no PR)[0m
+├─╯ │  feat(hydro_lang): add m2e/e2m external inputs for clusters in the simulator
+│   ○  [1m[35mropoqlpnoynq[0m [34m87e204022bbb[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-03 7a0e7095a862465fb23989ece3da7b918acc29ab
+│   ○  [1m[35mpkqlkqpuvpro[0m [34mafb7a04b82fa[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-02 7a0e7095a862465fb23989ece3da7b918acc29ab
+│   ○  [1m[35mzmlupmtorkyz[0m [34m267fb76d496c[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-02 7a0e7095a862465fb23989ece3da7b918acc29ab
+│   ○  [1m[35mlqmrsnrntztu[0m [34m8f3bc6412d64[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-02 f9f212d66f5d06a1de0e137e8dce47aa9d7db35f
+│   ○  [1m[35munnmxxnvqkls[0m [34m20b4ece66443[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-01 fb2becff83586ea1db6ebbcca79d8f73dcbed01f
+│   ○  [1m[35mkytpskprrnnm[0m [34m1a792a4e53d2[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-01 fbcd09c3018dbd7b9b52b51317271d7488ed8fea
+│   ○  [1m[35mplxspupyzyzu[0m [34m10d8a7af0016[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-04-01 0a8ae174c0752eca16e13ca5ac9d40d4ae3ebd37
+│   ○  [1m[35mlztqzunqroqv[0m [34m2d49a70666fb[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-04-01 2a45e64a9067e6df3c039025772a61b800b7845f
+│   ○  [1m[35mmvprzrprnozl[0m [34m9361eccc1a44[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-31 2a45e64a9067e6df3c039025772a61b800b7845f
+│   ○  [1m[35mwmulqpvwkzmx[0m [34mb18bdc82b4a2[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-30 2a45e64a9067e6df3c039025772a61b800b7845f
+│   ○  [1m[35mznquxkulqtpm[0m [34m1790f5bff3d3[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-29 2a45e64a9067e6df3c039025772a61b800b7845f
+│   ○  [1m[35mqzvwmnvnrynn[0m [34m92a3fa1f9083[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-28 2a45e64a9067e6df3c039025772a61b800b7845f
+│   ○  [1m[35mtmqronqplpkl[0m [34m8a91ba06d256[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-27 2a45e64a9067e6df3c039025772a61b800b7845f
+│   ○  [1m[35mpkykywotmylp[0m [34m6c24125c81f7[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-26 2a45e64a9067e6df3c039025772a61b800b7845f
+│   ○  [1m[35mvtkqnpvvspwo[0m [34mfc662c6ca748[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-25 2a45e64a9067e6df3c039025772a61b800b7845f
+│ ○ │  [1m[35mxnvuvupozuwo[0m [34m5e6f1beb5b9e[0m [2m(no PR)[0m
+├─╯ │  fix(hydro_lang): singleton/optional flatten operators require `B: IsBounded`, fix #2694
+│   ○  [1m[35mrwuosowqxnxx[0m [34m500a5dbf1786[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-25 128e85a7b6980f76575ad0e7306f34e7de0076c6
+│   ○  [1m[35mmqwtlymzqrnn[0m [34m7d5982ad6d4e[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-25 892bcb67cc7789db6f749c2a5c38796bcb17f14a
+│   ○  [1m[35morklowtmwulm[0m [34me350b53bf8f1[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-25 9891a9373ff9de46dcf97b93a898c88e9ecc87f3
+│   ○  [1m[35mnwzsrzlnlvvm[0m [34m48e7d4b1d5bc[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-25 42bf8f30728a7dd83ce02683b97e56ad4eaadcb3
+│   ○  [1m[35mnyvxmuprzokp[0m [34m0591c33409ca[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-24 9891a9373ff9de46dcf97b93a898c88e9ecc87f3
+│   ○  [1m[35mxnrxquolzmpq[0m [34m6297fb12273b[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-24 a0cd424a6b4b6d8d5c0f96ed4e2aeb7e6b64a2ac
+│   ○  [1m[35mmqtwxzwwrsrk[0m [34mbb4b31cb57ac[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-24 26afc34c237bd0821c5490d8777256245176692c
+│   ○  [1m[35mppoqsvnvtmqw[0m [34mcb893b1612cb[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-24 b9b0322abf37ff99cdafbc80eb0df62a8c0d53c9
+│   ○  [1m[35mlxutztstkxsw[0m [34mac2cb83889e8[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-24 52ed1062f8fb30b9b2ec8f4615d9187bba62e2b0
+│   ○  [1m[35mlmtsossqwrks[0m [34mdf896710af95[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-24 52ed1062f8fb30b9b2ec8f4615d9187bba62e2b0
+│   ○  [1m[35mxpvxykntxyos[0m [34m044b83229603[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-24 5ce2fa716d7c81da8ed5f5ccd5819cff98f80039
+│   ○  [1m[35mqrxvlkzrpyvw[0m [34me4c3d4f1db5d[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-23 5ce2fa716d7c81da8ed5f5ccd5819cff98f80039
+│   ○  [1m[35mkurqvorxlutw[0m [34m090f0d640ac6[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-23 5bccb09b69199639d3265dbbe90a96e02bad7f1d
+│   ○  [1m[35munukssowsqmn[0m [34mcf5099a204e7[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-22 5bccb09b69199639d3265dbbe90a96e02bad7f1d
+│   ○  [1m[35mntsqqvmkkmnk[0m [34m04fffea62a99[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-21 5bccb09b69199639d3265dbbe90a96e02bad7f1d
+│   ○  [1m[35mxuwrrksvxqzt[0m [34m5a4eda4fff44[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-20 62966dd0fa22ba6a60dc7f41cebda6165eb4990b
+│   ○  [1m[35mlxmlyyslntnl[0m [34m17ed063e7dc6[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-20 e99802f8d34142f85ced75ab16fda57ee56730cf
+│   ○  [1m[35mmoqvumzkswoz[0m [34m20b92bfc2d94[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-20 0fe74c4025e2b402dc46df29c21855e8ad635fde
+│ ○ │  [1m[35mpuuwyymvlvrn[0m [34me94fb4a441f0[0m [2m(no PR)[0m
+│ │ │  refactor(dfir_pipes): Add `is_terminated()` to `FusedPull`, use in `SendPush` and `SendSink`
+│ ○ │  [1m[35mstotkspmtltl[0m [34m88ce4b487679[0m [2m(no PR)[0m
+├─╯ │  feat(dfir_pipes): Add `SinkCompat` to turn `Push` into `Sink`, various cleanups
+│   ○  [1m[35mnukzktyqolwn[0m [34mb7b8c3fd40ba[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-20 d0f9d3b5ae0b281401c78702f28399fcec5a6fcd
+│   ○  [1m[35mlzqszmrwlotv[0m [34meeb02ab57122[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-19 d0f9d3b5ae0b281401c78702f28399fcec5a6fcd
+│   ○  [1m[35mzppvzmpqnxuw[0m [34md1e5bbf5d02d[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-19 f76b0224d62af0d4ac34a7386e45c52d4f58a81a
+│   ○  [1m[35mpwspnopqywkp[0m [34m8960727b40ec[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-19 88965c5e374f110d04a130e9ff37fc5e889d747d
+│   ○  [1m[35mplzvtxxvrtul[0m [34m528b1530481f[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-19 62afd62b1eb90d26bb4d13a4e2bcb290db43b9a0
+│   ○  [1m[35mroqmzpupnyol[0m [34m93c05fff0ac3[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-18 62afd62b1eb90d26bb4d13a4e2bcb290db43b9a0
+│   ○  [1m[35mqmpvvsyuzyln[0m [34m314c95468dcc[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-18 be35ffa266cf564cf967bb653720dc664b24b813
+│   ○  [1m[35mwltpkulxovxu[0m [34m75b685cad74c[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-18 7fddc970b30538f2373007fab080d35444178fa5
+│ ○ │  [1m[35mzsoymnoqrmts[0m [34m5e5469291523[0m [2m(no PR)[0m
+├─╯ │  Fix resolve_futures poll_ready blocking on pending futures (#2662)
+│   ○  [1m[35mwzkmkulktwxv[0m [34m9673c08761ab[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-18 db8d7f1a7fb2556302d92ff77dbb40beef8f3a44
+│   ○  [1m[35mnnqlrkuntyyk[0m [34mf79303e5d36b[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-18 6b3a071020a12df1aa77027ec9bcf3821a7bc853
+│   ○  [1m[35mmowussyompqw[0m [34ma94827eaf68e[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-18 8600c2e37203447da91fe220760ff20c5fed90e9
+│   ○  [1m[35mpmwtnqkurltw[0m [34mcb169ef62c36[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-18 3e6e26c4cc87d6f7857591b10876074cba97caff
+│   ○  [1m[35mrnolqlsvxzxx[0m [34m22dea0d094b1[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-18 3e6e26c4cc87d6f7857591b10876074cba97caff
+│   ○  [1m[35mmrpwyxuknqpn[0m [34ma8b1159150d5[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-18 e91d1584f29d04cf4778c911127f80bb53059ff8
+│   ○  [1m[35mxprymzwvlwus[0m [34mc42e7cfea45d[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-18 e91d1584f29d04cf4778c911127f80bb53059ff8
+│   ○  [1m[35muzpoumquvrpk[0m [34m2ad173766b20[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-17 05c8849747ac45e80e20a8a9038549e7aaf54560
+│   ○  [1m[35muxkymkxkrsrz[0m [34m782cde7a4893[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-17 988313771dc16147e2a94207b87d08a937290b5f
+│   ○  [1m[35mmxtxsxskrypn[0m [34m4e428f645075[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-17 df45ef75f5ff9671aefab46d7367cd65b27a9ac0
+│   ○  [1m[35mwllqrrklxqxq[0m [34m6d57678b8dea[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-17 355c392452b25cdf103841ac7699cff6b11f7e12
+│   ○  [1m[35mstzsrkulltpv[0m [34m750746cd888f[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-16 355c392452b25cdf103841ac7699cff6b11f7e12
+│   ○  [1m[35mqzmqlstrmvrw[0m [34m22a7c160d505[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-15 355c392452b25cdf103841ac7699cff6b11f7e12
+│   ○  [1m[35mkwmpuvxwsvrr[0m [34mfcabf1e5877a[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-14 355c392452b25cdf103841ac7699cff6b11f7e12
+│   ○  [1m[35mrwlpolpzqqto[0m [34m8de04f109c37[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-13 355c392452b25cdf103841ac7699cff6b11f7e12
+│   ○  [1m[35mqutkuwwnxzmx[0m [34mab0bc88a6835[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-12 355c392452b25cdf103841ac7699cff6b11f7e12
+│   ○  [1m[35mvlzmqunmutvo[0m [34mcf3c939f810b[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-11 355c392452b25cdf103841ac7699cff6b11f7e12
+│   ○  [1m[35motkzypwvxztk[0m [34md05d1d812dbd[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-10 355c392452b25cdf103841ac7699cff6b11f7e12
+│   ○  [1m[35mmsvzqlsukxzo[0m [34m8fd353dae403[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-10 355c392452b25cdf103841ac7699cff6b11f7e12
+│   ○  [1m[35mtnmuyrsrvlns[0m [34m96017ac04109[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-09 292743d6ba6e35ec0446b35098402df0d29a5fe6
+│   ○  [1m[35msvktzxsuuqsw[0m [34m99975d572665[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-09 a57e73fc649a73fba42ba51d551705f01c09dfe7
+│   ○  [1m[35muqppzolkknqm[0m [34mc2382dd3fac0[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-09 a662ff38541e58bec801644b81b2bfc505779e7b
+│   ○  [1m[35mnwswuywvnpso[0m [34md82bf3fba863[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-09 220bc86f6003acd155acffaf731f77ba2d8e13e9
+│   ○  [1m[35mmpplrzwtmttu[0m [34m938f66bec2fc[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-09 a662ff38541e58bec801644b81b2bfc505779e7b
+│   ○  [1m[35mquyxzwlunoxn[0m [34m33e3350386fe[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-09 661c72a402d0a9f102e73772e6cc377ae92c73fc
+│ ○ │  [1m[35mmrqoqrmvkqyp[0m [34md32df017ecbc[0m [2m(no PR)[0m
+├─╯ │  chore: update to rust 1.93.1, enable a few more clippy lints
+│   ○  [1m[35mptnqytuultvq[0m [34m26ccb990b9bd[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-09 05f777d36e77223647ccf7d9ec6654ed622b081a
+│   ○  [1m[35mqomsxuqzoqsp[0m [34md045acda511b[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-08 05f777d36e77223647ccf7d9ec6654ed622b081a
+│   ○  [1m[35mnsywnsusynts[0m [34m14e548bb3152[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-07 05f777d36e77223647ccf7d9ec6654ed622b081a
+│   ○  [1m[35mrrqmmvrysnnk[0m [34m9df23e9a10ab[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-07 05f777d36e77223647ccf7d9ec6654ed622b081a
+│   ○  [1m[35mqrpvozqltwon[0m [34m26e7ca22c317[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-06 bff2e9267d815ea48c14befd46a13dc0078d2e18
+│   ○  [1m[35mkvrqywzylnun[0m [34m739d33a5ebc2[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-06 4b6f21e11b43b31f51befd5bec7e7c532ff290bb
+│   ○  [1m[35mltqqrookurrq[0m [34m730819e084c7[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-03-06 b7c8108bac4ca23e37f0c0c3fc079e5e459b6c55
+│   ○  [1m[35mlqqpzqxrxtrv[0m [34m7738c480b46c[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-05 b7c8108bac4ca23e37f0c0c3fc079e5e459b6c55
+│   ○  [1m[35morkopouqqynw[0m [34madded630a4bb[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-05 9941c0ddbd5fb251cae0ac97e204a8ba3d4d9606
+│   ○  [1m[35msxrrwmpttyyo[0m [34m0fcc03bdcf16[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-03-05 60fb98690cd8c63fff30fde7bf20b6d506a6be88
+│ ○ │    [1m[35moqrzlswquplp[0m [34md4a504c6d74d[0m [2m(no PR)[0m
+│ ├───╮  [32m(empty)[0m Merge 2a86fbd25fed67d2de3fdc2aace96d80691428d3 into sapling-pr-archive-shadaj
+│ │ │ ○  [1m[35mwxotszttmyyl[0m [34m2a86fbd25fed[0m [2m(no PR)[0m
+├─────╯  docs(hydro_lang): add Stageleft gotcha about local vs module imports
+│ ○ │    [1m[35muqzvlqmyyknk[0m [34ma7e47336ec5a[0m [2m(no PR)[0m
+│ ├───╮  [32m(empty)[0m Merge 7b558c010235dcf2628471ed53620478d6886924 into sapling-pr-archive-shadaj
+│ │ │ ○  [1m[35mxvqtyytoylxz[0m [34m7b558c010235[0m [2m(no PR)[0m
+├─────╯  feat(hydro_lang): implement support for `use::state` with a `source_iter` input
+│ │ ○  [1m[35mosuzqyurvluq[0m [34m8dfd1b2cd58d[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-03-05 3bcb6a3daab78b0aa5cfd55efb4ae19c8aef739a
+│ ○ │    [1m[35mnnqxrmmkwvtm[0m [34m0d3ab07a6615[0m [2m(no PR)[0m
+│ ├───╮  merge commit for archive created by Sapling
+│ ○ │ │  [1m[35mlwynllxoulxz[0m [34m1131c542bb04[0m [2m(no PR)[0m
+├─╯ │ │  feat(hydro_lang): implement support for `use::state` with a `source_iter` input
+│   ○ │  [1m[35mnoovwyxooltk[0m [34md15a0bdb3a9a[0m [2m(no PR)[0m
+│   │ │  Update Benchmarks 2026-03-05 e40dd890f1640d14c5999c3f6baa383ff7881cce
+│   │ ○  [1m[35myrmumskzkppk[0m [34mc3a9f720eeb9[0m [2m(no PR)[0m
+│ ╭───┤  [32m(empty)[0m Merge e563e397f369ce69df068abe9d3b047ad47738c7 into sapling-pr-archive-shadaj
+│ ○ │ │  [1m[35mlwynllxoulxz[0m [34me563e397f369[0m [2m(no PR)[0m
+├─╯ │ │  feat(hydro_lang): implement support for `use::state` with a `source_iter` input
+│   │ ○  [1m[35mywrstpnwlnml[0m [34mf2f1e0f32f7f[0m [2m(no PR)[0m
+│ ╭───┤  [32m(empty)[0m Merge f168cdc7b8cf567dbdc2679c112c3d3ea9d1c8dc into sapling-pr-archive-shadaj
+│ ○ │ │  [1m[35mwoywroqusnon[0m [34mf168cdc7b8cf[0m [2m(no PR)[0m
+├─╯ │ │  feat(hydro_lang): implement support for `use::state` with a `source_iter` input
+│   │ ○  [1m[35msruvkpussnnp[0m [34m35758c1d59b5[0m [2m(no PR)[0m
+│ ╭───┤  [32m(empty)[0m Merge 250d958bba277adba5730fa8b8af15912172f312 into sapling-pr-archive-shadaj
+│ ○ │ │  [1m[35mvrnkvlrvrqpr[0m [34m250d958bba27[0m [2m(no PR)[0m
+├─╯ │ │  feat(hydro_lang): implement support for `use::state` with a `source_iter` input
+│   ○ │  [1m[35mtnxqutrxovry[0m [34mff19ba0b0f76[0m [2m(no PR)[0m
+│   │ │  Update rustdoc 2026-03-04 d5e523caacfc0b537218e69d83d406bfc2c58b32
+│   │ ○  [1m[35myorqkurpvuyv[0m [34m45ccff9018d6[0m [2m(no PR)[0m
+│ ╭───┤  [32m(empty)[0m Merge 95af759937beac048c2fe15ef9bb7b9458e0dd19 into sapling-pr-archive-shadaj
+│ ○ │ │  [1m[35mqroozsypxqml[0m [34m95af759937be[0m [2m(no PR)[0m
+├─╯ │ │  chore: bump Stageleft version
+│   ○ │  [1m[35mztokvzrkyrpx[0m [34m2c27b8eddc80[0m [2m(no PR)[0m
+│   │ │  Update rustdoc 2026-03-04 9751e9ec954b4e4dcdfa3358211e8ba6b9e3687c
+│   ○ │  [1m[35mwwrwkxuqqmkn[0m [34me9c592d95980[0m [2m(no PR)[0m
+│   │ │  Update Benchmarks 2026-03-04 cbbf6b69849d4f13dca2f528b0eb7859ad2f1d5b
+│   ○ │  [1m[35mpnpqlkwlkwwm[0m [34m7f59e58b6c2f[0m [2m(no PR)[0m
+│   │ │  Update rustdoc 2026-03-03 cbbf6b69849d4f13dca2f528b0eb7859ad2f1d5b
+│   │ ○  [1m[35mwkxovovvnuro[0m [34m00bf5ec5f2a3[0m [2m(no PR)[0m
+│ ╭───┤  merge commit for archive created by Sapling
+│ │ │ ○  [1m[35mmyxupzzwuxlo[0m [34m3fcac5b6b674[0m [2m(no PR)[0m
+├─────╯  docs(hydro_lang): add missing docs for remaining location modules
+│ ○ │    [1m[35mkwtlqurqytur[0m [34m00e7eb3b43b1[0m [2m(no PR)[0m
+│ ├───╮  [32m(empty)[0m Merge 0c4c4bfcfa0102cb009e44e06fee5512056b6f59 into sapling-pr-archive-shadaj
+│ │ │ ○  [1m[35mqpktmtpzvrpp[0m [34m0c4c4bfcfa01[0m [2m(no PR)[0m
+├─────╯  docs(hydro_lang): add missing docs for remaining location modules
+│ │ ○  [1m[35mluxlqnzlssrx[0m [34m309ee2724c3c[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-03-03 a65f6655cc51f75dab5f5a5c00d041cee0a5fab2
+│ ○ │    [1m[35mymvookyvprzy[0m [34mbd648282342d[0m [2m(no PR)[0m
+│ ├───╮  [32m(empty)[0m Merge c2e0ea3564722e90546cfcfc13d277483c521262 into sapling-pr-archive-shadaj
+│ │ │ ○  [1m[35mvtvrvpwnyxll[0m [34mc2e0ea356472[0m [2m(no PR)[0m
+├─────╯  docs(hydro_lang): add missing docs for remaining location modules
+│ │ ○  [1m[35mumrtztuxrvmn[0m [34m4c9a57539cd2[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-03-02 a65f6655cc51f75dab5f5a5c00d041cee0a5fab2
+│ │ ○  [1m[35mxruzsmpzvzvu[0m [34ma86b6baeb985[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-03-01 a65f6655cc51f75dab5f5a5c00d041cee0a5fab2
+│ │ ○  [1m[35mwpzwklxxpmqu[0m [34mdfaa20482dca[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-02-28 a65f6655cc51f75dab5f5a5c00d041cee0a5fab2
+│ │ ○  [1m[35mnrryuywvptul[0m [34m85d8fbdab908[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-28 a65f6655cc51f75dab5f5a5c00d041cee0a5fab2
+│ ○ │    [1m[35mymmyylmlsqku[0m [34mc74544fea4dc[0m [2m(no PR)[0m
+│ ├───╮  [32m(empty)[0m Merge 4b6919617bcdd54b7b838ac4b40c03f47edc149f into sapling-pr-archive-shadaj
+│ │ │ ○  [1m[35mkqxrwoslxknz[0m [34m4b6919617bcd[0m [2m(no PR)[0m
+├─────╯  chore: migrate away from deprecated Docusaurus config
+│ ○ │  [1m[35myrqulnuvkwwu[0m [34m224234ef92c3[0m [2m(no PR)[0m
+├─╯ │  docs(hydro_lang): add docs on network configuration
+│   ○  [1m[35motpymxktxurk[0m [34m40c620ff51ea[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-27 fad81f0f79bac3d7524165df515fd746af148bfb
+│   ○  [1m[35mukwrxmormnkl[0m [34m1ed8a11274ed[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-27 588e69696e6e2cab3010c8fb7ffcc919b5b14e09
+│ ○ │  [1m[35mmuyllykmlznk[0m [34m95dad8a866db[0m [2m(no PR)[0m
+│ │ │  fix(plot): Normalize y-axes across columns and show tick labels
+│ ○ │  [1m[35mtunkkzpwprwz[0m [34m7037da185706[0m [2m(no PR)[0m
+│ │ │  feat(dfir_baseline): Add TCP blocking server and fix client termination
+│ │ ○  [1m[35mlmukprrzstwv[0m [34mf136148d60ad[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-26 588e69696e6e2cab3010c8fb7ffcc919b5b14e09
+│ │ ○  [1m[35mvuxqkwotwytz[0m [34mb8749f9ee035[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-26 a363dd38cdde318de33fd83e9387547275cf87a6
+│ │ ○  [1m[35mskosmtrrlyor[0m [34ma05f68ad97d9[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-26 08cb0ed12b213bc9a6ef449095cb89a69adc84ab
+│ ○ │  [1m[35mrvozpkyrxuou[0m [34mac7b28fcc1da[0m [2m(no PR)[0m
+│ │ │  feat(dfir_baseline): Add 7-way metastability comparison demo
+│ │ ○  [1m[35mwmzqssmmnwup[0m [34m1cabdf9d417f[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-02-26 f00cd91c3eed0446c05004c7d350c53e6e1e21bb
+│ │ ○  [1m[35mlvqpvonxqnnl[0m [34m29f660cd0f1a[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-25 f00cd91c3eed0446c05004c7d350c53e6e1e21bb
+│ │ ○  [1m[35mklmznrnqxmpn[0m [34m851a97c0d49f[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-25 6027dfad9c3e59fc50e5dc9acf296e8ecd1cf8a5
+│ │ ○  [1m[35myxvwqsrsovnz[0m [34m82b609431957[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-25 6a3ae3da98762b07e4d2a2ad6911cef6b6443df7
+│ │ ○  [1m[35mrolqnmtvupuu[0m [34mad5ec5a75801[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-25 afa6e18a8c382f9ee9c7cda27544222eba492b92
+│ │ ○  [1m[35mvyqpystyuqsl[0m [34m21c722dc0f1f[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-02-25 59de8b731832d5d351f21ae2dbf98fd0533f142b
+│ │ ○  [1m[35mwnztrqywwrxm[0m [34m0cd1fe4aea56[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-24 59de8b731832d5d351f21ae2dbf98fd0533f142b
+│ │ ○  [1m[35mkkwuoxpzwmuk[0m [34m4435187ce8f7[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-24 edaa3835df9f3ad32071998f1f0daa658321e547
+│ │ ○  [1m[35mwnuupwylwkpw[0m [34md9eef64dc861[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-24 df7ae127bace25595f362db4c1eec46cd61d9754
+│ │ ○  [1m[35mnsqnsmrpyoqk[0m [34m273244bd1fcc[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-24 4d7d5a14d9157038340ef13aecf8f7d93f06e445
+│ │ │ ○  [1m[35mvrtontkvntnp[0m [34mbb1ab12d2506[0m [2m(no PR)[0m
+│ │ │ │  fix(hydro_test): add explicit TotalOrder type parameter to assume_ordering in m2m_broadcast.rs
+│ │ │ ○  [1m[35mnulktkmrnmsp[0m [34mb5b3f85f9aa4[0m [2m(no PR)[0m
+├─────╯  [32m(empty)[0m Initial plan
+│ │ ○  [1m[35mzzxqkxrrmmmu[0m [34m7d666b0e3515[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-02-24 acbefcdd44ea050507b06cba363e98725bce14e8
+│ │ ○  [1m[35mttqvkxrtrmzq[0m [34m4905a7294212[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-24 4d628dc323c14a8ca08cc68ef782da515dc64150
+│ │ ○  [1m[35mnokmzxmyqtml[0m [34m2beec41320cd[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-23 16269f19d1e96232cefd6342817b98349f62c54f
+│ │ ○  [1m[35movkqnzouqmro[0m [34mba19653b220c[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-23 9716e5bdd3a52d09d060fac1cdaaee98b1afc520
+│ │ ○  [1m[35mwqktozlkysvs[0m [34m52405535fc44[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-02-23 676ca45da47281aca0d0a19155601b6edc81acec
+│ ○ │  [1m[35myswmxskqwwtm[0m [34me29f6fa78728[0m [2m(no PR)[0m
+│ │ │  docs(dfir_baseline): Document retry logic implementation
+│ ○ │  [1m[35muzwllnponrnr[0m [34md259ecff351b[0m [2m(no PR)[0m
+│ │ │  feat(dfir_baseline): Add retry logic with timeout detection
+│ ○ │  [1m[35mqmrxtzwzykzp[0m [34mfc5b254fc00d[0m [2m(no PR)[0m
+├─╯ │  feat(dfir_baseline): Complete stable baseline implementation
+│   ○  [1m[35mmxymqllnnqun[0m [34m40b1c2960e1f[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-22 676ca45da47281aca0d0a19155601b6edc81acec
+│   ○  [1m[35mqzvoqmvyxlvm[0m [34m25d5893cbcef[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-21 676ca45da47281aca0d0a19155601b6edc81acec
+│   ○  [1m[35mrynqwumupmuu[0m [34m34f135d918e3[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-20 676ca45da47281aca0d0a19155601b6edc81acec
+│ ○ │  [1m[35mkrqvpulswlyn[0m [34mcd52f2f374c9[0m [2m(no PR)[0m
+│ │ │  fixup! no type guards [ci-bench]
+│ ○ │  [1m[35munrlrpkxuruk[0m [34m83a45c529904[0m [2m(no PR)[0m
+├─╯ │  no type guards [ci-bench]
+│   ○  [1m[35moyvrquvosswx[0m [34m56fa9084c770[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-20 39d3c98edcf137adb3d7615dd937e99239576e26
+│   ○  [1m[35mkyszzutzpsnw[0m [34m7a099ceaad4c[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-19 39d3c98edcf137adb3d7615dd937e99239576e26
+│   ○  [1m[35mzpqwrmquvxqu[0m [34m8aeeb1e9f621[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-19 bf569f43dcc71e11a8a520709374ca2271775556
+│   ○  [1m[35mzltxrpxwzyvs[0m [34m516b319a23ca[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-19 82d7b6f8731c9e80e35b712509bc69c88ee36dd9
+│   ○  [1m[35mkmtpkxutoxvo[0m [34m26ae31afed7e[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-19 bf569f43dcc71e11a8a520709374ca2271775556
+│   ○  [1m[35mooqpuvzyykpl[0m [34m9f8a5d0f4af5[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-18 bf569f43dcc71e11a8a520709374ca2271775556
+│   ○  [1m[35muyvwnvttpyrs[0m [34m1fe285a8acb9[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-18 8d22dd95b2e3ce3984ea009df60971f08edb0731
+│   ○  [1m[35mqnztnlpmlkxo[0m [34mf14b08ae67d8[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-18 4efc69b547f081d568466cbb1fa857d02e1878c6
+│ ○ │  [1m[35mrtrwnnolmuro[0m [34ma641b882a00f[0m [2m(no PR)[0m
+├─╯ │  try marking a lot of things with `#[inline(always)]` [ci-bench]
+│   ○  [1m[35mrqynypvqnpxv[0m [34m5cb00b048fe1[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-17 4efc69b547f081d568466cbb1fa857d02e1878c6
+│   ○  [1m[35mmxtrwlqmrprk[0m [34m9778f2798763[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-17 b6531489427ee4f9947138c50b58a954cfde35b3
+│ ○ │  [1m[35mlwqumrlowwvn[0m [34m69ececa8283b[0m [2m(no PR)[0m
+│ │ │  Add comment explaining limit implementation approach
+│ ○ │  [1m[35mxmyyyklquxrl[0m [34m59fb083b3324[0m [2m(no PR)[0m
+│ │ │  Implement .limit() method for hydro_lang streams
+│ ○ │  [1m[35mwzyvsqrmpoml[0m [34m62d7e94adfbd[0m [2m(no PR)[0m
+├─╯ │  [32m(empty)[0m Initial plan
+│   ○  [1m[35mllzooqstxolz[0m [34m60f7e3b94863[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-16 8b519c3e9679bb2b2296be07ffa7a6da211457bf
+│   ○  [1m[35mozwrtoryqxnz[0m [34m3dec88a773b8[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-16 8b519c3e9679bb2b2296be07ffa7a6da211457bf
+│   ○  [1m[35mqkuqsvrwvkst[0m [34m624a4eac1ed4[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-16 5ed68d8daddf1d35485b13237a08d295069e3f6f
+│   ○  [1m[35mxmpkpxzwzkmx[0m [34me17fb9d8128d[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-15 5ed68d8daddf1d35485b13237a08d295069e3f6f
+│   ○  [1m[35mprwmyrmpouzx[0m [34m619c9574187c[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-14 5ed68d8daddf1d35485b13237a08d295069e3f6f
+│   ○  [1m[35mqmqxzmqypmvo[0m [34m9fdf853dd036[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-13 5ed68d8daddf1d35485b13237a08d295069e3f6f
+│   ○  [1m[35mxkoxvtqwnunq[0m [34mac9d5248e06b[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-13 5ed68d8daddf1d35485b13237a08d295069e3f6f
+│   ○  [1m[35mvlktrylwwywr[0m [34mdb0d43b72297[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-13 5096ed903fcaa7beb590851b95b84a72cad858e1
+│   ○  [1m[35mxvslutrywqpl[0m [34m748dde25ca52[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-13 08e4ad73c1c74a3b7398c3b8fddd92bb865c025a
+│   ○  [1m[35myusuukpnrzxw[0m [34m8fb8fb798454[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-13 91866fc17d44ea936d8450fb8a8b4ab346fc2623
+│   ○  [1m[35msypuolrwppxo[0m [34m491012d5568c[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-13 d56b580451970806a3b0e84bd71b34268398c613
+│ ○ │  [1m[35mpptrzmmpzqpn[0m [34mf0dbe8ad219c[0m [2m(no PR)[0m
+├─╯ │  testing dfir_lang limit `source_stream` to LIMIT items
+│   ○  [1m[35mnvkttqmpwpru[0m [34m262e25b84bb2[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-13 077ff8a25ea960e9dd8fd935344686e5f6c0f470
+│   ○  [1m[35mnwzxuwspnrnt[0m [34m2c9b38aa7c0e[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-13 9db850540c75ba651d614514d19281019887248f
+│ ○ │  [1m[35mnlovsxovzvvk[0m [34m74e307b905c9[0m [2m(no PR)[0m
+│ │ │  refactor(sinktools): use `pin_project` in `LazySinkSource`
+│ │ ○  [1m[35myswxwkkuqpzx[0m [34m81607bbe1e85[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-02-12 9db850540c75ba651d614514d19281019887248f
+│ │ ○  [1m[35myuxzwtlwkzut[0m [34m7aa3735fd51d[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-11 9db850540c75ba651d614514d19281019887248f
+│ │ ○  [1m[35mvrmnkxoomlux[0m [34m281976844be1[0m [2m(no PR)[0m
+│ │ │  Update rustdoc 2026-02-11 3f16b90afc1f2a2db8ffd18e76421162a91adcbc
+│ │ ○  [1m[35mtolrswssnpmo[0m [34m606a9678f3e2[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-02-11 dbea6fcb3f0aa16a8e3c83e062892b1920b9bd93
+│ │ ○  [1m[35mpszulxzvlmsr[0m [34mfc089f896044[0m [2m(no PR)[0m
+│ │ │  Update Benchmarks 2026-02-11 dbea6fcb3f0aa16a8e3c83e062892b1920b9bd93
+│ ○ │  [1m[35mspvptzlostww[0m [34m68920b670ce0[0m [2m(no PR)[0m
+│ │ │  implement dualwaker
+│ │ │ ○  [1m[35mnswpwyslvqqw[0m [34m7c98ed0c5f2e[0m [2m(no PR)[0m
+│ │ │ │  fix(hydro_lang)!: fix performance via proper `TaglessMemberId` variant feature-gating (#2564)
+│ │ │ ○  [1m[35mrklpokpxnopx[0m [34m6cba667bd489[0m [2m(no PR)[0m
+│ │ │ │  feat(hydro_lang): support in-memory inputs for embedded Hydro programs (#2559)
+│ │ │ ○  [1m[35mnuvnxnytwukp[0m [34m3a797f4d1486[0m [2m(no PR)[0m
+│ │ │ │  chore: update nightly snapshots (#2566)
+│ │ │ ○  [1m[35mzyxlprwptwst[0m [34m47d00ccdbff2[0m [2m(no PR)[0m
+│ │ │ │  feat(hydro_lang): Convert Singleton<Option<T>> to Optional<T> (#2565)
+│ │ │ ○  [1m[35mpotvpuwuysnu[0m [34m3b97c9640c89[0m [2m(no PR)[0m
+│ │ │ │  feat(hydro_lang): preliminary support for embedding Hydro programs in other Rust code (#2557)
+│ │ │ ○  [1m[35myulxuxwzsulz[0m [34me9c54361404b[0m [2m(no PR)[0m
+│ │ │ │  chore: update nightly snapshots (#2560)
+│ │ │ ○  [1m[35mmtquvlzuntlr[0m [34m6a4cb7c92f6a[0m [2m(no PR)[0m
+│ │ │ │  refactor(dfir_lang,hydro_lang)!: have `_counter` take in a single (now-combined) prefix arg (#2562)
+│ │ │ ○  [1m[35mttvmklnzlltn[0m [34m02f90fb09078[0m [2m(no PR)[0m
+│ │ │ │  feat(dfir_lang): include op name in errors (#2561)
+│ │ │ ○  [1m[35mqxrmotrksnml[0m [34me413a693bf3c[0m [2m(no PR)[0m
+│ │ │ │  fix(hydro_std): Latency calculation fix (#2558)
+│ │ │ ○  [1m[35mokuytvzulyyu[0m [34md6103279323a[0m [2m(no PR)[0m
+│ │ │ │  feat(hydro_lang)!: require explicit failure policy for TCP channels (#2550)
+│ │ │ ○  [1m[35mppxmkksworym[0m [34m65ce46dae72a[0m [2m(no PR)[0m
+│ │ │ │  feat(hydro_std)!: bench_client time series (#2554)
+│ │ │ ○  [1m[35mqvlnvzvkwxvk[0m [34m250d29309cf7[0m [2m(no PR)[0m
+│ │ │ │  ci: update benchmark workflow to post on start and track run history [ci-bench] (#2545)
+│ │ │ ○  [1m[35mmnksuovmsyum[0m [34m6569c657d9d6[0m [2m(no PR)[0m
+│ │ │ │  chore: update nightly snapshots (#2546)
+│ │ │ ○  [1m[35mkvrxouzquouv[0m [34ma1f002b69577[0m [2m(no PR)[0m
+│ │ │ │  fix(hydro_lang,dfir_lang)!: fix & test sim DFIR codegen; DFIR use `Result` to force error handling (#2541)
+│ │ │ ○  [1m[35mnrqpolmlpsvu[0m [34medf1b562f8ed[0m [2m(no PR)[0m
+│ │ │ │  ci: skip conventional commits check on draft PRs (#2543)
+│ │ │ ○  [1m[35mlvzzlnvvnwyz[0m [34mda343db2f6d2[0m [2m(no PR)[0m
+│ │ │ │  chore(hydro_lang): place some unused APIs back behind feature gates (#2542)
+│ │ │ ○  [1m[35mvormzwmtptmy[0m [34mb7f28dbc82b4[0m [2m(no PR)[0m
+│ │ │ │  ci: download Maelstrom to tempdir instead of project workspace (#2544)
+│ │ │ ○  [1m[35mmpvvlszpsovm[0m [34mf6a3d6b5ed81[0m [2m(no PR)[0m
+│ │ │ │  feat(hydro_lang): improve quality of error spans in `sliced!` macro (#2531)
+│ │ │ ○  [1m[35mplkwksvtvrzp[0m [34m36ffc7ce11ce[0m [2m(no PR)[0m
+│ │ │ │  feat(hydro_lang): Jepsen / Maelstrom backend for Hydro (#2532)
+│ │ │ ○  [1m[35mlorqwntsvytk[0m [34m618a1935093e[0m [2m(no PR)[0m
+│ │ │ │  docs(hydro_lang): docs for the `Location` trait (#2538)
+│ │ │ ○  [1m[35mstwzmoopxwxk[0m [34m690449530f8c[0m [2m(no PR)[0m
+│ │ │ │  refactor(hydro_lang): remove assumption that `use` always has two parameters (#2530)
+│ │ │ ○  [1m[35mvoqpllkzppur[0m [34mc6e03117908e[0m [2m(no PR)[0m
+│ │ │ │  chore!: update pinned rust to 1.92, add lints/fixes for redundant cloning, string handling (#2525)
+│ ○ │ │  [1m[35mqyqtltnquosy[0m [34m0c366cf372d3[0m [2m(no PR)[0m
+├─╯ │ │  test(sinktools): LazySinkSource add tests, make existing tests more robust
+│   ○ │  [1m[35mlpwmwqqkyxts[0m [34m387a9f6ab34d[0m [2m(no PR)[0m
+│   │ │  Update rustdoc 2026-02-10 07caa28acbc0f235207d91bda54f4f58203273e0
+│   │ ○  [1m[35munyruvuqvkrk[0m [34ma15628100c59[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_std)!: Refactor client_aggregator so printing is a separate function (#2522)
+│   │ ○  [1m[35molsslomrknsv[0m [34m0850fe6a0243[0m [2m(no PR)[0m
+│   │ │  ci: comment benchmark artifact link on [ci-bench] PRs (#2529)
+│   │ ○  [1m[35msrzpuzzqsumk[0m [34m4aa3b6f3d9af[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): update ecs deployment to emit a hydro manifest that can be used by cdk to deploy to ecs. (#2515)
+│   │ ○  [1m[35mkzqsrmmypnmy[0m [34m2f11556614c8[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2527)
+│   │ ○  [1m[35mpvtvsopqrpox[0m [34mc62d1c1fe0d7[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): support `assume_ordering` in atomic locations and block top-level bounded (#2526)
+│   │ ○  [1m[35mklnwrqqnomwt[0m [34m22ef93bb0a5e[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): add support for top-level `KeyedStream::assume_ordering` (#2523)
+│   │ ○  [1m[35mknnpomzwqpvt[0m [34me7f4365e372e[0m [2m(no PR)[0m
+│   │ │  feat(hydro_deploy): enable automatic AWS CloudWatch metric reporting (DFIR, Tokio, cpu/mem/netstat) (#2251)
+│   │ ○  [1m[35muvyqkqxmvpql[0m [34m661546f1c4f5[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): allow additional crates to be downloaded for the trybuild (#2517)
+│   │ ○  [1m[35mkknyloqsvkrm[0m [34m8e03c061dcea[0m [2m(no PR)[0m
+│   │ │  docs(hydro_lang): update docs for new simulator support (#2521)
+│   │ ○  [1m[35mrlrkmpmwwtxv[0m [34mb97d717c1d38[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): support top-level `assume_ordering` in the simulator (#2513)
+│   │ ○  [1m[35mpqwslpxukppl[0m [34m37b0e5f2bf7d[0m [2m(no PR)[0m
+│   │ │  fix(dfir_lang): Fix counter in pull mode (#2516)
+│   │ ○  [1m[35moqpkqkypwkrr[0m [34m8f352ed2c24b[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2514)
+│   │ ○  [1m[35mllmrzrypyzvx[0m [34mf5e3de66ae74[0m [2m(no PR)[0m
+│   │ │  fix: flag non-determinstic hashmap iterators, fix hydro_lang codegen nondeterminism fix #2464 (#2511)
+│   │ ○  [1m[35moszxqqqxlxry[0m [34m6318067ec12c[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang)!: Join consistent naming (#2492)
+│   │ ○  [1m[35mrtqxxlowmnqu[0m [34ma3a50c584072[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): introduce `Weaker{Ordering/Retries}Than` to simplify stream weakening (#2508)
+│   │ ○  [1m[35mrkosykxxwvqz[0m [34m54142661bbf3[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): re-add type-erased deploy methods, `with_(process|cluster)_erased`, unstable (#2507)
+│   │ ○  [1m[35mrvvynytwokvv[0m [34mb9df5a5214c5[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): remove RewriteIrFlowBuilder (#2506)
+│   │ ○  [1m[35mptmtomrtqrot[0m [34mb4ca8f058fcb[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): add bidi support for docker containers (#2499)
+│   │ ○  [1m[35mtutlrxylnrno[0m [34mb5840b0c11cd[0m [2m(no PR)[0m
+│   │ │  feat(dfir_rs)!: Add `DfirMetricsIntervals::all_metrics`, `take_interval` methods, remove dubious `Iterator` impl (#2503)
+│   │ ○  [1m[35mkvolooytqsty[0m [34m65772d209188[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_deploy)!: Make buildstructor-underlying `add_<cloud>_host` methods private (#2504)
+│   │ ○  [1m[35mmqmqqlounpqr[0m [34m1010720c0e88[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): add `.name` to configure channel names and prepare for multiversioning (#2479)
+│   │ ○  [1m[35mswwpnyspuzxz[0m [34mb0591d0b5af2[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): Add sidecar API (#2495)
+│   │ ○  [1m[35mntokyoyronxw[0m [34madb905d158cb[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): set up skeleton for registering expressions with proof providers (#2481)
+│   │ ○  [1m[35mwxlpwkzzmork[0m [34m3ce0abdf42e4[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2501)
+│   │ ○  [1m[35mnqpxwmkqxwxx[0m [34m072f975829b7[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): remove unused `launch!` macro (#2498)
+│   │ ○  [1m[35mmsprzyzwkqpx[0m [34mbde5f336b43d[0m [2m(no PR)[0m
+│   │ │  docs(hydro_lang): inline code snippets (#2494)
+│   │ ○  [1m[35mpkmrzlrtoovz[0m [34m5443d8b1f43e[0m [2m(no PR)[0m
+│   │ │  ci: remove `maximize-build-space` action (#2496)
+│   │ ○  [1m[35mtmpmmyvzwmyk[0m [34m289a236e0aaf[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): cleanup str cloning, rename `name_hint` ->  `bin_name_prefix`, fix #2491 (#2493)
+│   │ ○  [1m[35mqmttqmzspsls[0m [34m81db48795edb[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): stageleft cleanup, remove a `pub`, fix #2477 (#2488)
+│   │ ○  [1m[35monvsyltyxpul[0m [34mf5b36af162b1[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2490)
+│   │ ○  [1m[35muumxmwoknozu[0m [34ma6b980e61b2d[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang)!: convert locations (Cluster/Process/External) to use slotmaps, new key type (#2465)
+│   │ ○  [1m[35mtrrtxmtyvltr[0m [34m91348b43ca65[0m [2m(no PR)[0m
+│   │ │  feat(example_test): use `trybuild-internals-api` to forward features and avoid re-compilation (#2483)
+│   │ ○  [1m[35myxnsklnwmqpk[0m [34m7ecb6718eb91[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): Sliced atomic keyed stream (#2485)
+│   │ ○  [1m[35mltmmupppwnkt[0m [34m61a8637e8a66[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2484)
+│   │ ○  [1m[35munzzykplmkmv[0m [34mf32c46992b68[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): disable `aws-sdk-*` default features to avoid [re-]compiling `ring` (#2482)
+│   │ ○  [1m[35mqmqryokpmyto[0m [34m7c7424207d82[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_std): Generalize bench_client (#2435)
+│   │ ○  [1m[35mwutlusmwzsvx[0m [34m992cf66dfd70[0m [2m(no PR)[0m
+│   │ │  feat(hydro_deploy): support (and prefer) `tofu` as a deployment backend (#2467)
+│   │ ○  [1m[35mynxxyvustmul[0m [34mb66c1943ac84[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): bump Stageleft to reduce Trybuild prep latency (#2453)
+│   │ ○  [1m[35mlyqltrqwvwqx[0m [34m5a7eb7ea22cb[0m [2m(no PR)[0m
+│   │ │  ci: drop local sccache [ci-full] (#2475)
+│   │ ○  [1m[35mpkssmtllmnnu[0m [34mb2aba8350cd4[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): statically link projected DFIR for fuzzing (#2474)
+│   │ ○  [1m[35mwvluqqswwruo[0m [34m77ab6e890496[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2478)
+│   │ ○  [1m[35mvwtzlqorpyqt[0m [34mc5d39cac7c74[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang)!: remove unused `Deploy::GraphId` type, `CompiledFlow` param (always `()`) (#2470)
+│   │ ○  [1m[35mxpnkpyypwppm[0m [34m988e4c228b87[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): remove unused `DeployNode::id` location field (#2473)
+│   │ ○  [1m[35mttxokwpmuvmk[0m [34m861f7861b082[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): share target dir between main and trybuild (#2471)
+│   │ ○  [1m[35mpvzskqmwzxwp[0m [34me25e5a1647fa[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): remove unused `HydroMeta::subgraph_id` location field (#2469)
+│   │ ○  [1m[35mouwtnwkznkop[0m [34m922a68e90f1e[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang)!: remove trivial locations from `Deploy` trait (#2468)
+│   │ ○  [1m[35mtuktnmnortln[0m [34md48da8e6fda1[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): use a dylib helper crate to avoid global RUSTFLAGS for trybuild [ci-full] (#2462)
+│   │ ○  [1m[35mqttzzwstzypq[0m [34mff817b4a2e2a[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2466)
+│   │ ○  [1m[35mxoynpulmylty[0m [34m0ac8e10dad33[0m [2m(no PR)[0m
+│   │ │  chore(hydro_test): run `compute_pi` test without optimizations (#2461)
+│   │ ○  [1m[35mmxnlxvvzysrv[0m [34ma0ec28e16b70[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang)!: cleanup port handling with newtypes, trait changes (#2439)
+│   │ ○  [1m[35mrnkmkmzquvxo[0m [34ma275092a9e86[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): fix local docker race conditions around membership stream and multiple containers starting up at the same time (#2430)
+│   │ ○  [1m[35mnttqlwwrxrmt[0m [34mc8eea31dc62b[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): make backtrace resolution lazy to reduce graph compilation overhead (#2457)
+│   │ ○  [1m[35mqlxtxwrzqrlz[0m [34m3dab645f09fa[0m [2m(no PR)[0m
+│   │ │  docs: `CONTRIBUTING.md` python removed, pinned stable (#2455)
+│   │ ○  [1m[35mnrztzsrvvryt[0m [34ma5c29ea46be0[0m [2m(no PR)[0m
+│   │ │  test: update `./precheck.bash` with `--docker`, `--ecs` (#2456)
+│   │ ○  [1m[35mtvmvymoozpmw[0m [34md6b82eac7480[0m [2m(no PR)[0m
+│   │ │  fix: run lints with all-targets and all-features, remove redundant cargo checks (#2459)
+│   │ ○  [1m[35mpmormnoxtyvz[0m [34m2c71a5c97c01[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): mutate Stageleft `gen_staged` in-place to avoid AST copies during pretty-print (#2452)
+│   │ ○  [1m[35mtqvyqnxrnyso[0m [34md8e975157e64[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2458)
+│   │ ○  [1m[35mwonnlxvstukw[0m [34m2146b826022e[0m [2m(no PR)[0m
+│   │ │  fix(hydro_test): don't add custom rustflags for chat example (#2454)
+│   │ ○  [1m[35myquzoyskyuqz[0m [34m38386964fa96[0m [2m(no PR)[0m
+│   │ │  docs: remove border above "You will learn" header (#2451)
+│   │ ○  [1m[35mzsksyvpxowlq[0m [34mb87010c97279[0m [2m(no PR)[0m
+│   │ │  ci: also update Trybuild snapshots automatically in nightly CI (#2450)
+│   │ ○  [1m[35mkmqxxpnnplox[0m [34m5fa60f9eaf13[0m [2m(no PR)[0m
+│   │ │  chore(dfir_rs,hydro_lang,lattices): remove unused deps (#2448)
+│   │ ○  [1m[35msmkvvrsyplyz[0m [34m17312f7a9489[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): re-enable tests that previously had stack overflow on Windows [ci-full] (#2443)
+│   │ ○  [1m[35mlxspttumvmyo[0m [34m83618b940f5d[0m [2m(no PR)[0m
+│   │ │  fix: remove debug info for non-workspace crates (#2449)
+│   │ ○  [1m[35mrnymrwtymtwt[0m [34m3ea703820d65[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): add ecs deployment support [ci-full] (#2426)
+│   │ ○  [1m[35mkouvvnpuysop[0m [34m97a80f657485[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_deploy)!: extract profile folding into a feature (#2447)
+│   │ ○  [1m[35mopovpkuvyyrk[0m [34mabc6afcd5bb1[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): convert `HydroNode::emit_core` to use `HydroNode::transform_bottom_up` (#2442)
+│   │ ○  [1m[35mtxvouzklzyrp[0m [34md3fca3160f49[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_deploy,hydro_lang): drop unnecessary dependencies (#2446)
+│   │ ○  [1m[35mvzxuuypukkqw[0m [34mf0db61f7c67c[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): update Trybuild fork to inherit workspace profiles (#2441)
+│   │ ○  [1m[35mywkyorywplrn[0m [34m971927c71aac[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): unify `forward_ref` implementation between `Location` and `Tick` (#2440)
+│   │ ○  [1m[35mwxvtqopltxvk[0m [34m125509b357d6[0m [2m(no PR)[0m
+│   │ │  docs: fix mobile layout and add Free Termination (#2438)
+│   │ ○  [1m[35mlwszzvlostxl[0m [34m72e6bed4281e[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2437)
+│   │ ○  [1m[35mslmwuvwsxqvl[0m [34md3719799bb1c[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang)!: initial support for top-level bounded live collections (#2414)
+│   │ ○  [1m[35mllylyxlwzovq[0m [34m37f4d7894f52[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang)!: use `ExternalPortId` instead of `usize` (#2433)
+│   │ ○  [1m[35mqsxuxslnnqqv[0m [34mab40f479a662[0m [2m(no PR)[0m
+│   │ │  docs: update affiliations and add dissertations (#2434)
+│   │ ○  [1m[35mokulsxpksuzz[0m [34mae4be3b151da[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang)!: [re]move mostly-unused `raw_port()` APIs (#2431)
+│   │ ○  [1m[35mkxmuorplsqvt[0m [34m97469c88a912[0m [2m(no PR)[0m
+│   │ │  fix(dfir_lang): ensure `source_iter` always drains on first tick (#2432)
+│   │ ○  [1m[35mvlytlxolqouv[0m [34m104ddea93262[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): detect workspace `Cargo.lock` changes to trigger trybuild setup (#2429)
+│   │ ○  [1m[35mmvqqknsqslzt[0m [34m31c5a7387f24[0m [2m(no PR)[0m
+│   │ │  fix(sinktools): make an unreachable state more explicitly unreachable (#2424)
+│   │ ○  [1m[35mtqlkosxzmlmk[0m [34md69d40535c8f[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): don't print color codes if they are disabled (#2423)
+│   │ ○  [1m[35msvztzyomtyrq[0m [34mf7d7344252a0[0m [2m(no PR)[0m
+│   │ │  refactor(sinktools): remove unused buffered_lazy_sink_source (#2422)
+│   │ ○  [1m[35mwoqtyysokonq[0m [34me22669aac1f6[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): `viz` use `slotmap` custom key (instead of `usize`) (#2425)
+│   │ ○  [1m[35mnuysslyutokv[0m [34ma7c26de1c520[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): Add across_ticks() API to KeyedStream (#2420)
+│   │ ○  [1m[35mxzuvrvklqmrs[0m [34mb8aeb921cf68[0m [2m(no PR)[0m
+│   │ │  fix(dfir_rs): bring back Clippy allow to fix linting issues on stable (#2418)
+│   │ ○  [1m[35mpzpwqtunwuoq[0m [34ma381c85a52ab[0m [2m(no PR)[0m
+│   │ │  feat(hydro_test): Launch examples on AWS (#2407)
+│   │ ○  [1m[35mqzmxnkzoptnp[0m [34m21bffa625fdd[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2416)
+│   │ ○  [1m[35mrktsnzmutuul[0m [34m5b5c00f82630[0m [2m(no PR)[0m
+│   │ │  fix: move hydro_deploy tests to hydro_test, add rust-lld back in as musl c linker, fix ci nightly tests, fix snapshots [ci-full] (#2406)
+│   │ ○  [1m[35mzvxopwyrrqoz[0m [34mf77fe086ece6[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): Create rewritten_ir_builder from BuiltFlow instead of FlowBuilder (#2413)
+│   │ ○  [1m[35mktsrtkznuvqr[0m [34m5d888d3bbced[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang)!: unify remaining stream / keyed stream APIs using properties (#2412)
+│   │ ○  [1m[35mrlsxqzrtlsww[0m [34mffa87173b948[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang)!: unify `fold` API by using Stageleft properties to track commutativity and idempotence (#2405)
+│   │ ○  [1m[35mqqklmrzpyzwr[0m [34m973d0411cc11[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang)!: remove `compile_no_network`, remove interior mutability from `preview_compile` for simplicity (#2409)
+│   │ ○  [1m[35mvttrvntnvqqx[0m [34mc4ad56a9969c[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): make network channels configurable with a generic `Stream::send` API (#2400)
+│   │ ○  [1m[35mspvzvzmswxtu[0m [34ma10c5fff5327[0m [2m(no PR)[0m
+│   │ │  refactor!: move deploy_integration from dfir to hydro_lang, rename `mod resource_measurement` to `launch` (#2390)
+│   │ ○  [1m[35mzsrplsnsuwru[0m [34m37b9493a7768[0m [2m(no PR)[0m
+│   │ │  feat(dfir_rs): provide `DfirMetricsIntervals` iterator to prevent race conditions when writing metrics (#2401)
+│   │ ○  [1m[35mopoymloyonuz[0m [34me88cfbc55e9c[0m [2m(no PR)[0m
+│   │ │  feat(hydro_deploy): add AL2 perf setup command, test AWS in perf_compute_pi (#2398)
+│   │ ○  [1m[35mprmuyrnpvkpr[0m [34m0987cd9745c6[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_std): port `bench_client` to use sliced!, introduce `Stream::merge_ordered` (#2394)
+│   │ ○  [1m[35mpomnokvlvqxr[0m [34m42b18bf6b7c7[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_deploy)!: Remove `RwLock` wrapping of `AwsNetwork`, `GcpNetwork` (#2386)
+│   │ ○  [1m[35msskoyolmnmnl[0m [34m4803efef6931[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_deploy)!: fix `&self, self_arc: &Arc<Self>` methods, `RustCratePortConfig::merge` (#2385)
+│   │ ○  [1m[35mxtlwxnvuluvz[0m [34mc89c01fff01e[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_deploy)!: use `&self` to avoid `RwLock` where possible (#2372)
+│   │ ○  [1m[35mxtvswpztnwqv[0m [34mcc55a91e65ff[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_std): port quorum to use `sliced!` (#2381)
+│   │ ○  [1m[35mlwvxkzpzmnzs[0m [34mdef9dd0c5777[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): remove 2 unnecessary clones (#2387)
+│   │ ○  [1m[35mztnrnquswmoq[0m [34m63e143032c52[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang,hydro_deploy): add local containerized deployments (#2179)
+│   │ ○  [1m[35mqtsprymqvvvz[0m [34m47e92692be77[0m [2m(no PR)[0m
+│   │ │  docs: Update "DFIR book" references to "DFIR docs" in documentation (#2383)
+│   │ ○  [1m[35mmzonpwmxoxqp[0m [34mb0c7828ea727[0m [2m(no PR)[0m
+│   │ │  feat(hydro_std): port `request_response` to use `sliced!` and add simulation tests (#2379)
+│   │ ○  [1m[35mllpkwtmvzzxs[0m [34m664c1806522d[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): support atomic yield in `sliced!`, use in Paxos (#2378)
+│   │ ○  [1m[35mzwxmtwqstnvw[0m [34m630ad9e9d1fe[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_test): port graph reachability to `sliced!` and re-enable test (#2377)
+│   │ ○  [1m[35mwsrmzutwylsz[0m [34m7dce087bbe71[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): add `use::state` syntax for stateful `sliced!` (#2373)
+│   │ ○  [1m[35mslvktzprwxvl[0m [34m069af6a748c2[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_deploy): remove unused `#[async_trait]` (#2370)
+│   │ ○  [1m[35mslqxnlqkzvwp[0m [34ma2e784ade867[0m [2m(no PR)[0m
+│   │ │  chore: enable local sccache for all tests [ci-full] (#2366)
+│   │ ○  [1m[35mrtrnnklxowzn[0m [34mdf83122176a8[0m [2m(no PR)[0m
+│   │ │  docs(hydro_lang): delete leftover old docs (#2367)
+│   │ ○  [1m[35mxqxuuwlmlkvv[0m [34mb6fd0b93b130[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_deploy): cleanup `ServiceBuilder`, comments (#2369)
+│   │ ○  [1m[35mxvzrolkzuolo[0m [34m4629cef774d9[0m [2m(no PR)[0m
+│   │ │  fix(hydro_lang): work around Windows stack overflow in doctests [ci-full] (#2363)
+│   │ ○  [1m[35molzrqxqqzorp[0m [34me95ab0c6c199[0m [2m(no PR)[0m
+│   │ │  docs(hydro_lang): improve learning objectives for concurrent clients (#2364)
+│   │ ○  [1m[35mtxrrwvptpxkv[0m [34md41d497bc168[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang,hydro_test): use `sliced!` in more places (#2360)
+│   │ ○  [1m[35mzknllpsnunqv[0m [34ma1ae16f2117d[0m [2m(no PR)[0m
+│   │ │  refactor(dfir_rs): context waker to use std::task::Wake, fix #2345 (#2358)
+│   │ ○  [1m[35mzupktkozkznt[0m [34m24d0040bc700[0m [2m(no PR)[0m
+│   │ │  docs(hydro_lang): fix buggy code snippet in single counter tutorial (#2356)
+│   │ ○  [1m[35munruxltwryvo[0m [34m70f2d3c969db[0m [2m(no PR)[0m
+│   │ │  feat(hydro_lang): add `across_ticks` API for operations inside a tick that retain memory (#2352)
+│   │ ○  [1m[35mskurzpyplnzl[0m [34m60a8a657531f[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang)!: remove `persist` APIs and its IR node (#2349)
+│   │ ○  [1m[35mwmqlmtrxzusq[0m [34mfe54bc85c1f4[0m [2m(no PR)[0m
+│   │ │  feat(dfir_rs)!: track and expose DFIR runtime metrics, fix #2228 (#2241)
+│   │ ○  [1m[35mstnwouvoozuq[0m [34m1503eccd72d0[0m [2m(no PR)[0m
+│   │ │  refactor(dfir_rs): convert pull from Iterator to Stream to support async yielding [ci-bench] (#2338)
+│   │ ○  [1m[35mvvlvrrtwrkrl[0m [34m8bd0e26c8b10[0m [2m(no PR)[0m
+│   │ │  test(benches): add `flat_map2` micro_ops benchmark to avoid std `OneShot` specialization [ci-bench] (#2353)
+│   │ ○  [1m[35muopuwrwqmsny[0m [34m962ef2085286[0m [2m(no PR)[0m
+│   │ │  fix(dfir_rs): fix generation of `surface_example.rs` test snapshots, used in book (#2350)
+│   │ ○  [1m[35mspnyormqpltx[0m [34m02f87790ad61[0m [2m(no PR)[0m
+│   │ │  refactor(hydro_lang): eliminate use of `Persist` node from non-`persist` APIs (#2347)
+│   │ ○  [1m[35mnwwnuoryzrxk[0m [34mcdbc941d74f8[0m [2m(no PR)[0m
+│   │ │  refactor: remove unused CompileEnv (#2346)
+│   │ ○  [1m[35msynqrutovwxx[0m [34m667665e6ea0f[0m [2m(no PR)[0m
+│   │ │  docs(hydro_lang): initial slices / atomic docs (#2331)
+│   │ ○  [1m[35msmpmtkvpwpss[0m [34m8b8f112641f2[0m [2m(no PR)[0m
+│   │ │  refactor: separate rust crates and hosts to allow the rust crate code to be reused (#2340)
+│   │ ○  [1m[35mmqusqtktssys[0m [34m2bbe53552468[0m [2m(no PR)[0m
+│   │ │  [32m(empty)[0m fix: remove garbage file (#2342)
+│   │ ○  [1m[35mooyozzxrpskr[0m [34mcc196a4f4edf[0m [2m(no PR)[0m
+│   │ │  chore: update stageleft (#2339)
+│   │ ○  [1m[35mmqtnzttspxuz[0m [34mdd610935eb90[0m [2m(no PR)[0m
+│   │ │  chore: update nightly snapshots (#2337)
+│   │ ○  [1m[35mlszmrryomszt[0m [34m7b84be264cbe[0m [2m(no PR)[0m
+│   │ │  feat(sinktools): add LazySinkSource, a splittable lazily initialized sink and source (#2329)
+│   │ ○  [1m[35mozyqlmxlyzru[0m [34me5c6631e8a47[0m [2m(no PR)[0m
+│   │ │  docs(hydro_lang): initial simulator website docs (#2321)
+│   │ ○  [1m[35mutwwntrzrukn[0m [34mf58d016f4b1f[0m [2m(no PR)[0m
+│   │ │  feat(sinktools): add lazy version of demux_map (#2326)
+│   │ ○  [1m[35mwqnoswruknpm[0m [34mdc4d114cf6b1[0m [2m(no PR)[0m
+├─────╯  feat: add tagless member ids, add docker member id (#2330)
+│   ○  [1m[35mzlnuquuwmyup[0m [34m3d73a981a028[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-10 589f1c979094b089ca41b050c2902551d166658d
+│   ○  [1m[35msxxvlzuvrtvq[0m [34m703630aa55e4[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-10 e764772603d3516d6e8237b8c02bdec721205ef6
+│   ○  [1m[35mprwsknmlznqk[0m [34m3565ae91ffd8[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-10 373e07b15777012e5364d6a86f8b42e7b6bf5a99
+│   ○  [1m[35mtyruolszxqrw[0m [34m783c0952f640[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-10 4af85cbd179974bd668ed04f3c152c8bb2e64182
+│   ○  [1m[35mwwzoktpvxmpv[0m [34mbe7879fe4676[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-10 4af85cbd179974bd668ed04f3c152c8bb2e64182
+│ ○ │  [1m[35mzuzxoullymxk[0m [34m677ed4a12261[0m [2m(no PR)[0m
+│ │ │  wip member ids
+│ ○ │  [1m[35mmyuovkvqomrs[0m [34m417cee98a435[0m [2m(no PR)[0m
+│ │ │  fixup! fixup! fixup! fix(hydro_lang): feature-gate member ID variants, fix performance
+│ ○ │  [1m[35mrpstvpkurswx[0m [34mdb45bf50adc2[0m [2m(no PR)[0m
+│ │ │  fixup! fixup! fix(hydro_lang): feature-gate member ID variants, fix performance
+│ ○ │  [1m[35myypmxoknpqvw[0m [34m0b9c4ad40369[0m [2m(no PR)[0m
+│ │ │  fixup! fix(hydro_lang): feature-gate member ID variants, fix performance
+│ ○ │  [1m[35mymrvolpsylkp[0m [34mc88c87f2f33a[0m [2m(no PR)[0m
+├─╯ │  fix(hydro_lang): feature-gate member ID variants, fix performance
+│   ○  [1m[35mqoypvumtymqv[0m [34m74da1f09aa3e[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-09 bc5fc3311c5b4ba7be7277e48d0a197707ce3ff1
+│   ○  [1m[35mxwqztszssrwx[0m [34mdf2fefa5bc0b[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-09 c6a22b8ba67ebc6b9caebf3ab79cd07f12633496
+│   ○  [1m[35mvzmzplkqxrnn[0m [34mdef5acd5c229[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-09 6738e4821acb6deac212099c2f0cb948eb6caaeb
+│   ○  [1m[35mntlqypsokxwq[0m [34md7f62179458f[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-09 8dfd5726bd4542d7786b619ae65d739cebad2f7a
+│   ○  [1m[35mktszqwzqypxy[0m [34m8ed8bac91383[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-09 117d617a76ef11a88df1c069bc2edac0067c080c
+│   ○  [1m[35mxrnpmmnzpnnn[0m [34m17e5229aa91d[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-08 117d617a76ef11a88df1c069bc2edac0067c080c
+│   ○  [1m[35mrkuvvypkwpsk[0m [34meffd239bf4f7[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-07 117d617a76ef11a88df1c069bc2edac0067c080c
+│   ○  [1m[35mukrptuutqnsq[0m [34m77febcc6bd81[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-07 117d617a76ef11a88df1c069bc2edac0067c080c
+│   ○  [1m[35mtkmympwnroxl[0m [34m5caa98c9e5ff[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-06 3f8e1c7c91037f98971989d5e0f2c65b65326ddb
+│ ○ │  [1m[35mrvvzulotpmnq[0m [34me007778427c4[0m [2m(no PR)[0m
+│ │ │  Use pin_project! to eliminate unsafe blocks in lazy_sink_source
+│ ○ │  [1m[35mnlyvnkwtmnyk[0m [34m382dbc77ccac[0m [2m(no PR)[0m
+│ │ │  Refactor LazySinkSource to implement Sink+Stream directly, use futures::StreamExt::split
+│ ○ │  [1m[35mwzmwzluopzxp[0m [34m3e8cf2aacc51[0m [2m(no PR)[0m
+│ │ │  Refactor LazySinkSource to implement Sink and Stream directly without split
+│ │ │ ○  [1m[35mqpzkknrmlxtx[0m [34m03889c7e6fad[0m [2m(no PR)[0m
+│ │ │ │  Fix import style in test file
+│ │ │ ○  [1m[35msnruqrqprkyt[0m [34macd3fb201a65[0m [2m(no PR)[0m
+│ │ │ │  Update all streams and channel functions to return FusedStream
+│ │ │ ○  [1m[35mmpqpusnyxour[0m [34mc450c0834ace[0m [2m(no PR)[0m
+│ │ │ │  Update rga example function signatures to use Fuse<UnboundedReceiverStream>
+│ ○ │ │  [1m[35mqrkrwuurkmvl[0m [34m361f478b810b[0m [2m(no PR)[0m
+│ │ │ │  Remove trailing whitespace from lazy_sink_source.rs
+│ ○ │ │  [1m[35mzpxokxrtsvkv[0m [34m8f2013ddb8d6[0m [2m(no PR)[0m
+│ │ │ │  Optimize lazy_sink_source to use pin_project! macro instead of boxed pinned futures
+│ │ │ ○  [1m[35mmylkqxxkqqkw[0m [34m4d4bfb90f722[0m [2m(no PR)[0m
+│ │ │ │  Add FusedStream trait bound to source_stream operator
+│ ○ │ │  [1m[35mxnznkklvmvxs[0m [34m7d5229adb621[0m [2m(no PR)[0m
+├─╯ │ │  [32m(empty)[0m Initial plan
+│   │ ○  [1m[35msrzrsluptmkl[0m [34me3819553e64c[0m [2m(no PR)[0m
+├─────╯  [32m(empty)[0m Initial plan
+│ ○ │  [1m[35mqzktrzrkxksk[0m [34mbb02cd13ae29[0m [2m(no PR)[0m
+│ │ │  ci: update benchmark workflow to post on start and track run history [ci-bench] (#2545)
+│ ○ │  [1m[35mppunkppzxqto[0m [34mae8329f74b29[0m [2m(no PR)[0m
+│ │ │  chore: update nightly snapshots (#2546)
+│ ○ │  [1m[35msnqqrmyxswqy[0m [34mb3932da65a73[0m [2m(no PR)[0m
+│ │ │  fix(dfir_lang): fix `source_iter` performance regression from #2432 [ci-bench] (#2537)
+│ ○ │  [1m[35mtyuoyoxwwwyu[0m [34m5862470b987e[0m [2m(no PR)[0m
+│ │ │  fix(hydro_lang,dfir_lang)!: fix & test sim DFIR codegen; DFIR use `Result` to force error handling (#2541)
+│ ○ │  [1m[35mqnpyzpouwxys[0m [34m312c39b7fa36[0m [2m(no PR)[0m
+│ │ │  ci: skip conventional commits check on draft PRs (#2543)
+│ ○ │  [1m[35mvqymsywqrsxo[0m [34m5d4d43a5d560[0m [2m(no PR)[0m
+│ │ │  chore(hydro_lang): place some unused APIs back behind feature gates (#2542)
+│ ○ │  [1m[35mqqmpqowrrzvn[0m [34md98e53cb123a[0m [2m(no PR)[0m
+│ │ │  ci: download Maelstrom to tempdir instead of project workspace (#2544)
+│ ○ │  [1m[35mvyoululuzzmm[0m [34mfcff8debc9e0[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): improve quality of error spans in `sliced!` macro (#2531)
+│ ○ │  [1m[35msqozqmktsnlo[0m [34m9d8f847e9736[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): Jepsen / Maelstrom backend for Hydro (#2532)
+│ ○ │  [1m[35mokktsouozzoo[0m [34m9073c38b8ed5[0m [2m(no PR)[0m
+│ │ │  docs(hydro_lang): docs for the `Location` trait (#2538)
+│ ○ │  [1m[35mlupysuxrsnwv[0m [34m9c3dbf5d16f1[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang): remove assumption that `use` always has two parameters (#2530)
+│ ○ │  [1m[35mowvnonmsnlzx[0m [34m77dbd2338305[0m [2m(no PR)[0m
+│ │ │  chore!: update pinned rust to 1.92, add lints/fixes for redundant cloning, string handling (#2525)
+│ ○ │  [1m[35mymqwsxlxvmul[0m [34m329f5b8ade73[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_std)!: Refactor client_aggregator so printing is a separate function (#2522)
+│ ○ │  [1m[35mnqnwuntzruwl[0m [34m1befb531bdd9[0m [2m(no PR)[0m
+│ │ │  ci: comment benchmark artifact link on [ci-bench] PRs (#2529)
+│ ○ │  [1m[35mlnrmprzlyopl[0m [34mdca2837373b0[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): update ecs deployment to emit a hydro manifest that can be used by cdk to deploy to ecs. (#2515)
+│ ○ │  [1m[35mlywmzvkupquz[0m [34m92cb05b8e713[0m [2m(no PR)[0m
+│ │ │  chore: update nightly snapshots (#2527)
+│ ○ │  [1m[35mpkqqsrmvvtxl[0m [34mdf593f73013d[0m [2m(no PR)[0m
+│ │ │  fix(hydro_lang): support `assume_ordering` in atomic locations and block top-level bounded (#2526)
+│ ○ │  [1m[35mnrxytzyklvuv[0m [34m58ee7eb29cde[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): add support for top-level `KeyedStream::assume_ordering` (#2523)
+│ ○ │  [1m[35mtkkkzkkxqmtn[0m [34me08df68d65e6[0m [2m(no PR)[0m
+│ │ │  feat(hydro_deploy): enable automatic AWS CloudWatch metric reporting (DFIR, Tokio, cpu/mem/netstat) (#2251)
+│ ○ │  [1m[35mywknvuuxkqok[0m [34m7794cae76ccc[0m [2m(no PR)[0m
+│ │ │  fix(hydro_lang): allow additional crates to be downloaded for the trybuild (#2517)
+│ ○ │  [1m[35mtystutruzrzw[0m [34m34056316e745[0m [2m(no PR)[0m
+│ │ │  docs(hydro_lang): update docs for new simulator support (#2521)
+│ ○ │  [1m[35mwsnoxntpnmwz[0m [34m66dcdcf7bb2d[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): support top-level `assume_ordering` in the simulator (#2513)
+│ ○ │  [1m[35mlpkkmnmnqurq[0m [34ma296bdffa73b[0m [2m(no PR)[0m
+│ │ │  fix(dfir_lang): Fix counter in pull mode (#2516)
+│ ○ │  [1m[35mwrnmwouuktly[0m [34m1a2151725da8[0m [2m(no PR)[0m
+│ │ │  chore: update nightly snapshots (#2514)
+│ ○ │  [1m[35mnsvokwmupuyy[0m [34m53da114bc2e1[0m [2m(no PR)[0m
+│ │ │  fix: flag non-determinstic hashmap iterators, fix hydro_lang codegen nondeterminism fix #2464 (#2511)
+│ ○ │  [1m[35msnwvywyqykmw[0m [34m85547ce37437[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang)!: Join consistent naming (#2492)
+│ ○ │  [1m[35mtkqllttupsym[0m [34mb1eb1eac81fc[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): introduce `Weaker{Ordering/Retries}Than` to simplify stream weakening (#2508)
+│ ○ │  [1m[35mllmpqpkwsqpt[0m [34m67e7ab870990[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): re-add type-erased deploy methods, `with_(process|cluster)_erased`, unstable (#2507)
+│ ○ │  [1m[35mmvtnmyspqwzu[0m [34m19e57c70b29f[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang): remove RewriteIrFlowBuilder (#2506)
+│ ○ │  [1m[35mpzkwqvwquwxm[0m [34md39479082ac6[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): add bidi support for docker containers (#2499)
+│ ○ │  [1m[35mkzmuttmqsqkz[0m [34m6d8e9a0e0852[0m [2m(no PR)[0m
+│ │ │  feat(dfir_rs)!: Add `DfirMetricsIntervals::all_metrics`, `take_interval` methods, remove dubious `Iterator` impl (#2503)
+│ ○ │  [1m[35myvzlruuvprkr[0m [34m17363c90245d[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_deploy)!: Make buildstructor-underlying `add_<cloud>_host` methods private (#2504)
+│ ○ │  [1m[35myyxkxututuwu[0m [34mb1afb861986a[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): add `.name` to configure channel names and prepare for multiversioning (#2479)
+│ ○ │  [1m[35mwtwslnsmqtyv[0m [34m0c62442b8c28[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): Add sidecar API (#2495)
+│ ○ │  [1m[35mlmokukxzvwyv[0m [34m24ff2d5c5747[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): set up skeleton for registering expressions with proof providers (#2481)
+│ ○ │  [1m[35mkmlwswzvuytp[0m [34md499de9d370b[0m [2m(no PR)[0m
+│ │ │  chore: update nightly snapshots (#2501)
+│ ○ │  [1m[35myyruktzquykw[0m [34mc6dfc658d9b9[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang): remove unused `launch!` macro (#2498)
+│ ○ │  [1m[35mouwxtqyywxxs[0m [34m17f7f1eef0d3[0m [2m(no PR)[0m
+│ │ │  docs(hydro_lang): inline code snippets (#2494)
+│ ○ │  [1m[35mmulzunzlpsnr[0m [34mb8b8c6b99a50[0m [2m(no PR)[0m
+│ │ │  ci: remove `maximize-build-space` action (#2496)
+│ ○ │  [1m[35multoqqztourx[0m [34m19169852303f[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang): cleanup str cloning, rename `name_hint` ->  `bin_name_prefix`, fix #2491 (#2493)
+│ ○ │  [1m[35mnprwrktywwmk[0m [34md33c134023ae[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang): stageleft cleanup, remove a `pub`, fix #2477 (#2488)
+│ ○ │  [1m[35mvtoxmxlvyqvm[0m [34m88683f0e1945[0m [2m(no PR)[0m
+│ │ │  chore: update nightly snapshots (#2490)
+│ ○ │  [1m[35mmnvvsuprtwsy[0m [34m5734543da811[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang)!: convert locations (Cluster/Process/External) to use slotmaps, new key type (#2465)
+│ ○ │  [1m[35muuqtrooxrppo[0m [34macc62e5a6a04[0m [2m(no PR)[0m
+│ │ │  feat(example_test): use `trybuild-internals-api` to forward features and avoid re-compilation (#2483)
+│ ○ │  [1m[35mtnvvltnwyyvw[0m [34m04012cc64324[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): Sliced atomic keyed stream (#2485)
+│ ○ │  [1m[35mwzxvxutrwnnt[0m [34m8e8144babaa3[0m [2m(no PR)[0m
+│ │ │  chore: update nightly snapshots (#2484)
+│ ○ │  [1m[35mklvvmtpxwpop[0m [34m7d805d69980d[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang): disable `aws-sdk-*` default features to avoid [re-]compiling `ring` (#2482)
+│ ○ │  [1m[35mnnsypwxskrqm[0m [34m860449ea5ccf[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_std): Generalize bench_client (#2435)
+│ ○ │  [1m[35mtovwnzzuorqs[0m [34m534397fa0ef8[0m [2m(no PR)[0m
+│ │ │  feat(hydro_deploy): support (and prefer) `tofu` as a deployment backend (#2467)
+│ ○ │  [1m[35mlttputpokkyz[0m [34m818ee7217f29[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): bump Stageleft to reduce Trybuild prep latency (#2453)
+│ ○ │  [1m[35mlvvqqttrqwpy[0m [34m1d220f055492[0m [2m(no PR)[0m
+│ │ │  ci: drop local sccache [ci-full] (#2475)
+│ ○ │  [1m[35mrkszvtmukqzu[0m [34m377ab0cd0b4c[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): statically link projected DFIR for fuzzing (#2474)
+│ ○ │  [1m[35momouwwlpmosw[0m [34m3a3fe3a7fef5[0m [2m(no PR)[0m
+│ │ │  chore: update nightly snapshots (#2478)
+│ ○ │  [1m[35mpwrmyoxkqooo[0m [34m45288244c595[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang)!: remove unused `Deploy::GraphId` type, `CompiledFlow` param (always `()`) (#2470)
+│ ○ │  [1m[35mltovpwqyztrn[0m [34mb937e77fb4ab[0m [2m(no PR)[0m
+│ │ │  fix(hydro_lang): remove unused `DeployNode::id` location field (#2473)
+│ ○ │  [1m[35mkvkspntturnp[0m [34m0a35d400a2f2[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): share target dir between main and trybuild (#2471)
+│ ○ │  [1m[35muqsnzoxzmuqz[0m [34m7a04e307c7ca[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang): remove unused `HydroMeta::subgraph_id` location field (#2469)
+│ ○ │  [1m[35moqlkvqouupoy[0m [34m29e636fd24e0[0m [2m(no PR)[0m
+│ │ │  refactor(hydro_lang)!: remove trivial locations from `Deploy` trait (#2468)
+│ ○ │  [1m[35mrtqwwolmosqo[0m [34mec5f49abc532[0m [2m(no PR)[0m
+├─╯ │  feat(hydro_lang): use a dylib helper crate to avoid global RUSTFLAGS for trybuild [ci-full] (#2462)
+│   ○  [1m[35muzxlzkklltst[0m [34m7508abf377af[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-06 9d07ac0863fc99d627bf47228acd6eb28adb8475
+│   ○  [1m[35mmyylslyqkwrk[0m [34ma57ea0ca9fa9[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-05 9d07ac0863fc99d627bf47228acd6eb28adb8475
+│   ○  [1m[35mvqvtmvzlrowk[0m [34md748ad0f84d1[0m [2m(no PR)[0m
+│   │  Update Benchmarks 2026-02-05 61228c8853ef2a48ffcf26860482e77c4275b571
+│   ○  [1m[35mootzupppvtzz[0m [34m14da8b5b3699[0m [2m(no PR)[0m
+│   │  Update rustdoc 2026-02-05 61228c8853ef2a48ffcf26860482e77c4275b571
+│   ○  [1m[35mwymvwkuzyooo[0m [34m46983f5ff00d[0m [2m(no PR)[0m
+│   │  remove micro/ops/next_tick/small outlier
+│   ○  [1m[35mpmulzopoqzlr[0m [34m9ad6a981f7e1[0m [2m(no PR)[0m
+├───╯  Collapse gh-pages history 2026-02-05
+│ ○  [1m[35mxqzvtnvskylv[0m [34m203ec96129a9[0m [2m(no PR)[0m
+│ │  Revert PR #2432: Revert source_iter draining changes
+│ ○  [1m[35myoxkpkonntut[0m [34md79ff15f6b5a[0m [2m(no PR)[0m
+├─╯  [32m(empty)[0m Initial plan
+│ ○  [1m[35mkqmkwzuxzlsq[0m [34m28773e4cf400[0m [2m(no PR)[0m
+│ │  refactor: move Sidecar trait from telemetry to compile::deploy module
+│ ○  [1m[35mwvnltkxwunor[0m [34mae2874250507[0m [2m(no PR)[0m
+│ │  test: update test-features script to include telemetry feature
+│ ○  [1m[35mzpkmzmvtrwnm[0m [34mf9bb46353316[0m [2m(no PR)[0m
+│ │  feat(hydro_lang): add telemetry feature gate to avoid unnecessary dependencies
+│ ○  [1m[35mwmxnrsyxttwo[0m [34m4f0cbc1785ec[0m [2m(no PR)[0m
+├─╯  [32m(empty)[0m Initial plan
+│ ○  [1m[35mmlzrtyrqslwt[0m [34me12c3b7efe72[0m [2m(no PR)[0m
+├─╯  fix(template): remove dfir examples, which should fix the lint errors
+│ ○  [1m[35mxumlstmprwow[0m [34md6e30bd9d6ec[0m [2m(no PR)[0m
+│ │  location root name
+│ ○  [1m[35mpxqxwltkmsvs[0m [34m0e6baf5595d9[0m [2m(no PR)[0m
+├─╯  feat(hydro_lang): add global `LocationId` variable
+│ ○  [1m[35mtomuwkkozmrm[0m [34m6df64c62a2d0[0m [2m(no PR)[0m
+├─╯  chore: update async-ssh2-russh to fix cve
+│ ○  [1m[35mtksppustxnot[0m [34m9deed721dba4[0m [2m(no PR)[0m
+│ │  DeployClusterNode DeployClusterWrapper WIP
+│ │ ○  [1m[35mtwwznzwsxrzu[0m [34mf45037901465[0m [2m(no PR)[0m
+│ │ │  [32m(empty)[0m Initial plan
+│ ○ │  [1m[35mzkwnsswmqtrl[0m [34mcc873158c244[0m [2m(no PR)[0m
+│ ├─╯  appendonlyvec note
+│ ○  [1m[35mupyvonzymvmu[0m [34m96c36b7966f5[0m [2m(no PR)[0m
+│ │  copilot suggestions
+│ ○  [1m[35msttmmznsrnwt[0m [34mc74a4787c6b1[0m [2m(no PR)[0m
+│ │  working maybe
+│ ○  [1m[35msprznunxpzyo[0m [34m771ab7357d15[0m [2m(no PR)[0m
+│ │  idk
+│ ○  [1m[35mmskyyuqlyrpx[0m [34m509a792c9783[0m [2m(no PR)[0m
+│ │  just ports left;
+│ ○  [1m[35muspomszlqvzq[0m [34med7586508fae[0m [2m(no PR)[0m
+│ │  make Service use `&self`
+│ ○  [1m[35muvpmprstkovr[0m [34m93eb19ad05ae[0m [2m(no PR)[0m
+│ │  make `LaunchedBinary` use `&self`
+│ ○  [1m[35mtwzxtzzmzuoq[0m [34mb2e4dd096c0c[0m [2m(no PR)[0m
+│ │  ref wip
+│ ○  [1m[35msktumotylpnw[0m [34m9db9ff51ae5a[0m [2m(no PR)[0m
+├─╯  refactor(hydro_deploy): remove unused `#[async_trait]`
+│ ○  [1m[35mkultmwznxmzv[0m [34m6351af9f1014[0m [2m(no PR)[0m
+│ │  2179-on-mac
+│ ○  [1m[35mmqkksssxnoox[0m [34m90410b2f5793[0m [2m(no PR)[0m
+│ │  fix typo
+│ ○  [1m[35mlwzqvqxoypmx[0m [34mdf6467a35047[0m [2m(no PR)[0m
+│ │  updates
+│ ○  [1m[35mzknrqmlkpsqq[0m [34mb131bf4c1f31[0m [2m(no PR)[0m
+│ │  Update hydro_lang/src/deploy/deploy_graph_containerized.rs
+│ ○  [1m[35mtxsmkvnzxksl[0m [34m4946ba33dd31[0m [2m(no PR)[0m
+│ │  Update hydro_lang/src/telemetry.rs
+│ ○  [1m[35mympsqyrqwtpv[0m [34m09f0ae67f2c1[0m [2m(no PR)[0m
+│ │  Update hydro_lang/src/deploy/deploy_graph_containerized.rs
+│ ○  [1m[35morzrvlyzxtwn[0m [34m5ce837a4826f[0m [2m(no PR)[0m
+├─╯  feat: add docker as a deployment target
+│ ○  [1m[35mzvoprwkmmyln[0m [34mcd4b3238ec43[0m [2m(no PR)[0m
+├─╯  feat!: compile envs are now specifiable and plumbed throughout hydrolang/hydro deploy
+│ ○  [1m[35mtrnqsonmvvqt[0m [34m9098a4afaec6[0m [2m(no PR)[0m
+├─╯  extract type info for network edges
+│ ○  [1m[35msmqrqrrxqupl[0m [34m26ec1f1be576[0m [2m(no PR)[0m
+├─╯  [32m(empty)[0m Initial plan
+│ ○  [1m[35movxlmllrxsrm[0m [34m9ec8559e8fac[0m [2m(no PR)[0m
+│ │  feat(hydro_lang): use mimalloc when compiling for an external host
+│ ○  [1m[35mkwnpyqytsrvv[0m [34m79e12dc6e172[0m [2m(no PR)[0m
+├─╯  fix(hydro_deploy_integration): compilation on non-Unix [ci-full]
+│ ○  [1m[35mytmxxlqzxpkn[0m [34m3813c6db16b4[0m [2m(no PR)[0m
+├─╯  feat: add local containerized deployments
+│ ○  [1m[35mptlzqznxsuqk[0m [34m06476c8eeda0[0m [2m(no PR)[0m
+│ │  remove junk file
+│ ○  [1m[35mktuzsuwpytzk[0m [34mf149ee4e1470[0m [2m(no PR)[0m
+│ │  Apply autofix formatting
+│ ○  [1m[35mspxyvtupwnqu[0m [34m7a488b232285[0m [2m(no PR)[0m
+│ │  Fix encapsulation and error handling issues
+│ ○  [1m[35myowrtmkxkpyr[0m [34m1f97781e1a5d[0m [2m(no PR)[0m
+│ │  Run cargo fmt
+│ ○  [1m[35mvwulntqrxksu[0m [34m77faf90b9d57[0m [2m(no PR)[0m
+│ │  Add RoaringBitmap and FST tombstone support to MapUnionWithTombstones
+│ ○  [1m[35mrnrxrrxzwlvq[0m [34m97892e2eb88e[0m [2m(no PR)[0m
+│ │  Extract tombstone implementations to shared module
+│ ○  [1m[35mvkuwrouuvkmn[0m [34m8b56de21a721[0m [2m(no PR)[0m
+│ │  Fix clippy doc formatting warnings
+│ ○  [1m[35mxmotoyulxzmm[0m [34m5e228b0ba9d3[0m [2m(no PR)[0m
+│ │  Add comprehensive tests for lattice properties and edge cases
+│ ○  [1m[35muttrovzwztpz[0m [34ma20ac044e4c3[0m [2m(no PR)[0m
+│ │  Apply autofix formatting
+│ ○  [1m[35mklluoxnvumqr[0m [34m95c32668eae6[0m [2m(no PR)[0m
+│ │  Add comprehensive documentation for choosing tombstone implementations
+│ ○  [1m[35moommqzytuvlr[0m [34mec4551fe13ec[0m [2m(no PR)[0m
+│ │  Refactor RoaringBitmap to use integers directly and add FST tombstone support
+│ ○  [1m[35mxnyuyvyrwpvt[0m [34m9f7d75296ab2[0m [2m(no PR)[0m
+│ │  Add RoaringBitmap-backed tombstone storage for SetUnionWithTombstones
+│ ○  [1m[35mwyuqznlmnqtq[0m [34m39eab72d1432[0m [2m(no PR)[0m
+│ │  new snaps
+│ ○  [1m[35mlyruyyqtmntq[0m [34md2f598126c57[0m [2m(no PR)[0m
+╭─┤  [32m(empty)[0m Merge branch 'main' into feature/docs-hydroscope-update
+│ │ ○  [1m[35mqpxxvzunqqyx[0m [34mf5dbdc12fc0b[0m [2m(no PR)[0m
+│ │ │  Update .github/copilot-instructions.md
+│ │ ○  [1m[35mmuswurrnqnlk[0m [34m6cdc491cb010[0m [2m(no PR)[0m
+│ │ │  Update .github/copilot-instructions.md
+│ │ ○  [1m[35mqwupxsztryqx[0m [34m1510f819f70a[0m [2m(no PR)[0m
+│ │ │  Update .github/copilot-instructions.md
+│ │ ○  [1m[35mklmyounuztsx[0m [34mc4d0fb775037[0m [2m(no PR)[0m
+│ │ │  Update .github/copilot-instructions.md
+│ │ ○  [1m[35muxlupplsrqkp[0m [34m6fd574b2d137[0m [2m(no PR)[0m
+│ │ │  Update .github/copilot-instructions.md
+│ │ ○  [1m[35mpmwknmoplpnq[0m [34md87a47fa057a[0m [2m(no PR)[0m
+│ │ │  Update .github/copilot-instructions.md
+│ │ ○  [1m[35mmmnutyolusym[0m [34mac8ec9a6afe8[0m [2m(no PR)[0m
+│ │ │  Update .github/copilot-instructions.md
+│ │ ○  [1m[35mlsrlmlwqztyn[0m [34mb65aea47eed8[0m [2m(no PR)[0m
+│ │ │  Update .github/copilot-instructions.md
+│ │ ○  [1m[35mtyvmtotvkssk[0m [34m95b19ec10704[0m [2m(no PR)[0m
+│ │ │  docs: Clarify nightly vs stable toolchain usage
+│ │ ○  [1m[35mnsoolopukrqx[0m [34mbeaa57ccb81e[0m [2m(no PR)[0m
+│ │ │  docs: Remove non-existent pusherator reference and clarify toolchain
+│ │ ○  [1m[35mykkwwrolqrvs[0m [34m98468e230b78[0m [2m(no PR)[0m
+│ │ │  docs: Clarify Rust toolchain version in Copilot instructions
+│ │ ○  [1m[35mtzuyoqsovntp[0m [34m397f7012c007[0m [2m(no PR)[0m
+│ │ │  feat: Add Copilot instructions for repository
+│ │ ○  [1m[35mpyqtukmqlowl[0m [34m25f1215d3327[0m [2m(no PR)[0m
+├───╯  [32m(empty)[0m Initial plan
+│ │ ○  [1m[35mwtutonovykwr[0m [34md7dd3aef0077[0m [2m(no PR)[0m
+│ │ │  [32m(empty)[0m Initial plan
+│ ○ │  [1m[35mrzomusqmmopo[0m [34m07f2baa86b52[0m [2m(no PR)[0m
+│ │ │  format fixes
+│ ○ │  [1m[35moyxqlqrpxsto[0m [34m2dc1e2898455[0m [2m(no PR)[0m
+│ │ │  refactor(viz): address code review feedback
+│ ○ │  [1m[35mpxyxlzxnovnw[0m [34m0d0939f88a89[0m [2m(no PR)[0m
+│ │ │  fix: remove explicit colors from JSON generation, use color-token instead
+│ ○ │  [1m[35muzvwnxqvokrz[0m [34mb2e9e1bfe141[0m [2m(no PR)[0m
+│ │ │  feat(viz): add tick-based sub-location hierarchy to JSON exporter
+│ ○ │  [1m[35mnyuupkqzxvtu[0m [34mac9ef4eb7566[0m [2m(no PR)[0m
+│ │ │  chore(cargo): update Cargo.lock to capture new slotmap dep
+│ ○ │  [1m[35mpxsokzuvsosq[0m [34m11daf40c3ee7[0m [2m(no PR)[0m
+│ │ │  docs(docs): update hydroscope page to use published package
+│ ○ │  [1m[35mzozrnxypynyt[0m [34m5635f3e2299f[0m [2m(no PR)[0m
+├─╯ │  docs: use @hydro-project/hydroscope ^1.2.0 in docs site and update lockfile
+│ ○ │  [1m[35mwvpooqmpytov[0m [34m7b10b5fb8984[0m [2m(no PR)[0m
+│ │ │  chore(cargo): update Cargo.lock to capture new slotmap dep
+│ ○ │  [1m[35mwstrumytvsko[0m [34m30e170bf43e1[0m [2m(no PR)[0m
+│ │ │  docs(docs): update hydroscope page to use published package
+│ ○ │  [1m[35mpqukvltlzysy[0m [34m4b65ee4a1c2a[0m [2m(no PR)[0m
+│ │ │  docs: use @hydro-project/hydroscope ^1.2.0 in docs site and update lockfile
+│ ○ │  [1m[35morqorxvqnqtn[0m [34mff4dc31850c8[0m [2m(no PR)[0m
+│ │ │  feat(viz): add tick-based sub-location hierarchy to JSON exporter
+│ ○ │  [1m[35msxpmtmrtqvuk[0m [34m2dd904ef1efb[0m [2m(no PR)[0m
+│ │ │  fix: remove explicit colors from JSON generation, use color-token instead
+│ │ ○  [1m[35mtvlwkwtlkmqt[0m [34m32e692a7292c[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): support Cluster -> Process network in sim
+│ │ ○  [1m[35mokpqxrnkqoxr[0m [34ma27868903748[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): support Process -> Process network in sim
+│ │ ○  [1m[35mrylxptrvzpsv[0m [34m707386ebb055[0m [2m(no PR)[0m
+├───╯  refactor(hydro_lang): allow `sim` feature without `deploy` feature
+│ ○  [1m[35mymxrtvkrsptr[0m [34m731aca981a01[0m [2m(no PR)[0m
+│ │  fix: use published @hydro-project/hydroscope from npm instead of symlink
+│ ○  [1m[35mpuzpmlwmnpmy[0m [34m4202e20c4535[0m [2m(no PR)[0m
+│ │  ci: upgrade Node.js to v20 for Docusaurus build
+│ ○  [1m[35mloykxsxmvmyq[0m [34m52d18f7fce2f[0m [2m(no PR)[0m
+│ │  refactor: improve viz graph rendering and fix test compilation warnings
+│ ○  [1m[35mkquwyrxzxmxo[0m [34mfac62c0426d2[0m [2m(no PR)[0m
+│ │  feat(viz): Add hierarchy collapsing in JSON exporter
+│ ○  [1m[35mqxntotxtkurx[0m [34m7fc609f48e61[0m [2m(no PR)[0m
+│ │  remove BrowserOnly wrapper
+│ ○  [1m[35mwtrutqmnlxkl[0m [34mf00ee085257d[0m [2m(no PR)[0m
+│ │  building clean now
+│ ○  [1m[35mpmxvoxrrvruw[0m [34mc010e155ca2f[0m [2m(no PR)[0m
+│ │  wrapper script to get docusaurus build to exit
+│ ○  [1m[35mpqukkqupknol[0m [34m78613f3a201f[0m [2m(no PR)[0m
+│ │  fix website build delay
+│ ○  [1m[35mxuruqoxmkmwo[0m [34m80aec2485a8a[0m [2m(no PR)[0m
+│ │  perf(docs): add step timing markers and disable realContentHash when SKIP_MINIFY_ALL=1 for faster CI builds
+│ ○  [1m[35mlrzrpsoowqru[0m [34m31493e787b5a[0m [2m(no PR)[0m
+│ │  make sure minification status is shown during website build
+│ ○  [1m[35mrrqwzvpowyyu[0m [34mde964c94f554[0m [2m(no PR)[0m
+│ │  docs(ci): pass SKIP_MINIFY_ALL through build script, add explicit CI logs for minify flags, and enable npm cache
+│ ○  [1m[35mvpstxyzvzomm[0m [34ma12bd5165a38[0m [2m(no PR)[0m
+│ │  pass SKIP_MINIFY_ALL to npm
+│ ○  [1m[35muoztwuzwqtyy[0m [34m3b4f00c016cd[0m [2m(no PR)[0m
+│ │  remove debug log
+│ ○  [1m[35mtoqutxwyuwqm[0m [34m42f6487b2996[0m [2m(no PR)[0m
+│ │  skip minify on website; fix URL-encoded hierarchies
+│ ○  [1m[35mukmlnlyspwqz[0m [34m51cced32bcd4[0m [2m(no PR)[0m
+│ │  leave more time for website to minify
+│ ○  [1m[35mskpwzyzsnnzt[0m [34ma4ebf485dff5[0m [2m(no PR)[0m
+│ │  viz(json): relax backtrace filtering for hierarchy and add compatibility aliases (function/filename/lineNumber) in backtrace frames to ensure Hydroscope rendering
+│ ○  [1m[35mkozvspwtklmq[0m [34m9c0c198e02f9[0m [2m(no PR)[0m
+│ │  fix broken refs in docs
+│ ○  [1m[35mvpykpwulwvzy[0m [34m6852bf62ae22[0m [2m(no PR)[0m
+│ │  more PR responses
+│ ○  [1m[35mvymnvmqovkzv[0m [34mad27a0f20129[0m [2m(no PR)[0m
+│ │  respond to PR comments
+│ ○  [1m[35mxkklxwmntynn[0m [34m00c6119cff2e[0m [2m(no PR)[0m
+│ │  use flex-box and remove resizeObserver hacks
+│ ○  [1m[35mquzvuqnupspr[0m [34me1b3f818f3f3[0m [2m(no PR)[0m
+│ │  docs: fix @hydro-project/hydroscope to use npm registry instead of local symlink
+│ ○  [1m[35mpwrsxnrlunyo[0m [34mb96312e014d0[0m [2m(no PR)[0m
+│ │  fmt fixes
+│ ○  [1m[35mnqvultoytwrv[0m [34m55e6a8a5dbc8[0m [2m(no PR)[0m
+│ │  fix: replace hydro_lang::graph:: with hydro_lang::viz:: in hydro_test examples
+│ ○  [1m[35myrsllzypvmvl[0m [34ma1dc26205744[0m [2m(no PR)[0m
+│ │  hydro_lang/src/graph -> hydro_lang/src/viz
+│ ○  [1m[35mrpnsnwzuyxsn[0m [34m46bed49f7ca6[0m [2m(no PR)[0m
+│ │  graph/render: import HydroIrMetadata to fix staged code resolution
+│ ○  [1m[35mmruwuwlptwyx[0m [34mda6f3876e125[0m [2m(no PR)[0m
+│ │  remove lite comments
+│ ○  [1m[35mmuuwymonyoon[0m [34m03ee9bf4359b[0m [2m(no PR)[0m
+│ │  docs: remove unnecessary hydroscope shim
+│ ○  [1m[35mnkvvlsplopsm[0m [34m124fb85f33d4[0m [2m(no PR)[0m
+│ │  graph/url_generation_test: remove redundant #[cfg(feature = "viz")]
+│ ○  [1m[35mqvpsusvlmxyr[0m [34m3592956cdf1c[0m [2m(no PR)[0m
+│ │  graph/debug: remove redundant #[cfg(feature = "viz")] attributes
+│ ○  [1m[35mxlkvqnpzkwsx[0m [34m87b71d62967e[0m [2m(no PR)[0m
+│ │  Apply suggestion from @MingweiSamuel
+│ ○  [1m[35mytquowrxmult[0m [34m8ca8b9d92a29[0m [2m(no PR)[0m
+│ │  Apply suggestion from @MingweiSamuel
+│ ○  [1m[35monnwkpqrrxmx[0m [34me8310d5e660b[0m [2m(no PR)[0m
+│ │  revert hydro_lang::compile paths (can't reference crate from within itself) and fix clippy::while_let_on_iterator
+│ ○  [1m[35mqkmtwulwrmom[0m [34mda15d335baf0[0m [2m(no PR)[0m
+│ │  graph: use absolute hydro_lang::compile::… paths in staged-visible code (json, render, debug, graphviz, mermaid, api)
+│ ○  [1m[35mknylrklxyqsp[0m [34mcc3ada5501a1[0m [2m(no PR)[0m
+│ │  remove accidental .vscode/tasks.json from PR scope
+│ ○  [1m[35mvszqnyoztrss[0m [34m0aa446b2c0f6[0m [2m(no PR)[0m
+│ │  graph/render: use absolute path hydro_lang::compile::ir::HydroIrMetadata to fix trybuild staged crate resolution
+│ ○  [1m[35mplollqylyklx[0m [34m9363634f65c1[0m [2m(no PR)[0m
+│ │  graph(json): fix potential usize underflow in label similarity check using saturating_sub(2)
+│ ○  [1m[35mtzqyvwlyzvnm[0m [34m68e31400005d[0m [2m(no PR)[0m
+│ │  docs: add local shim and webpack alias for @hydro-project/hydroscope to fix CI docs build; gate real package behind LOAD_HYDROSCOPE=1
+│ ○  [1m[35mkmpvnpltlyxq[0m [34meb50bbe39718[0m [2m(no PR)[0m
+│ │  docs(graph): fix rustdoc bare URL lint by using automatic links; refactor JSON assembly via serde; remove node semanticTags and update tests
+│ ○  [1m[35mkrmornkssoxt[0m [34mef498e677896[0m [2m(no PR)[0m
+│ │  refactor(graph/json): replace manual JSON assembly with serde struct; remove node semanticTags and update tests
+│ ○  [1m[35mzplmzuwqqswk[0m [34m5300f743078f[0m [2m(no PR)[0m
+│ │  ensure that args.graph.graph.is_some() is called at the right time.
+│ ○  [1m[35moqttlmrtxpwm[0m [34ma1aa6e3c22ba[0m [2m(no PR)[0m
+│ │  Update docs/src/pages/hydroscope.tsx
+│ ○  [1m[35mwrpmwywtlkrs[0m [34mf674c360541d[0m [2m(no PR)[0m
+│ │  Update hydro_lang/src/graph/json.rs
+│ ○  [1m[35muprloptvwooz[0m [34m0f91a55fb512[0m [2m(no PR)[0m
+│ │  Update hydro_lang/src/graph/url_generation_test.rs
+│ ○  [1m[35mltlytwwtwtlu[0m [34m0fd00751331b[0m [2m(no PR)[0m
+│ │  clean up stray comments
+│ ○  [1m[35mlupvkvkqxvun[0m [34mea9442f8a137[0m [2m(no PR)[0m
+│ │  Update hydro_lang/src/graph/debug.rs
+│ ○  [1m[35mwtpmyvqzmzxk[0m [34m87d39ac042af[0m [2m(no PR)[0m
+│ │  PR review cleanups
+│ ○  [1m[35mqmqnvpotllou[0m [34m92726448fefb[0m [2m(no PR)[0m
+│ │  remove AI docs, deprecated methods
+│ ○  [1m[35msqtqunruoxvu[0m [34m9c9e1f96723f[0m [2m(no PR)[0m
+│ │  fix: update BuiltFlow API method names from reactflow to hydroscope
+│ ○  [1m[35mupvvuwvttrvo[0m [34m86fe1d3013a7[0m [2m(no PR)[0m
+│ │  feat(graph): implement deterministic JSON output and improved semantic tagging
+│ ○  [1m[35msplwonxrmumn[0m [34mf52871f2bdb5[0m [2m(no PR)[0m
+│ │  updates for hydroscope
+│ ○  [1m[35mlqllnmtxumpq[0m [34mda5dd6493d68[0m [2m(no PR)[0m
+│ │  refactor: rename ReactFlow references to Hydroscope (graph changes only)
+│ ○  [1m[35mqnrxmwwsylmr[0m [34m49f3e6173b6d[0m [2m(no PR)[0m
+│ │  feat(hydro_lang): migrate graph visualization to JSON format with semantic tags
+│ ○  [1m[35mmnqsmmvqpwmr[0m [34m292e7b83a0e1[0m [2m(no PR)[0m
+├─╯  Task 5: Implement file-based fallback for large graphs
+│ ○  [1m[35mplvoyxulqqpq[0m [34m35c33f4138ef[0m [2m(no PR)[0m
+├─╯  fix(sim): macOS trybuild codesign, staged path rewrites; fix(sim): robust external port defaults; fix(sim): treat bytes::Bytes as pass-through in bincode codegen; chore(trybuild): inline staged paths to hydro_lang in tests
+│ ○  [1m[35mwrssrstxryzz[0m [34m47eb07aaa740[0m [2m(no PR)[0m
+├─╯  feat(hydro_lang): reduce compilation overhead when running tests
+│ ○  [1m[35mknxvnulxslyy[0m [34m8c5f021cb8d5[0m [2m(no PR)[0m
+│ │  feat(hydro_test): websocket protocol demo
+│ │ ○  [1m[35mrwmumrktsnsw[0m [34m5971c9fc6022[0m [2m(no PR)[0m
+│ │ │  feat(hydro_test): websocket chat demo
+│ │ ○  [1m[35mtquvvkkpvumk[0m [34m9cdfaf89ad09[0m [2m(no PR)[0m
+│ │ │  feat(hydro_lang): add API for safely broadcasting a stream across several keys
+│ │ ○  [1m[35msxkrxtswyzuv[0m [34me2abfaec2957[0m [2m(no PR)[0m
+│ ├─╯  feat(hydro_test): websocket protocol demo
+│ ○  [1m[35mwqzqqvpqlxuo[0m [34md5430c33e121[0m [2m(no PR)[0m
+│ │  feat(hydro_lang): add `flat_map` / `flatten` to `KeyedStream`
+│ ○  [1m[35muqqyxymtntyv[0m [34m2be2993fb3cf[0m [2m(no PR)[0m
+├─╯  fix(hydro_lang): ensure that `Stream::scan` actually remembers state with unbounded input
+│ ○  [1m[35mrzkkpvzquzso[0m [34mec0458ed40e9[0m [2m(no PR)[0m
+│ │  complete merge
+│ ○  [1m[35myoysxwmrsysq[0m [34me338b16680dc[0m [2m(no PR)[0m
+╭─┤  Merge remote-tracking branch 'origin/main' into feature/hydroscope-alpha
+│ ○  [1m[35mmwqrkwzlvswo[0m [34m7ab8d195b024[0m [2m(no PR)[0m
+│ │  simplified hydroscope page
+│ │ ○  [1m[35mutwnyluslyxm[0m [34mf56e1686b934[0m [2m(no PR)[0m
+├───╯  docs(rfc): stream alignment
+│ ○  [1m[35mrwyqkntyqvxm[0m [34md4fbf7f1e72d[0m [2m(no PR)[0m
+│ │  update hydroscope
+│ ○  [1m[35mnlytyuplyvpw[0m [34ma8da31b155cd[0m [2m(no PR)[0m
+│ │  mollify clippy
+│ ○  [1m[35momwwpznrmkkr[0m [34m9855b9c5224f[0m [2m(no PR)[0m
+│ │  delete old template, replaced by hydroscope
+│ ○  [1m[35mnyknuqmtlwkn[0m [34m5c552c9b209c[0m [2m(no PR)[0m
+│ │  cargo fmt
+│ ○  [1m[35mzxkwwlwxotqn[0m [34m813b221f0eff[0m [2m(no PR)[0m
+│ │  consolidate match arms
+│ ○  [1m[35mkyqplmvkvzmy[0m [34m4fdec77df2b5[0m [2m(no PR)[0m
+│ │  consolidate match arms
+│ ○  [1m[35molslpztoromu[0m [34m507504c37ccc[0m [2m(no PR)[0m
+│ │  remove redundant renderer-specific code from render.rs
+│ ○  [1m[35mnqlxzwosuoyz[0m [34m6862f5c82fef[0m [2m(no PR)[0m
+│ │  clean up render.rs matches, move styling to each rendered's file
+│ ○  [1m[35mtpqzvrrvunlu[0m [34mc685509b89c6[0m [2m(no PR)[0m
+│ │  unify styling across renderers
+│ ○  [1m[35mkznwxkuwvktq[0m [34mb28d4cab96dc[0m [2m(no PR)[0m
+│ │  remove nonsense debug output
+│ ○  [1m[35mpyuukktoppom[0m [34m17e56f5fcaba[0m [2m(no PR)[0m
+│ │  clean up merge detritus
+│ ○  [1m[35mqvmvuwmquwps[0m [34m068ca4db2574[0m [2m(no PR)[0m
+╭─┤  Merge remote-tracking branch 'origin/main' into feature/hydroscope-alpha
+│ ○  [1m[35muomosyoqoplt[0m [34m677fa7bc3b14[0m [2m(no PR)[0m
+│ │  clean up
+│ ○  [1m[35mqwkqwztuumrq[0m [34m9b08af708c24[0m [2m(no PR)[0m
+│ │  remove unused debug for json
+│ ○  [1m[35msxztkptzmoxt[0m [34m27a331a97b2d[0m [2m(no PR)[0m
+│ │  clippy and test error fixes
+│ ○  [1m[35mpuolsnzoqmrm[0m [34m9e469274c3e3[0m [2m(no PR)[0m
+│ │  working with hydroscope
+│ ○  [1m[35mwnvzlzrnvypy[0m [34m59a326814054[0m [2m(no PR)[0m
+│ │  hydroscope docs page
+│ ○  [1m[35mzszwouwulrmp[0m [34maf9a28747f63[0m [2m(no PR)[0m
+│ │  add hydroscope page to docs
+│ ○  [1m[35mnnqqoskkpupw[0m [34m79dcdc89339d[0m [2m(no PR)[0m
+│ │  continue rebase
+│ ○  [1m[35mvswlrzzkomnu[0m [34m28869ff20ada[0m [2m(no PR)[0m
+│ │  rebasing
+│ ○  [1m[35mnsnxyqovqpvl[0m [34ma1b9f5d7265c[0m [2m(no PR)[0m
+│ │  add hydroscope support
+│ ○  [1m[35mromrysuupmpp[0m [34mebf9b8fd9e58[0m [2m(no PR)[0m
+│ │  fix: benchmarks failing due to perms (#2070)
+│ ○  [1m[35mnrstumlqrozs[0m [34mc2c7dee832ed[0m [2m(no PR)[0m
+│ │  docs(hydro_lang): add `doc(cfg(...))` annotation for `graph` module (#2066)
+│ ○  [1m[35mrvxxtrrzrtsp[0m [34mf0d477e651a2[0m [2m(no PR)[0m
+│ │  refactor(hydro_lang): cleanly separate generic deployment from `hydro_deploy` backend (#2065)
+│ ○  [1m[35mmqutylsnqkzz[0m [34me4933d45ccf0[0m [2m(no PR)[0m
+│ │  ci: set hydro-project-bot bot to be the author of generated PRs (#2064)
+│ ○  [1m[35msxsvspxxsnrw[0m [34m9aa3f3320497[0m [2m(no PR)[0m
+│ │  chore: update nightly snapshots (#2063)
+│ ○  [1m[35msymlqmpppqpq[0m [34m5457804a95e7[0m [2m(no PR)[0m
+│ │  chore(gossip_kv)!: migrate to separate repo (#2062)
+│ ○  [1m[35mwtsxuoqkrqtu[0m [34mec808f67edb7[0m [2m(no PR)[0m
+│ │  chore(topolotree)!: migrate to separate repo (#2061)
+│ ○  [1m[35muurtzzoszktw[0m [34me9ba857e340d[0m [2m(no PR)[0m
+│ │  refactor(hydro_lang)!: reduce namespace pollution (#2060)
+│ ○  [1m[35myxtlzmqqults[0m [34mcff2ed11afce[0m [2m(no PR)[0m
+│ │  docs(hydro_lang): docs for `backtrace` module (#2058)
+│ ○  [1m[35mmutluxnqyyyz[0m [34md727a61e7e59[0m [2m(no PR)[0m
+│ │  docs(hydro_lang): docs for `test_util` module (#2050)
+│ ○  [1m[35myomvqtuwxltn[0m [34m8d45866b794e[0m [2m(no PR)[0m
+│ │  docs: update Docusaurus (#2051)
+│ ○  [1m[35myvlunxumsuku[0m [34ma884839b7ec4[0m [2m(no PR)[0m
+│ │  refactor(hydro_lang)!: rename `graph_util` => `graph::config` (#2053)
+│ ○  [1m[35muwpqusvnlxkw[0m [34ma087636db6a1[0m [2m(no PR)[0m
+│ │  ci: use Hydro bot to trigger CI for generated PRs (#2057)
+│ ○  [1m[35mzrouzrkvsszr[0m [34mc34115869116[0m [2m(no PR)[0m
+│ │  chore: update nightly snapshots (#2056)
+│ ○  [1m[35mkqmzvsrzktnu[0m [34mb3c081357dce[0m [2m(no PR)[0m
+│ │  docs(hydro_lang): set up lints so we can find missing docs (#2049)
+│ ○  [1m[35mxpvtpvvrsuyn[0m [34mf97d479dc202[0m [2m(no PR)[0m
+│ │  refactor(hydro_lang): share `HydroIrOpMetadata` between roots and nodes (#2047)
+│ ○  [1m[35mkxlqxvlumnsu[0m [34m48aa990f2e9a[0m [2m(no PR)[0m
+│ │  refactor(hydro_lang)!: rename `HydroLeaf` => `HydroRoot`, split out metadata struct for roots (#2042)
+│ ○  [1m[35myrsowpkywkmv[0m [34ma9fecb7e2829[0m [2m(no PR)[0m
+│ │  ci: attempt to avoid cancellation of primary CI (#2046)
+│ ○  [1m[35mywyvyztlytqr[0m [34mdfd1b12e7300[0m [2m(no PR)[0m
+│ │  ci: add collector jobs to handle required status checks for skipped matrix (#2045)
+│ ○  [1m[35mmyqwnwkknouz[0m [34mdfc63e7f0369[0m [2m(no PR)[0m
+│ │  ci: ensure docs action has permissions to write to `gh-pages` (#2044)
+│ ○  [1m[35mqqyuopxwozlx[0m [34m521466dfab56[0m [2m(no PR)[0m
+│ │  ci: avoid mutual-cancellation (#2043)
+│ ○  [1m[35muswukxuprvur[0m [34md5933daeb60e[0m [2m(no PR)[0m
+│ │  working with hydroscope
+│ ○  [1m[35mwsoworlymyxo[0m [34m35748dca9d90[0m [2m(no PR)[0m
+│ │  hydroscope docs page
+│ ○  [1m[35mqunxuszkqtqs[0m [34mc143351f3b02[0m [2m(no PR)[0m
+│ │  add hydroscope page to docs
+│ ○  [1m[35mvonmqsvpwkzy[0m [34m3b4a3576cbe4[0m [2m(no PR)[0m
+├─╯  add hydroscope support
+│ ○  [1m[35muzlsplyzunup[0m [34m93ef4b351447[0m [2m(no PR)[0m
+│ │  fix viewport
+│ ○  [1m[35mwrnuwzppwxun[0m [34md672a36c6866[0m [2m(no PR)[0m
+│ │  file loader, smart collapse
+│ ○  [1m[35mwtrnnmlussws[0m [34m18db27b85bd4[0m [2m(no PR)[0m
+│ │  Autofit button
+│ ○  [1m[35mxtllopyuxtqt[0m [34m7615669baf82[0m [2m(no PR)[0m
+│ │  clean up visualizer, prep for extraction
+│ ○  [1m[35mlwkvyqrospxp[0m [34mf81966c068fb[0m [2m(no PR)[0m
+│ │  visualizer-v4: typecheck hardening without behavior changes; widen container children types; typed edge routing sections; accept extra layout fields; minor render CSS typing; relax JSON edgeStyleConfig typing for tests
+│ ○  [1m[35mtrwntvyuxmwv[0m [34mde71c97d9094[0m [2m(no PR)[0m
+│ │  docs: add typecheck:vis script and pin TypeScript for local lint/typecheck — no runtime changes
+│ ○  [1m[35mutzuzwztvyuv[0m [34m5c4e7579e9b1[0m [2m(no PR)[0m
+│ │  docs: add dev scripts for visualizer-v4 (watch + lint) (#2019)
+│ ○  [1m[35mlssurlpypuvp[0m [34m3e4272b80c11[0m [2m(no PR)[0m
+│ │  visualizer-v4: complexity pass 2 — memoized nodes/edges, bridges/utilities, smart-collapse guardrails, tsc/lint cleanup (#2018)
+│ ○  [1m[35mzuxkvumkqzpq[0m [34mc648a2d66046[0m [2m(no PR)[0m
+│ │  vis-v4: complexity pass 2 (memoized nodes/edges, edge utils, docs) (#2017)
+│ ○  [1m[35mwuuqplrosvoo[0m [34m9db3d42775d4[0m [2m(no PR)[0m
+│ │  visualizer-v4: Extract fallback views from FlowGraph into render/FallbackViews.tsx (no behavior change)\n\n- Move LoadingView, ErrorView, EmptyView, UpdatingOverlay into presentational component file\n- Import and use in FlowGraph\n- Keeps strict scope, tests green (#2015)
+│ ○  [1m[35mrzyunvqnmksy[0m [34m7b076c3bad95[0m [2m(no PR)[0m
+│ │  feat/vis v4 complexity pass 1 (#2014)
+│ │ ○  [1m[35mzswlwyqovuvw[0m [34m79e656d502e3[0m [2m(no PR)[0m
+│ │ │  Initial analysis and plan for visualizer v4 complexity cleanup
+│ │ │ ○  [1m[35mounpqrqzwozq[0m [34m607b231f60f6[0m [2m(no PR)[0m
+│ ├───╯  [32m(empty)[0m Initial plan
+│ │ ○  [1m[35mpuzpnulmqolq[0m [34m8ad55b1bc093[0m [2m(no PR)[0m
+│ ├─╯  [32m(empty)[0m Initial plan
+│ ○  [1m[35mypuplsnzwmrr[0m [34m07fd15f5726d[0m [2m(no PR)[0m
+│ │  chore: Visualizer v4 cleanup: Remove dead code, consolidate config, and improve maintainability (#2009)
+│ ○  [1m[35mnysklxyklqol[0m [34m82590308d5d1[0m [2m(no PR)[0m
+│ │  finish checking in kind analysis
+│ ○  [1m[35mkrvttywtuzzx[0m [34m7ed8e9b79711[0m [2m(no PR)[0m
+│ │  quick attempt to extract stream kinds, will be replaced
+│ ○  [1m[35mkluwpzxvrrkl[0m [34m31301b0433b5[0m [2m(no PR)[0m
+│ │  edge styling
+│ ○  [1m[35mwnnzptptwtqn[0m [34m024c084ce779[0m [2m(no PR)[0m
+│ │  WIP edge types
+│ ○  [1m[35mmsmkpwlwnnts[0m [34m5791a371e5a5[0m [2m(no PR)[0m
+│ │  WIP edge styling
+│ ○  [1m[35mmwlqpytpxzvq[0m [34m9e4769ca6594[0m [2m(no PR)[0m
+│ │  move color palette to StyleTunerPanel
+│ ○  [1m[35mxmkqvslsxkkw[0m [34m2b917bb5289c[0m [2m(no PR)[0m
+│ │  dont fuzz test by default
+│ ○  [1m[35mlkxwknxpkymk[0m [34m630534267d78[0m [2m(no PR)[0m
+│ │  Visualizer: avoid API change to VisualizationState; use ELKBridge.getContainerELKFixed in engine and revert added getter to ease merge to feature/reactflow
+│ ○  [1m[35mkqpmrlmktxpn[0m [34m364c801e646e[0m [2m(no PR)[0m
+│ │  Checkpoint from VS Code for coding agent session
+│ ○  [1m[35mpkkxvqwmtvnk[0m [34m421534d1e1bd[0m [2m(no PR)[0m
+│ │  color palette fox
+│ ○  [1m[35mwmtwnqrqxmkx[0m [34ma544757e78fa[0m [2m(no PR)[0m
+│ │  refactor: bridge-specific methods to bridges, generics to VisualizerState
+│ ○  [1m[35mntpuxzvworll[0m [34ma2dc128ca5de[0m [2m(no PR)[0m
+│ │  clean up tests
+│ ○  [1m[35mnmvqtxlrlvyu[0m [34m02e97dec777c[0m [2m(no PR)[0m
+│ │  hyperEdge.aggregatedEdges replaced with CoveredEdgeIndex approach
+│ ○  [1m[35myvosupwylpxt[0m [34m16f15cbaa4a0[0m [2m(no PR)[0m
+│ │  WIP but fuzz tests all passing
+│ ○  [1m[35mxnlktzsqtpyk[0m [34meff7a091dc3c[0m [2m(no PR)[0m
+│ │  rewrite handleContainerCollapse/Expand by hand
+│ ○  [1m[35mqpmlrmtmxnul[0m [34m6a91fb3ca123[0m [2m(no PR)[0m
+│ │  expandAllContainers, comprehensive fuzz test cleanup
+│ ○  [1m[35msvprykvkxysw[0m [34mf581cbf1b87a[0m [2m(no PR)[0m
+│ │  comprehensive fuzz test
+│ ○  [1m[35mnxwtnnrsovrs[0m [34m625e9e0226cf[0m [2m(no PR)[0m
+│ │  ELKBridge cleanup, label padding, fitview on collapse/expand
+│ ○  [1m[35mzkmvovrrrlmx[0m [34m851e0c03a4ff[0m [2m(no PR)[0m
+│ │  fix expandAll button
+│ ○  [1m[35mxutynukkxmts[0m [34m0fcba530c8f8[0m [2m(no PR)[0m
+│ │  nested container layout fix
+│ ○  [1m[35mmzqrkpnsmvvm[0m [34m2389b97cee5a[0m [2m(no PR)[0m
+│ │  additional expansion test
+│ ○  [1m[35muylwlrowmsku[0m [34mfad316855ef4[0m [2m(no PR)[0m
+│ │  VisState.ts -> VisualizationState.ts and collapse bugfix
+│ ○  [1m[35mqyqqnyuquyov[0m [34md4c7c4dde791[0m [2m(no PR)[0m
+│ │  validateInvariants in fuzz test
+│ ○  [1m[35mxprkrsxxzsyn[0m [34m3438de4a5002[0m [2m(no PR)[0m
+│ │  fuzz tests passing
+│ ○  [1m[35mtwqqnvrssotp[0m [34m386775254793[0m [2m(no PR)[0m
+│ │  Collapse/Expand fixes, ValidationWrapper added
+│ ○  [1m[35msulkywluwymo[0m [34ma058f7833566[0m [2m(no PR)[0m
+│ │  aggregated->hyperEdge naming
+│ ○  [1m[35mlozrlpxwuuln[0m [34md4b9d1a15b74[0m [2m(no PR)[0m
+│ │  clean up test warns 2
+│ ○  [1m[35mxnrwlsvtuwyr[0m [34me2e493d434ba[0m [2m(no PR)[0m
+│ │  clean up test warns
+│ ○  [1m[35muzlkpmprysow[0m [34m570e7925265b[0m [2m(no PR)[0m
+│ │  remove "legacy API" from VisState.ts
+│ ○  [1m[35mrxnxyklwtptu[0m [34mde8114a911c3[0m [2m(no PR)[0m
+│ │  fix tests
+│ ○  [1m[35msxylqtxrxqym[0m [34m48b13c60e189[0m [2m(no PR)[0m
+│ │  fix most tests
+│ ○  [1m[35mrlpmsxunpuvn[0m [34m47c9232597f1[0m [2m(no PR)[0m
+│ │  fix collapse bug
+│ ○  [1m[35mrvpovozpzyyp[0m [34m81f487b337d3[0m [2m(no PR)[0m
+│ │  checkpoint: working edges
+│ ○  [1m[35mttrvorxvyokv[0m [34me2f1746e1bb7[0m [2m(no PR)[0m
+│ │  wip on edges, file load advice
+│ ○  [1m[35mpkrwynxutwtk[0m [34m7128dca90ca6[0m [2m(no PR)[0m
+│ │  compress vis URLs
+│ ○  [1m[35momzqtkswxyws[0m [34m36b710b48f9a[0m [2m(no PR)[0m
+│ │  positioning fixes
+│ ○  [1m[35mrvrkrmlomsov[0m [34m0a593ce8622c[0m [2m(no PR)[0m
+│ │  fix _handleContainerCollapse and tests
+│ ○  [1m[35mrkzllmtpwlop[0m [34mc09ff6efa538[0m [2m(no PR)[0m
+│ │  remove warnings from smart collapse
+│ ○  [1m[35mwoltotuzlunk[0m [34m78a44fefd870[0m [2m(no PR)[0m
+│ │  clear layout positions for hidden nodes
+│ ○  [1m[35mkukxxpspnqkq[0m [34mb9c22c90acac[0m [2m(no PR)[0m
+│ │  clean skipped tests
+│ ○  [1m[35mnmnkrmvrusxm[0m [34mec64c109923e[0m [2m(no PR)[0m
+│ │  complete VisState encapsulation checkin
+│ ○  [1m[35mksmulrtotnxw[0m [34m27d3803a1220[0m [2m(no PR)[0m
+│ │  encapsulation for VisState, tests passing
+│ ○  [1m[35mrqlmlnxvvrpy[0m [34mc12ed49da37e[0m [2m(no PR)[0m
+│ │  test pass
+│ ○  [1m[35mxplrtqkkslww[0m [34m5b2bf1463287[0m [2m(no PR)[0m
+│ │  paxos-flipped test
+│ ○  [1m[35mwwwmqlmppwxy[0m [34m26d45c83d3e8[0m [2m(no PR)[0m
+│ │  fix tests
+│ ○  [1m[35motlrkylqvypu[0m [34m9c07a495ca87[0m [2m(no PR)[0m
+│ │  get logic out of bridges
+│ ○  [1m[35mnvvwstqnmklw[0m [34md4a5340d119a[0m [2m(no PR)[0m
+│ │  collapsed labels
+│ ○  [1m[35myuwxvptuoqns[0m [34m575de6cddab6[0m [2m(no PR)[0m
+│ │  smart collapse on load
+│ ○  [1m[35mwwxtmvktpmus[0m [34m30b7594a2b7e[0m [2m(no PR)[0m
+│ │  controls working
+│ ○  [1m[35muyyvrpsxrmzt[0m [34m6953d97d72e3[0m [2m(no PR)[0m
+│ │  hierarchy menu style
+│ ○  [1m[35muznywpvzxyor[0m [34m0187abcad704[0m [2m(no PR)[0m
+│ │  autofit and cleanup
+│ ○  [1m[35mzsywxysqxwkx[0m [34m2c6356ead130[0m [2m(no PR)[0m
+│ │  fix relayout
+│ ○  [1m[35mlpylpolrxuwt[0m [34m74867eb12255[0m [2m(no PR)[0m
+│ │  clean and fix
+│ ○  [1m[35mnmkxsppoqnvp[0m [34mecf24380b9ba[0m [2m(no PR)[0m
+│ │  more cleanup
+│ ○  [1m[35mtznqnxvvxtzy[0m [34me5295318525e[0m [2m(no PR)[0m
+│ │  cleanup
+│ ○  [1m[35mqrzwyywqxzwq[0m [34mf2c3d118c9ec[0m [2m(no PR)[0m
+│ │  file drop and cleanup
+│ ○  [1m[35msozpxlxvwvqv[0m [34mea5b65d1b400[0m [2m(no PR)[0m
+│ │  initial cut of v4
+│ ○  [1m[35mvwnwmtvqtqkk[0m [34me7d200a8029b[0m [2m(no PR)[0m
+│ │  vis v4 functioning
+│ ○  [1m[35mvnmuktkmlwxv[0m [34mb9bbc4fb32c9[0m [2m(no PR)[0m
+│ │  clean up and start vis v4
+│ ○  [1m[35mklnvusnyozpo[0m [34m3603e6e2ea00[0m [2m(no PR)[0m
+│ │  fix rebase, dry up redundant code
+│ ○  [1m[35mzmskqmnntnvt[0m [34m732bfe1bb139[0m [2m(no PR)[0m
+│ │  rebase main and fix
+│ ○  [1m[35mplnpsyrozzow[0m [34m9257c00bf355[0m [2m(no PR)[0m
+│ │  cleanup after rebase
+│ ○  [1m[35mtrnlnokzuwnv[0m [34m7044fe00d84c[0m [2m(no PR)[0m
+│ │  fix hierarchy layout
+│ ○  [1m[35mnnwswyoxnmwu[0m [34m8a6d963d88f9[0m [2m(no PR)[0m
+│ │  code review of VisState
+│ ○  [1m[35mvmwzspptvlop[0m [34m00e40d45d91b[0m [2m(no PR)[0m
+│ │  typescript port
+│ ○  [1m[35msnxyqsyruspw[0m [34mfefa49788f40[0m [2m(no PR)[0m
+│ │  rename reactflow->JSON in the Rust code
+│ ○  [1m[35mpynnztquxuku[0m [34mf3de3ec8a28c[0m [2m(no PR)[0m
+│ │  feat(hydro_lang): add `KeyedStream` to track steams with unordered keys but possibly-ordered values (#1974)
+│ ○  [1m[35mstrtqsqrxyut[0m [34m3a8dc4dafa1b[0m [2m(no PR)[0m
+│ │  feat(hydro_lang): add `Stream::scan_keyed` and `Stream::fold_keyed_early_stop` (#1971)
+│ ○  [1m[35mnklvttmqrvsq[0m [34me5fb151c2feb[0m [2m(no PR)[0m
+│ │  fix(hydro_optimize): Decoupling optimization fixes (#1972)
+│ ○  [1m[35mqpskymlrtmlk[0m [34m3a567cbc9d89[0m [2m(no PR)[0m
+│ │  feat(hydro_lang,hydro_deploy)!: introduce support for dynamic external clients (#1966)
+│ ○  [1m[35mltwrqompwwun[0m [34m24503fdb3820[0m [2m(no PR)[0m
+│ │  docs: links `http`->`https` (#1969)
+│ ○  [1m[35mrlzqzplnmxmq[0m [34m8d0a6cfdfe3c[0m [2m(no PR)[0m
+│ │  refactor(hydro_deploy)!: remove deprecated `add_connection` API (#1967)
+│ ○  [1m[35mzsslpwvxpzkp[0m [34me321440b897b[0m [2m(no PR)[0m
+│ │  Release example_test v0.0.0, dfir_rs v0.14.0, hydro_deploy v0.14.0, hydro_lang v0.14.0, hydro_optimize v0.13.0, hydro_std v0.14.0
+│ ○  [1m[35mlsyuuxrsnptz[0m [34ma54e6b2f5417[0m [2m(no PR)[0m
+│ │  fix: workaround to publish `example_test`
+│ ○  [1m[35mumruqvozuwyn[0m [34m72fbfe64a81b[0m [2m(no PR)[0m
+│ │  Release dfir_lang v0.14.0, dfir_macro v0.14.0, hydro_deploy_integration v0.14.0, lattices_macro v0.5.10, variadics_macro v0.6.1, dfir_rs v0.14.0, hydro_deploy v0.14.0, hydro_lang v0.14.0, hydro_optimize v0.13.0, hydro_std v0.14.0, safety bump 6 crates
+│ ○  [1m[35mkrxynonuzyts[0m [34md0e69f87ce04[0m [2m(no PR)[0m
+│ │  ci: remove dfir_datalog from release.yml, docs (#1965)
+│ ○  [1m[35mnnrxmpktornt[0m [34m2246cd3e92bd[0m [2m(no PR)[0m
+│ │  fix(hydro_deploy): VM names violating GCP's regex (#1961)
+│ ○  [1m[35mkslvmxvxnvno[0m [34mea2008546786[0m [2m(no PR)[0m
+│ │  refactor(hydro_lang): separate externals from other location kinds, clean up network operators (#1962)
+│ ○  [1m[35mmkvntzrqprvu[0m [34m1252f2b8cc22[0m [2m(no PR)[0m
+│ │  docs: add Discord link and use GitHub icon (#1964)
+│ ○  [1m[35mumkzwrsxsmkw[0m [34m0f3053529b64[0m [2m(no PR)[0m
+│ │  fix(hydro_deploy_integration): leftover logging when setting up Unix sockets (#1963)
+│ ○  [1m[35mqmoyrkmwvsus[0m [34m14245ee4da82[0m [2m(no PR)[0m
+│ │  refactor(hydro_lang)!: invert external sources and clean up locations in IR (#1958)
+│ ○  [1m[35mqoslvyokrrty[0m [34m4ce040690f40[0m [2m(no PR)[0m
+│ │  refactor(hydro_lang): rename `ExternalProcess` to `External` (#1956)
+│ ○  [1m[35mmzqqosysyrms[0m [34m79ce1f18f9a8[0m [2m(no PR)[0m
+│ │  fix(hydro_lang): emit appropriate `Persist` / `Unpersist` nodes for `scan` (#1959)
+│ ○  [1m[35mllplwuqxwxnq[0m [34m8d3f0e8a9816[0m [2m(no PR)[0m
+│ │  feat(hydro_deploy): improve logging for profiling (#1955)
+│ ○  [1m[35mxmqqvsqpxvky[0m [34m7e6e4320417d[0m [2m(no PR)[0m
+│ │  feat(hydro_optimize): Use partitioning analysis results to partition (#1952)
+│ ○  [1m[35msvxwvwnvvrnw[0m [34mf06dde4162e4[0m [2m(no PR)[0m
+│ │  Create visualizer-v4: Integration of v3 core/bridges with v2 frontend (#1976)
+│ ○  [1m[35mqywlwtxostyq[0m [34mcb0b8d5bd671[0m [2m(no PR)[0m
+│ │  remove collapsed containers call
+│ ○  [1m[35mzmutrmwrrnkx[0m [34ma5f35570fb43[0m [2m(no PR)[0m
+│ │  clean and up to date
+│ ○    [1m[35mxrxzvrtyswmw[0m [34m5767666b8c64[0m [2m(no PR)[0m
+│ ├─╮  Merge branch 'feature/cleanflow' into feature/reactflow
+│ │ ○  [1m[35mxttolzruxwvx[0m [34ma43187791fcb[0m [2m(no PR)[0m
+│ │ │  all tests pass
+│ │ ○  [1m[35mslqrswxzktqu[0m [34m0fb51f746eda[0m [2m(no PR)[0m
+│ │ │  fix dead calls
+│ │ ○  [1m[35msrykllzupory[0m [34m956ca17999fb[0m [2m(no PR)[0m
+│ │ │  fix hierarchy layout
+│ │ ○  [1m[35mzrktvpnzxrwn[0m [34m40b1c701014f[0m [2m(no PR)[0m
+│ │ │  tests pass
+│ │ ○  [1m[35mqtnnkunksxyp[0m [34m56e5efad0a6c[0m [2m(no PR)[0m
+│ │ │  fix hierarchy layout
+│ │ ○  [1m[35mvulwwrrokuzs[0m [34m6c1942423b4f[0m [2m(no PR)[0m
+│ │ │  tests pass
+│ ○ │  [1m[35mlxxslxzylnwk[0m [34m9c5f3bd65a5e[0m [2m(no PR)[0m
+│ │ │  fix dead calls
+│ ○ │  [1m[35mmtpnqorqsxsp[0m [34meb62101e2304[0m [2m(no PR)[0m
+│ │ │  hierarchy wip
+│ ○ │  [1m[35mzupksqztxvty[0m [34m21c5fb09746e[0m [2m(no PR)[0m
+│ ├─╯  fix hierarchy layout
+│ ○  [1m[35mxrwvynttrwmz[0m [34me78e6bd90fa3[0m [2m(no PR)[0m
+│ │  grouping
+│ ○  [1m[35mrlmzznwowrpz[0m [34m584bb6955926[0m [2m(no PR)[0m
+│ │  collapsed dimensions
+│ ○  [1m[35mqsxwlqllurlu[0m [34mbb3433a1d084[0m [2m(no PR)[0m
+│ │  layout algs
+│ ○  [1m[35mszyolznzoovt[0m [34m3450613f1cdf[0m [2m(no PR)[0m
+│ │  layout algorithms
+│ ○  [1m[35mtkzwnvxpwxws[0m [34me2648defcde5[0m [2m(no PR)[0m
+│ │  refactor: replace V1 with clean V2 container collapse/expand engine
+│ ○  [1m[35moszymzxtqpkx[0m [34m0c6ee7bd55d4[0m [2m(no PR)[0m
+│ │  collapse/expand bugfix
+│ ○  [1m[35mposzplmkyput[0m [34ma71e387cf0a9[0m [2m(no PR)[0m
+│ │  click and drag
+│ ○  [1m[35mpsnqqtvpvxyn[0m [34m468faeb9231a[0m [2m(no PR)[0m
+│ │  validate hyperedge invariants
+│ ○  [1m[35mrvxqokqrkuwt[0m [34m8467329b1e09[0m [2m(no PR)[0m
+│ │  cleaner checkpoint
+│ ○  [1m[35mrssoxuxyptvp[0m [34m9213af564ff8[0m [2m(no PR)[0m
+│ │  dead code
+│ ○  [1m[35mwlruvuwvqyyu[0m [34m9193338ddf4b[0m [2m(no PR)[0m
+│ │  checkpoint
+│ ○  [1m[35mzqtvqwmsntnw[0m [34md57cb24e7d5a[0m [2m(no PR)[0m
+│ │  checkpoint
+│ ○  [1m[35mrnrozpxpnont[0m [34mae8bd41208b0[0m [2m(no PR)[0m
+│ │  cleanup tests
+│ ○  [1m[35mksmlzutuxwpp[0m [34m604a8b9b47ea[0m [2m(no PR)[0m
+│ │  fix container dimension passing
+│ ○  [1m[35mrkzwlmtvnxnp[0m [34me738faefff76[0m [2m(no PR)[0m
+│ │  cleaner tests
+│ ○  [1m[35mzovtvrmqmzpw[0m [34m61bf13bd4683[0m [2m(no PR)[0m
+│ │  complete test reorg
+│ ○  [1m[35mzqozpxntvwlq[0m [34mfb33495e32b5[0m [2m(no PR)[0m
+│ │  reorg tests
+│ ○  [1m[35mzsnzmotqktvv[0m [34m0df34afc4e86[0m [2m(no PR)[0m
+│ │  checkpoint
+│ ○  [1m[35mtppnklwloprk[0m [34maa800f1a484e[0m [2m(no PR)[0m
+│ │  feat: modernize test infrastructure with Vitest, convert all tests to TypeScript, deprecate legacy alpha code, and establish clean architectural boundaries
+│ ○  [1m[35mkzxoqouwsqzk[0m [34m9f8b1317f379[0m [2m(no PR)[0m
+│ │  🧪 Implement comprehensive bridge architecture with tests
+│ ○  [1m[35mlvslqrqusurr[0m [34m8de4dcd75d13[0m [2m(no PR)[0m
+│ │  wip
+│ ○  [1m[35mxxowwtmpsvnp[0m [34mdbf97989a0dd[0m [2m(no PR)[0m
+│ │  Add render tests, refactor components for DRY principles, and create comprehensive VisState documentation (#1973)
+│ ○  [1m[35mslrsnnykvnzw[0m [34mc24fe05bea95[0m [2m(no PR)[0m
+│ │  collapse WIP
+│ ○  [1m[35mwmsztqxuvqss[0m [34mb7452ea74b59[0m [2m(no PR)[0m
+│ │  Port tests from JavaScript to TypeScript
+│ ○  [1m[35mvmlvozqxtkzu[0m [34m2d2a88623b39[0m [2m(no PR)[0m
+│ │  edge styling WIP
+│ ○  [1m[35mpxtotvqvnpwu[0m [34mdd995a1e6f39[0m [2m(no PR)[0m
+│ │  standard zoom controls
+│ ○  [1m[35mnxlsoztlqxov[0m [34m6e60edb1ddee[0m [2m(no PR)[0m
+│ │  remove temp docs
+│ ○  [1m[35mzvoyrnourrzo[0m [34m269d9aa3fa9d[0m [2m(no PR)[0m
+│ │  container title style
+│ ○  [1m[35mtstuurrmymnn[0m [34mb5835df57be4[0m [2m(no PR)[0m
+│ │  node styling
+│ ○  [1m[35msulrtkpmzktn[0m [34m1c8b1aa03524[0m [2m(no PR)[0m
+│ │  fix imports canonically
+│ ○  [1m[35myyuopyuytxvl[0m [34mebaf5c058bac[0m [2m(no PR)[0m
+│ │  fix imports
+│ ○  [1m[35mlqumstruswxx[0m [34ma0b68c430486[0m [2m(no PR)[0m
+│ │  fix tests
+│ ○  [1m[35mxzkppyqvlouy[0m [34m2e2b6f77956f[0m [2m(no PR)[0m
+│ │  cleanup: Refactor and enhance VisState and related components
+│ ○  [1m[35mpupwswvnwzpu[0m [34m19be6b8c454d[0m [2m(no PR)[0m
+│ │  wip vis typescript
+│ ○  [1m[35mmtlwourwpxsx[0m [34m489770247576[0m [2m(no PR)[0m
+│ │  wip
+│ ○  [1m[35moluxwvzvpoou[0m [34m2ae4e62087b3[0m [2m(no PR)[0m
+│ │  reorg directories
+│ ○  [1m[35mokslpqroquop[0m [34m5c9142068da3[0m [2m(no PR)[0m
+│ │  code review of VisState
+│ ○  [1m[35mzoztlmxkppyy[0m [34mb9ef1fc13b67[0m [2m(no PR)[0m
+│ │  typescript port
+│ ○  [1m[35mxkzwwtyvkkrs[0m [34maaabbf13496b[0m [2m(no PR)[0m
+│ │  cleaned up
+│ ○  [1m[35mnyzzmoylyvym[0m [34m598b9652d4b4[0m [2m(no PR)[0m
+│ │  wip
+│ ○  [1m[35myuvytpmumust[0m [34mf77b36039c15[0m [2m(no PR)[0m
+│ │  all calls to layout go thru explicit wrapper
+│ ○  [1m[35mozvtvznktlso[0m [34m0c763381ea1c[0m [2m(no PR)[0m
+│ │  consolidate grouping in UI
+│ ○  [1m[35mxryktrwzqzwk[0m [34m744a0dade257[0m [2m(no PR)[0m
+│ │  fix group by
+│ ○  [1m[35myxoxvouztmxy[0m [34m0cd4e61780f2[0m [2m(no PR)[0m
+│ │  handle large graph files
+│ ○  [1m[35mzqooutqvrqxn[0m [34m9574fda9f289[0m [2m(no PR)[0m
+│ │  refactor and remove Hydro specifics from frontend
+│ ○  [1m[35mzkpymsmysqlv[0m [34md5dc1fdeeaf1[0m [2m(no PR)[0m
+│ │  filter internal edges in collapsed nodes
+│ ○  [1m[35mnnzlnoymvxon[0m [34m032f74bd9217[0m [2m(no PR)[0m
+│ │  spacing
+│ ○  [1m[35mkkrwtqtollpt[0m [34mf46f425c2be4[0m [2m(no PR)[0m
+│ │  containers should use constants for spacing
+│ ○  [1m[35mqlupztznpmqp[0m [34m60bb3f7c187b[0m [2m(no PR)[0m
+│ │  consolidate ELK params
+│ ○  [1m[35mkuvysyzxmkty[0m [34m949afe3a889a[0m [2m(no PR)[0m
+│ │  consolidate reactflow params
+│ ○  [1m[35mnwpxwlxsxqms[0m [34m5b84562976f5[0m [2m(no PR)[0m
+│ │  color unification
+│ ○  [1m[35msvwurpuvmtru[0m [34mac2588c94b34[0m [2m(no PR)[0m
+│ │  cleaned up code and added debug integration tests
+│ ○  [1m[35mqtlnnqslqpqu[0m [34mb3da2105c0d9[0m [2m(no PR)[0m
+│ │  feat(vis): reorganize symmetric functions and add comprehensive inverse tests
+│ ○  [1m[35mnyklkzuywtvw[0m [34me067c7b81e1c[0m [2m(no PR)[0m
+│ │  clean vis implementation
+│ ○  [1m[35msmtsvkvrpwyu[0m [34m5309ae1ddfaa[0m [2m(no PR)[0m
+│ │  fix missing edges in initial state
+│ ○  [1m[35mkwmqxtyvnnrw[0m [34m9e4fde3d511f[0m [2m(no PR)[0m
+│ │  collapseAll on group change
+│ ○  [1m[35molttoslpnlyx[0m [34m477d9b5a1ad7[0m [2m(no PR)[0m
+│ │  legend launches closed
+│ ○  [1m[35mwryrqzvuuryv[0m [34ma2ec4085c372[0m [2m(no PR)[0m
+│ │  Docked Legend and HierarchyTree
+│ ○  [1m[35mquymupxqluvp[0m [34mb83040438342[0m [2m(no PR)[0m
+│ │  fix edge disappearance
+│ ○  [1m[35mukwvummvrmns[0m [34mce2ac80f7b56[0m [2m(no PR)[0m
+│ │  fix edges in expanded containers
+│ ○  [1m[35mqkzukvroyxkv[0m [34m0266c8ceed2e[0m [2m(no PR)[0m
+│ │  suppress webpack warnings in dev mode
+│ ○  [1m[35muzmosmtlmsxk[0m [34m1649a1bd7ec6[0m [2m(no PR)[0m
+│ │  wip
+│ ○  [1m[35mqwqulqpmwrwr[0m [34m8897d48a92b4[0m [2m(no PR)[0m
+│ │  wip
+│ ○  [1m[35mrqukqqwnrsvr[0m [34m67ddeeae92b8[0m [2m(no PR)[0m
+│ │  autofit, toolbar
+│ ○  [1m[35mlzmskrqvxsoo[0m [34m02bd85bb2d14[0m [2m(no PR)[0m
+│ │  better collapsed layout, remove Promises/races
+│ ○  [1m[35mktvlmsoqrrnz[0m [34m18ea71b2db0b[0m [2m(no PR)[0m
+│ │  add chat and paxos to test files
+│ ○  [1m[35mwtrtoxlkpuxu[0m [34m827bf6a77f70[0m [2m(no PR)[0m
+│ │  no more edge warnings
+│ ○  [1m[35mutktpqoyqkqp[0m [34m06e76f1176b6[0m [2m(no PR)[0m
+│ │  initialize to collapsed state
+│ ○  [1m[35mlrltkvnosyzv[0m [34ma0e89dde395f[0m [2m(no PR)[0m
+│ │  straggler file
+│ ○  [1m[35mpquyynqqwqvy[0m [34m6f8d6b851ed7[0m [2m(no PR)[0m
+│ │  group by location or backtrace
+│ ○  [1m[35mokvpqptylxxw[0m [34m264a4cb3945e[0m [2m(no PR)[0m
+│ │  trailing update checkin
+│ ○  [1m[35msoktpqorqqln[0m [34m7c2345c9dba4[0m [2m(no PR)[0m
+│ │  refactor: remove dead code DRY up
+│ ○  [1m[35mszumnrtyswsx[0m [34m37725da2a848[0m [2m(no PR)[0m
+│ │  fix: update import path for FileDropZone in pages/visualizer.js
+│ ○  [1m[35mkmwlyqsxqulx[0m [34mf894dbd7a70f[0m [2m(no PR)[0m
+│ │  refactor: replace dynamic imports with static imports in Visualizer.js
+│ ○  [1m[35mwuwopzsuuwvv[0m [34me60c221bc5e6[0m [2m(no PR)[0m
+│ │  rename reactflow->JSON in the Rust code
+│ ○  [1m[35mxysynzluoyok[0m [34m06c0619b153a[0m [2m(no PR)[0m
+│ │  backtrace-based hierarchy
+│ ○  [1m[35mqwppsxypupwp[0m [34ma0a6f933c5fe[0m [2m(no PR)[0m
+│ │  pass backtrace info to vis
+│ ○  [1m[35mtytzvzzrxrtv[0m [34m447c58a1d081[0m [2m(no PR)[0m
+│ │  collapsible hierarchical containers
+│ ○  [1m[35mmptytpsmwyyt[0m [34m8e88e2f46ec5[0m [2m(no PR)[0m
+│ │  minor
+│ ○  [1m[35mopqrppklmmkz[0m [34m047aa5838193[0m [2m(no PR)[0m
+│ │  clean hydro vis
+│ ○  [1m[35mpsrntuyzpwnq[0m [34mf5668a9dca5f[0m [2m(no PR)[0m
+│ │  hierarchical layout looks good
+│ ○  [1m[35myostqszksttx[0m [34md63fa3f20d5b[0m [2m(no PR)[0m
+│ │  centered leaf nodes
+│ ○  [1m[35mnwrxszytrnrr[0m [34m73a7e0c355b7[0m [2m(no PR)[0m
+│ │  less layout logic
+│ ○  [1m[35mwmknnrlnwywp[0m [34m2aa7298de3d8[0m [2m(no PR)[0m
+│ │  wip
+│ ○  [1m[35mvlwvuwtnnvpw[0m [34m01be986734e1[0m [2m(no PR)[0m
+│ │  leaf labels
+│ ○  [1m[35mnzwlszttlrtm[0m [34ma50d9036068a[0m [2m(no PR)[0m
+│ │  WIP
+│ ○  [1m[35munktxmmktnzp[0m [34m707b3197d9d4[0m [2m(no PR)[0m
+│ │  nesting layout
+│ ○  [1m[35mwmvonlkrzurw[0m [34m9867a3cc06b0[0m [2m(no PR)[0m
+│ │  nested containers
+│ ○  [1m[35myyunzypmnpol[0m [34mf1507b4653db[0m [2m(no PR)[0m
+│ │  cleanup
+│ ○  [1m[35mtwytylsmswvx[0m [34m8c994b2e94a7[0m [2m(no PR)[0m
+│ │  starting over
+│ ○  [1m[35mzlvxqpmvxswt[0m [34m79195aaeb937[0m [2m(no PR)[0m
+│ │  WIP. stuck on container layout.
+│ ○  [1m[35myoqkvqkmstun[0m [34m9ac43606c5fb[0m [2m(no PR)[0m
+│ │  better container labels
+│ ○  [1m[35mkonmzmrmxwvz[0m [34mdd6013248dfd[0m [2m(no PR)[0m
+│ │  remove CustomEdge
+│ ○  [1m[35mrvzuxuqzuwxu[0m [34m2b04801f42b9[0m [2m(no PR)[0m
+│ │  initial cleanup for ReactFlow 12
+│ ○  [1m[35msrpzkxuurxyn[0m [34mdd1807cd4291[0m [2m(no PR)[0m
+│ │  migrate to ReactFlow 12
+│ ○  [1m[35mkrvnmyvpswku[0m [34m6d08c2604d42[0m [2m(no PR)[0m
+│ │  fix: Replace broken stageleft import with GitHub link
+│ ○  [1m[35mruokylknmkvw[0m [34m73647e4349ec[0m [2m(no PR)[0m
+│ │  broken internal edges
+│ ○  [1m[35mmvrprxqtzqmr[0m [34m3a60a58479a7[0m [2m(no PR)[0m
+│ │  correct edges on collapse/expand
+│ ○  [1m[35mtrolwpowspvs[0m [34m2ecfa03ed1aa[0m [2m(no PR)[0m
+│ │  refactored visualizer
+│ ○  [1m[35mylkmmyunrssr[0m [34m548ad0a87d82[0m [2m(no PR)[0m
+│ │  cleanup logs
+│ ○  [1m[35mvkyxzwxuwrxt[0m [34mfbb20fed8b84[0m [2m(no PR)[0m
+│ │  click and drag containers
+│ ○  [1m[35mrlsuqunnqpyw[0m [34mad11424b454c[0m [2m(no PR)[0m
+│ │  working better
+│ ○  [1m[35mtvqsxylpostz[0m [34m9c3326bd5074[0m [2m(no PR)[0m
+│ │  click works, drag broken
+│ ○  [1m[35mtxtsuqkuruyp[0m [34mc5708bd9d8ae[0m [2m(no PR)[0m
+│ │  remove infinite re-render
+│ ○  [1m[35mttpuonpxosmq[0m [34mfe4e54eb5876[0m [2m(no PR)[0m
+│ │  no click, but cleaner
+│ ○  [1m[35mzxsklqrosvxv[0m [34m7fb6a9b9930a[0m [2m(no PR)[0m
+│ │  wip
+│ ○  [1m[35mzrvqlurozstk[0m [34m01b308611be1[0m [2m(no PR)[0m
+│ │  cleaned out debugging
+│ ○  [1m[35mnympsnkyxovk[0m [34mc0895aa34066[0m [2m(no PR)[0m
+│ │  centering container labels
+│ ○  [1m[35muuslkntkrwut[0m [34m1039f23604fa[0m [2m(no PR)[0m
+│ │  container labels
+│ ○  [1m[35muspwwlwupwum[0m [34m55d383182963[0m [2m(no PR)[0m
+│ │  fairly functional state
+│ ○  [1m[35mmzumxpozrpxs[0m [34m81551bf13cbc[0m [2m(no PR)[0m
+├─╯  wip docs visualizar
+│ ○  [1m[35mtkmuuuzzvqkm[0m [34mba5eeea25b21[0m [2m(no PR)[0m
+│ │  Update CHANGELOG.md
+│ ○  [1m[35mqlwlokzosulo[0m [34m1f2d2a6f495d[0m [2m(no PR)[0m
+│ │  Update CHANGELOG.md
+│ ○  [1m[35mynrlwtoutqor[0m [34md3ca306396ba[0m [2m(no PR)[0m
+│ │  Update CHANGELOG.md
+│ ○  [1m[35munruwpxwsxro[0m [34m904a75afd64b[0m [2m(no PR)[0m
+├─╯  Update CHANGELOG.md
+│ ○  [1m[35mtmstxmuyrwmv[0m [34maa0474a2e2c6[0m [2m(no PR)[0m
+├─╯  clippy
+│ ○  [1m[35msonyrwsqpwqz[0m [34mfebe5e6e9194[0m [2m(no PR)[0m
+├─╯  feat(dfir_rs,hydro_lang): add experimental io-uring based networking
+│ ○  [1m[35mlmnwppqwvqmq[0m [34m475e3f5f8208[0m [2m(no PR)[0m
+│ │  working chat
+│ ○  [1m[35mlqzuktwvypzk[0m [34m97c5694474ac[0m [2m(no PR)[0m
+│ │  basic echo chat working
+│ ○  [1m[35mstrmovqtqunw[0m [34m960ad094710e[0m [2m(no PR)[0m
+│ │  Checkpointing: have a chat UI setup.
+│ ○    [1m[35mtwxrtszqtwnp[0m [34m10708647ea30[0m [2m(no PR)[0m
+│ ├─╮  [32m(empty)[0m Merge remote-tracking branch 'refs/remotes/MingweiSamuel/wasm-test-site' into rohit_websocket_server_premerge
+│ ○ │  [1m[35mnsppxznnrnyk[0m [34md2a149773cb2[0m [2m(no PR)[0m
+├─╯ │  Checkpointing websocket server.
+│   ○  [1m[35mvtlnotxyppxy[0m [34m622519608688[0m [2m(no PR)[0m
+│   │  call global javascript function from rust (ugly)
+│   ○  [1m[35mmystuuwxvukw[0m [34m2739cf434bbb[0m [2m(no PR)[0m
+├───╯  add working test harness site
+│ ○  [1m[35mkprptxnuytxt[0m [34maed38208d210[0m [2m(no PR)[0m
+├─╯  cardinality example test
+│ ○  [1m[35mlymuuqooywqm[0m [34m03134e02e98e[0m [2m(no PR)[0m
+├─╯  feat(hydroflow): Add deadline `Instant` args to hydroflow run methods
+│ ○  [1m[35mqzllxsqzxusv[0m [34m73349a509c4e[0m [2m(no PR)[0m
+│ │  special README for applied23 tag
+│ ○  [1m[35myqzkwzwqrpys[0m [34m25696f72a612[0m [2m(no PR)[0m
+│ │  minor cleanup for shopping example
+│ ○  [1m[35mymxoulvtsnso[0m [34med0d6187afba[0m [2m(no PR)[0m
+│ │  example(hydroflow): shopping cart working (#690)
+│ ○  [1m[35mkvunrpulwnvt[0m [34m8be4df7c88b3[0m [2m(no PR)[0m
+│ │  example(hydroflow): shopping cart, compiling, wip (#690)
+│ ○  [1m[35mxzvutkvvlzvn[0m [34md43fd2d8ca96[0m [2m(no PR)[0m
+│ │  example(hydroflow): Add `lamport_clock` example (#690)
+│ ○  [1m[35mxspovnrstmos[0m [34mfc476bc7658e[0m [2m(no PR)[0m
+├─╯  Add initial Hydro Deploy docs (#686)
+│ ○  [1m[35mypmouvzpwuuw[0m [34m5d666f37993a[0m [2m(no PR)[0m
+│ │  fixup! Update docs, add book chapter for `lattices` crate (#667)
+│ ○  [1m[35mrovzpmsrpzso[0m [34m4380ef908dba[0m [2m(no PR)[0m
+│ │  Bump lattices version to `0.1.0` (#667)
+│ ○  [1m[35mprvsklmwzvor[0m [34m70b3a9a9aa5f[0m [2m(no PR)[0m
+│ │  Update docs, add book chapter for `lattices` crate (#667)
+│ ○  [1m[35mlylzzvvpyrsv[0m [34m751d2c04aa61[0m [2m(no PR)[0m
+│ │  Make lattice test helpers public, restructure (#664)
+│ ○  [1m[35mqmvopznnqlpr[0m [34mcb54b904b337[0m [2m(no PR)[0m
+│ │  fixup! Warn lint `unused_qualifications` (#660)
+│ ○  [1m[35mktpknttkqxpk[0m [34m22d74805ad9e[0m [2m(no PR)[0m
+│ │  rustfmt normalize comments (#660)
+│ ○  [1m[35mykulrrsqqyzt[0m [34m2c3d414ba52f[0m [2m(no PR)[0m
+│ │  Warn lint `unused_qualifications` (#660)
+│ ○  [1m[35mkzxpxpknpnno[0m [34m1fa1006c5932[0m [2m(no PR)[0m
+│ │  rustfmt use `\n` newlines (#660)
+│ ○  [1m[35mkvosuzpnvvrx[0m [34m48830c2646eb[0m [2m(no PR)[0m
+│ │  rustfmt format declarative macro patterns (#660)
+│ ○  [1m[35mztusnqvrnyqs[0m [34maccfcfc5bc79[0m [2m(no PR)[0m
+│ │  rustfmt format code comments (#660)
+│ ○  [1m[35mnrsknvrrztmm[0m [34medc5ba466de2[0m [2m(no PR)[0m
+│ │  rustfmt use field and try shorthands (#660)
+│ ○  [1m[35mzospwsuoxstw[0m [34mff08e2205530[0m [2m(no PR)[0m
+│ │  rustfmt enforce lowercase hex literals (#660)
+│ ○  [1m[35mlwstrouklqtw[0m [34md74c7052faaf[0m [2m(no PR)[0m
+│ │  rustfmt group imports (#660)
+│ ○  [1m[35mpzzstmtuvomz[0m [34me7bdfb786e6a[0m [2m(no PR)[0m
+├─╯  rustfmt prescribe flat-module `use` format (#660)
+│ ○  [1m[35mxypqyqmxwrqt[0m [34mc42d679fab8d[0m [2m(no PR)[0m
+│ │  Adjusting changelogs prior to release of hydroflow_cli_integration v0.0.1, hydroflow_internalmacro v0.0.1, hydroflow_lang v0.0.1, hydroflow_datalog_core v0.0.1, hydroflow_datalog v0.0.1, hydroflow_macro v0.0.1, variadics v0.0.2, pusherator v0.0.1, hydroflow v0.0.1
+│ ○  [1m[35mlsytmputtqto[0m [34m0593c730a1fe[0m [2m(no PR)[0m
+│ │  Setup release workflow
+│ ○  [1m[35mzrvwnyxuzrls[0m [34m1d518d3a159c[0m [2m(no PR)[0m
+│ │  Add skip check to `examples-container-build`
+│ ○  [1m[35mkkqvoxywwyku[0m [34m461787ab0327[0m [2m(no PR)[0m
+│ │  Ensure lowercasing for `example-containers-build`
+│ ○  [1m[35mywmuwsnxvypl[0m [34m5a740a4c5bc5[0m [2m(no PR)[0m
+│ │  Update `fkirc/skip-duplicate-actions` to `5.3.0`
+│ ○  [1m[35molmqqqntlsum[0m [34m1f6b648ea776[0m [2m(no PR)[0m
+├─╯  Update `actions/checkout` to `v3`
+[2m~[0m  [2m(elided revisions)[0m

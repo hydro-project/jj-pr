@@ -1,0 +1,6 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/hydro-many-closed-1780070904.json.gz
+---
+push: #2903 (mingwei/paxos-ref)

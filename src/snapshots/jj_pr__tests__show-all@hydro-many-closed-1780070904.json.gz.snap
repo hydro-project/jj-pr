@@ -1,0 +1,38 @@
+---
+source: src/tests.rs
+expression: "render_show(&f, true)"
+input_file: src/fixtures/hydro-many-closed-1780070904.json.gz
+---
+○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m  [32mReady[0m  [1m[35mmingwei/sqs-rebase[0m
+│  feat(hydro_test): add example of AWS + SQS support
+│ [31m⚠[0m  [33mambiguous[0m trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m
+│ │  [2m(edit commit description to fix PR: trailer)[0m
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2844PR #2844]8;;[0m  [31mClosed[0m  [1m[35mmingwei/push-fold[0m
+├─╯  feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2882PR #2882]8;;[0m  [31mClosed[0m  [1m[35mmingwei/bumpalo-experiment[0m
+├─╯  experiment: use bumpalo for DFIR handoff buffers [ci-bench]
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2887PR #2887]8;;[0m  [31mClosed[0m  [1m[35mmingwei/tickslab-experiment[0m
+├─╯  experiment: custom TickSlab for DFIR handoffs, replacing Vec for non-defer handoffs [ci-bench]
+│ ○    [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m  [31mClosed[0m  [1m[35mmingwei/bumpalo-experiment-2[0m
+│ ├─╮  experiment: try bumpalo again (take 2) [ci-bench]
+│ │ [33m⚠[0m  [33mambiguous[0m branches: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m
+│ │ │  [2m(edit commit description to fix PR: trailer)[0m
+│ [33m⚠[0m │  [33mambiguous[0m branches: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m
+│ ├─╯  [2m(edit commit description to fix PR: trailer)[0m
+│ │ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m  [31mClosed[0m  [1m[35mmingwei/blink-experiment[0m
+│ ├─╯  experiment: try blink-alloc for dfir handoff buffers [ci-bench]
+│ [33m⚠[0m  [33mambiguous[0m branches: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m, trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m
+├─╯  [2m(restructure PRs to resolve — stack one on the other)[0m
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2883PR #2883]8;;[0m  [32mReady[0m  [1m[35mmingwei/state-outputs[0m
+├─╯  refactor(dfir_pipes,dfir_lang)!: Add two mandatory output ports (`[items]`, `[state]`) to `state`/`state_by` operators
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2901PR #2901]8;;[0m  [32mReady[0m  [1m[35mmingwei/dfir-handoff-refs[0m
+│ │  feat(dfir_lang): add vec handoff reference support via `#var` and `#mut var` syntax
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2894PR #2894]8;;[0m  [32mReady[0m  [1m[35mmingwei/bumpalo-experiment-3[0m
+├─╯  feat(dfir_rs): use `bumpalo` for intra-tick handoffs [ci-bench]
+│ [1m[32m@[0m  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2899PR #2899]8;;[0m  [33mDraft[0m  [1m[35mmingwei/hydro-mut[0m
+├─╯  feat(hydro_lang): Add mutable singleton references (`by_ref_mut`) to Hydro
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2903PR #2903]8;;[0m*  [33mDraft[0m  [1m[35mmingwei/paxos-ref[0m
+│ │  refactor(hydro_test): migrate paxos cross_singleton to by_ref() singleton mechanism [ci-bench]
+│ [1m[36m◆[0m  [1m[32mtrunk()[0m
+├─╯
+[2m~[0m  [2m(elided revisions)[0m
