@@ -874,6 +874,12 @@ pub fn render_log(
         Box::new(jj_entries.iter())
     };
 
+    // Print root at the top in reversed mode.
+    if reversed {
+        let row = renderer.next_row(None, Vec::new(), crate::style::glyph_elided(), crate::style::root());
+        write!(out, "{row}")?;
+    }
+
     for jj_entry in iter {
         let cid = &*jj_entry.commit.commit_id;
         let _cid_scope = tracing::info_span!("commit", %cid).entered();
