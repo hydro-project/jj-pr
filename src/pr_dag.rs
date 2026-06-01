@@ -725,34 +725,24 @@ pub fn render_show(
         .with_min_row_height(1)
         .build_box_drawing();
 
-    let order: Vec<NodeKey> = if reversed {
-        state.topo_order.to_vec()
+    let iter: Box<dyn Iterator<Item = &NodeKey>> = if reversed {
+        Box::new(state.topo_order.iter())
     } else {
-        state.topo_order.iter().rev().copied().collect()
+        Box::new(state.topo_order.iter().rev())
     };
+    let edge_map = if reversed { &state.node_succs } else { &state.node_preds };
 
-    for node_key in order {
+    for &node_key in iter {
         if !show_all && state.node_hidden.contains_key(node_key) {
             continue;
         }
 
-        let parents = if reversed {
-            state
-                .node_succs
-                .get(node_key)
-                .unwrap()
-                .iter()
-                .map(|&dag_node| Ancestor::Parent(dag_node))
-                .collect::<Vec<_>>()
-        } else {
-            state
-                .node_preds
-                .get(node_key)
-                .unwrap()
-                .iter()
-                .map(|&dag_node| Ancestor::Parent(dag_node))
-                .collect::<Vec<_>>()
-        };
+        let parents = edge_map
+            .get(node_key)
+            .unwrap()
+            .iter()
+            .map(|&dag_node| Ancestor::Parent(dag_node))
+            .collect::<Vec<_>>();
 
         let is_current = state.node_current == Some(node_key);
 
@@ -858,7 +848,9 @@ pub fn render_log(
 ) -> Result<()> {
     let known_entries = jj_entries.iter().map(|e| &*e.commit.commit_id).collect::<BTreeSet<_>>();
 
-    // Build child map for reversed edge lookup.
+    // Build child map for reversed edge lookup. In the forward case, parents are
+    // already stored per-entry in `jj_entry.commit.parents`, but the inverse
+    // (children) must be pre-computed.
     let children_map: HashMap<&CommitId<str>, Vec<&CommitId<str>>> = if reversed {
         let mut map: HashMap<&CommitId<str>, Vec<&CommitId<str>>> = HashMap::new();
         for e in jj_entries {
@@ -876,13 +868,13 @@ pub fn render_log(
         .with_min_row_height(1)
         .build_box_drawing();
 
-    let entries: Vec<&JjLogEntry> = if reversed {
-        jj_entries.iter().rev().collect()
+    let iter: Box<dyn Iterator<Item = &JjLogEntry>> = if reversed {
+        Box::new(jj_entries.iter().rev())
     } else {
-        jj_entries.iter().collect()
+        Box::new(jj_entries.iter())
     };
 
-    for jj_entry in &entries {
+    for jj_entry in iter {
         let cid = &*jj_entry.commit.commit_id;
         let _cid_scope = tracing::info_span!("commit", %cid).entered();
 

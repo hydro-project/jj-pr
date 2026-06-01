@@ -10,6 +10,21 @@ fn render_show(input: &InputData, show_all: bool) -> String {
     render_show_with_statuses(input, &BTreeMap::new(), show_all)
 }
 
+fn render_show_reversed(input: &InputData, show_all: bool) -> String {
+    crate::style::set_force_color(true);
+    let prs = input.prs_map();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
+    let mut buf = Vec::new();
+    pr_dag::render_show(&state, &prs, &BTreeMap::new(), show_all, true, &mut buf).unwrap();
+    String::from_utf8(buf).unwrap()
+}
+
 fn render_show_with_statuses(input: &InputData, pr_statuses: &BTreeMap<PrNum, PrStatus>, show_all: bool) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
@@ -38,6 +53,22 @@ fn render_log(input: &InputData, show_all: bool) -> String {
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
     let mut buf = Vec::new();
     pr_dag::render_log(&state, &prs, &pr_statuses, &input.jj_entries, show_all, false, &mut buf).unwrap();
+    String::from_utf8(buf).unwrap()
+}
+
+fn render_log_reversed(input: &InputData, show_all: bool) -> String {
+    crate::style::set_force_color(true);
+    let prs = input.prs_map();
+    let state = pr_dag::build(
+        &input.jj_entries,
+        &prs,
+        &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+    )
+    .unwrap();
+    let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
+    let mut buf = Vec::new();
+    pr_dag::render_log(&state, &prs, &pr_statuses, &input.jj_entries, show_all, true, &mut buf).unwrap();
     String::from_utf8(buf).unwrap()
 }
 
@@ -274,7 +305,9 @@ fn stacked_prs() {
         None,
     );
     insta::assert_snapshot!("stacked_prs_show", render_show(&f, true));
+    insta::assert_snapshot!("stacked_prs_show_reversed", render_show_reversed(&f, true));
     insta::assert_snapshot!("stacked_prs_log", render_log(&f, false));
+    insta::assert_snapshot!("stacked_prs_log_reversed", render_log_reversed(&f, false));
     insta::assert_snapshot!("stacked_prs_sync", plan_sync(&f));
 }
 
