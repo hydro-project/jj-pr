@@ -717,6 +717,7 @@ pub fn render_show(
     prs: &BTreeMap<PrNum, &GhPr>,
     pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
     show_all: bool,
+    reversed: bool,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
     let mut renderer = GraphRowRenderer::new()
@@ -724,13 +725,19 @@ pub fn render_show(
         .with_min_row_height(1)
         .build_box_drawing();
 
-    for &node_key in state.topo_order.iter().rev() {
+    let iter: Box<dyn Iterator<Item = &NodeKey>> = if reversed {
+        Box::new(state.topo_order.iter())
+    } else {
+        Box::new(state.topo_order.iter().rev())
+    };
+    let edge_map = if reversed { &state.node_succs } else { &state.node_preds };
+
+    for &node_key in iter {
         if !show_all && state.node_hidden.contains_key(node_key) {
             continue;
         }
 
-        let parents = state
-            .node_preds
+        let parents = edge_map
             .get(node_key)
             .unwrap()
             .iter()
@@ -836,16 +843,44 @@ pub fn render_log(
     pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
     jj_entries: &[JjLogEntry],
     show_all: bool,
+    reversed: bool,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
     let known_entries = jj_entries.iter().map(|e| &*e.commit.commit_id).collect::<BTreeSet<_>>();
+
+    // Build child map for reversed edge lookup. In the forward case, parents are
+    // already stored per-entry in `jj_entry.commit.parents`, but the inverse
+    // (children) must be pre-computed.
+    let children_map: HashMap<&CommitId<str>, Vec<&CommitId<str>>> = if reversed {
+        let mut map: HashMap<&CommitId<str>, Vec<&CommitId<str>>> = HashMap::new();
+        for e in jj_entries {
+            for parent in &e.commit.parents {
+                map.entry(&**parent).or_default().push(&*e.commit.commit_id);
+            }
+        }
+        map
+    } else {
+        HashMap::new()
+    };
 
     let mut renderer = GraphRowRenderer::new()
         .output()
         .with_min_row_height(1)
         .build_box_drawing();
 
-    for jj_entry in jj_entries {
+    let iter: Box<dyn Iterator<Item = &JjLogEntry>> = if reversed {
+        Box::new(jj_entries.iter().rev())
+    } else {
+        Box::new(jj_entries.iter())
+    };
+
+    // Print root at the top in reversed mode.
+    if reversed {
+        let row = renderer.next_row(None, Vec::new(), crate::style::glyph_elided(), crate::style::root());
+        write!(out, "{row}")?;
+    }
+
+    for jj_entry in iter {
         let cid = &*jj_entry.commit.commit_id;
         let _cid_scope = tracing::info_span!("commit", %cid).entered();
 
@@ -968,23 +1003,31 @@ pub fn render_log(
 
         let message = format!("{line1}\n{line2}");
 
-        let row = renderer.next_row(
-            Some(cid),
+        let edges = if reversed {
+            children_map
+                .get(cid)
+                .into_iter()
+                .flatten()
+                .map(|&child_cid| Ancestor::Parent(known_entries.contains(child_cid).then_some(child_cid)))
+                .collect()
+        } else {
             jj_entry
                 .commit
                 .parents
                 .iter()
                 .map(|cid| Ancestor::Parent(known_entries.contains(&**cid).then_some(&**cid)))
-                .collect(),
-            glyph,
-            message,
-        );
+                .collect()
+        };
+
+        let row = renderer.next_row(Some(cid), edges, glyph, message);
         write!(out, "{row}")?;
     }
 
     // Print root.
-    let row = renderer.next_row(None, Vec::new(), crate::style::glyph_elided(), crate::style::root());
-    write!(out, "{row}")?;
+    if !reversed {
+        let row = renderer.next_row(None, Vec::new(), crate::style::glyph_elided(), crate::style::root());
+        write!(out, "{row}")?;
+    }
 
     Ok(())
 }

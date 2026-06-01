@@ -32,6 +32,10 @@ pub struct ShowArgs {
     /// Show all PRs including closed ones
     #[arg(long)]
     pub all: bool,
+
+    /// Show PRs in the opposite order (older PRs first)
+    #[arg(long)]
+    pub reversed: bool,
 }
 
 #[derive(clap::Args, Clone)]
@@ -39,6 +43,10 @@ pub struct LogArgs {
     /// Show all JJ changes, including those not associated with any active PRs
     #[arg(long)]
     pub all: bool,
+
+    /// Show changes in the opposite order (older changes first)
+    #[arg(long)]
+    pub reversed: bool,
 }
 
 #[derive(clap::Args, Clone)]
