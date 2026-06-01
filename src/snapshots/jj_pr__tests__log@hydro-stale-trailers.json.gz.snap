@@ -1,0 +1,84 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false)"
+input_file: src/fixtures/hydro-stale-trailers.json.gz
+---
+○  [1m[35mzvnpwvyvzunk[0m [34m2c86bc96b47d[0m [1m[35mmingwei/stateful-push[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│  cleanup persist_mut_keyed
+│ [1m[36m◆[0m  [1m[35mvmtwxppvtwow[0m [34m3e4bc9ae51c1[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│ │  chore: update nightly snapshots (#2891)
+│ │ ○  [1m[35myoqxtzqtnrxw[0m [34m7319860f7a98[0m [1m[35mmingwei/by-ref-slf[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2907PR #2907]8;;[0m [33mDraft[0m
+│ ├─╯  refactor(hydro_lang): singleton `by_ref()` proper lifetime based on stageleft fix
+○ │  [1m[35mtsoutuqvnsmx[0m [34md6d80096e9e1[0m [1m[35msandbox-fb2e97fd-91cb-4477-a560-a5731ecebe29[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Fix precheck.bash --dfir clippy and compile errors from rebasing
+○ │  [1m[35mmlpnpmytkllz[0m [34me6398a00035b[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Remove Stratum from persist_mut and persist_mut_keyed
+○ │  [1m[35mwsvorvvkqpus[0m [34m4b1bcbc156bb[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Keep persist_mut and persist_mut_keyed with Stratum (need emit-on-flush)
+○ │  [1m[35mwqrurskqwpty[0m [34m66ce9438f7ab[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Fix persist_mut push-side borrow conflict; remove Stratum
+○ │  [1m[35mrkpvnlqktpkp[0m [34m2c329dc1fb50[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Investigate persist_mut push-side borrow conflict
+○ │  [1m[35mnkvnkwksstry[0m [34m889303753ce2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Add push-side codegen for reduce_keyed; persist_mut stays pull-only
+○ │  [1m[35mylyxylnpuwmp[0m [34mf488b638bff0[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Add push-side codegen for reduce_keyed
+○ │  [1m[35mlkpqzyknsysm[0m [34m4fb4b0e28d23[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Add push-side codegen for fold_keyed, fix FoldKeyed type generics
+○ │  [1m[35mvxwrpsrpnxnv[0m [34m7401baf9f7b9[0m [1m[35mmingwei/push-codegen[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  accumulate size_hint
+○ │  [1m[35muzxvymzkwsoo[0m [34mceb32c36aab2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  combine regular and borrow fold
+○ │  [1m[35mkvonvxptywnv[0m [34ma85c3292e5e8[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Add push-side codegen for sort and reduce operators
+○ │  [1m[35moyqwypsoqono[0m [34m5b30ec7cd334[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  Add push-side fold codegen and restore Stratum for persist_mut
+○ │  [1m[35monkpmnltlskr[0m [34m12719355d0ba[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m [33mDraft[0m
+│ │  cleanup Fold
+○ │  [1m[35moyymkmznptow[0m [34m1a99e61268fe[0m [1m[35mmingwei/push-fold[0m [1m[35msandbox-ff4ea805-edb6-4a68-a9c0-062239670ae2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2844PR #2844]8;;[0m [31mClosed[0m
+├─╯  feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators
+│ ○  [1m[35mkqrlnktyzoss[0m [34m29153107d681[0m [1m[35mmingwei/dfir-handoff-refs[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2901PR #2901]8;;[0m [32mReady[0m
+│ │  Add compile-fail test for iter_ref and fix affected existing tests
+│ ○  [1m[35mprpnxnwnwzrq[0m [34m75f4c5569088[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2901PR #2901]8;;[0m [32mReady[0m
+│ │  Add validation to iter_ref: require `#handoff_name` reference argument
+│ ○  [1m[35mwzpruuynkyqy[0m [34m9d0a917a89a1[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2901PR #2901]8;;[0m [32mReady[0m
+│ │  Add `iter_ref(#handoff)` operator for zero-copy iteration over vec handoffs
+│ ○  [1m[35mpurkwrvkvuxy[0m [34mcc820c3ed93d[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2901PR #2901]8;;[0m [32mReady[0m
+├─╯  Add vec handoff (`handoff()`) reference support via `#var` and `#mut var` syntax
+│ ○  [1m[35movltwsqmwzlr[0m [34ma6d6079bc6e0[0m [1m[35mmingwei/paxos-ref[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2903PR #2903]8;;[0m [33mDraft[0m
+│ │  refactor(hydro_test): migrate paxos cross_singleton to by_ref() singleton mechanism [ci-bench]
+│ ○  [1m[35mpsnpnnvlsrxt[0m [34m4fd16688d216[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2903PR #2903]8;;[0m [33mDraft[0m
+├─╯  Add by_ref() singleton capture support to Stream::filter_map
+│ ○  [1m[35myvoslutvqqrm[0m [34m23d7e033dcd3[0m [1m[35mmingwei/hydro-mut[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2899PR #2899]8;;[0m [33mDraft[0m
+│ │  cleanup unsafe
+│ ○  [1m[35mmxsvqqnkkskw[0m [34m93e3626bbfbc[0m [1m[35msandbox-a63453f2-950d-4a8f-9d54-3986f5c18a1f[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2899PR #2899]8;;[0m [33mDraft[0m
+├─╯  feat(hydro_lang): Add mutable singleton references (`by_ref_mut`) to Hydro
+│ [33m⚠[0m  [1m[35mykyzqzxoowkq[0m [34m96fc0d1ccfba[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m[33m][0m
+│ │  Fix defer_tick double-buffering to use O(1) mem::swap instead of O(n) drain/extend
+│ │ [33m⚠[0m  [1m[35mqmowsoonkvzq[0m [34mf34852be5457[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m[33m][0m
+│ ├─╯  actually reset alloc at end of tick
+│ [33m⚠[0m  [1m[35mzlmrksqpkprn[0m [34m8daf0166c71b[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
+│ │  Simplify non_lazy_buf_idents by storing buf_ident in back_buffer_idents_laziness tuple
+│ [33m⚠[0m  [1m[35mtvotpvuzsmxy[0m [34ma9cde23bbbb9[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
+│ │  Fix bumpalo-based dfir handoffs: two bugs in back-edge handoff handling
+│ [33m⚠[0m  [1m[35msrprmqzvsnsv[0m [34m627ab948887b[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
+│ │  kinda working?
+│ [33m⚠[0m  [1m[35mulskwstupsut[0m [34mbf3b7f57b8e7[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2890PR #2890]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2889PR #2889]8;;[0m[33m][0m
+├─╯  wip
+│ ○  [1m[35mltloqrxtnksl[0m [34m50a7be44a8ae[0m [1m[35mmingwei/sqs-rebase[0m [1m[35msandbox-236c6a7a-2597-4c57-95fc-46268f948b7a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  address PR #2746 review comments for AWS SQS support
+│ ○  [1m[35mzqxzmtrvpyzy[0m [34m4e04d8cf6b6a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  re-enable aws feature gating
+│ ○  [1m[35mrpnyusryuvux[0m [34m8d5372a8cc78[0m [1m[35msandbox-2aebe241-661a-4fc0-8b40-bc0740d6c156[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  Fix clippy warnings in hydro_test SQS module
+│ ○  [1m[35mlsuxxwwlvloy[0m [34m0cd687eaddb7[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  enable credentials-login feature for getting login from `aws` cli
+│ ○  [1m[35mzkpvyxzntswr[0m [34meb0ed928d77d[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  enable credentials-login feature for getting login from `aws` cli
+│ ○  [1m[35mowkpmukqqlwx[0m [34m5c80acb70889[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  cleanup sqs one-write code
+│ ○  [1m[35monsovwqumzxm[0m [34m81df6b86b6e8[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  SQS working!
+│ ○  [1m[35mtuwnswwkwnov[0m [34maa7a009bea3c[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+├─╯  add aws, sqs hydro_test
+[2m~[0m  [2m(elided revisions)[0m

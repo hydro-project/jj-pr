@@ -7,9 +7,9 @@ input_file: src/fixtures/remade-pr-old-branch-deleted.json.gz
 │  Remove unused slot_vec module from dfir_rs
 │ [1m[32m@[0m  [1m[35mlkkmpmprxkpr[0m [34m4418cd07500c[0m [2m(no PR)[0m
 │ │  [32m(empty)[0m [32m(no description set)[0m
-│ │ [33m⚠[0m  [1m[35mwwzknkzponxn[0m [34m006273d8e6ba[0m [1m[35mmingwei/delete-delaytype2[0m [1m[35msandbox-983e683f-b411-4b48-8268-af9a6da7e5a2[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m[33m][0m
+│ │ ○  [1m[35mwwzknkzponxn[0m [34m006273d8e6ba[0m [1m[35mmingwei/delete-delaytype2[0m [1m[35msandbox-983e683f-b411-4b48-8268-af9a6da7e5a2[0m [2m(no PR)[0m
 │ ├─╯  Remove DelayType::Stratum and DelayType::MonotoneAccum from operator input_delaytype_fn
-│ [33m⚠[0m  [1m[35mnpvopmrtwqpt[0m [34m288a11230795[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2841PR #2841]8;;[0m[33m][0m
+│ ○  [1m[35mnpvopmrtwqpt[0m [34m288a11230795[0m [2m(no PR)[0m
 │ │  Remove DelayType::Stratum and DelayType::MonotoneAccum variants
 │ │ ○  [1m[35mmnoosqpuwtyx[0m [34mf5bf180354d3[0m [2m(no PR)[0m
 │ │ │  [32m(empty)[0m [32m(no description set)[0m
