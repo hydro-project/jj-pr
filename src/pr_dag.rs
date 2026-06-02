@@ -510,6 +510,14 @@ fn decide(
     // Finally, incorporate the trailer PR num.
     if let Some(trailer_pr_num) = trailer_pr_num {
         (node, node_key) = 'a: {
+            // Ignore stale trailers: closed PRs with no local bookmark are dead.
+            // The trailer will be overwritten by StampTrailer during sync.
+            if !pr_local.contains(&trailer_pr_num)
+                && prs.get(&trailer_pr_num).is_some_and(|p| p.state == gh::PrState::Closed)
+            {
+                break 'a (node, node_key);
+            }
+
             // Special case: if the `trailer_pr_num` is set but the PR is not tracked locally, try to treat this as the tip
             // of a merged PR with a deleted branch (needs abandoning).
             if !pr_local.contains(&trailer_pr_num)

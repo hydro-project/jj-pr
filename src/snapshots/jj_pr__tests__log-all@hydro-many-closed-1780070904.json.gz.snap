@@ -203,41 +203,41 @@ input_file: src/fixtures/hydro-many-closed-1780070904.json.gz
 │ │ │  unify push accum
 │ │ │ ○  [1m[35mtkznsupxnwtv[0m [34m9ef4fe861c84[0m [2m(no PR)[0m
 ├─────╯  [32m(empty)[0m [32m(no description set)[0m
-│ │ │ [33m⚠[0m  [1m[35mwotlxqsxrzqr[0m [34m2f085762c223[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ ○  [1m[35mwotlxqsxrzqr[0m [34m2f085762c223[0m [2m(no PR)[0m
 │ │ │ │  Remove DelayType::Stratum and DelayType::MonotoneAccum from operator input_delaytype_fn
-│ │ │ [33m⚠[0m  [1m[35mmywosvqpporq[0m [34me725e09eec30[0m [1m[35msandbox-1b29a495-7851-480a-89b8-dc7f297b500a[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ ○  [1m[35mmywosvqpporq[0m [34me725e09eec30[0m [1m[35msandbox-1b29a495-7851-480a-89b8-dc7f297b500a[0m [2m(no PR)[0m
 │ │ │ │  Remove DelayType::Stratum and DelayType::MonotoneAccum variants
-│ │ │ [31m⚠[0m  [1m[35mloxrupzwqsst[0m [34md3aa4c0575f6[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ [31m✗[0m  [1m[35mloxrupzwqsst[0m [34md3aa4c0575f6[0m [2m(no PR)[0m
 │ │ │ │  Add singleton propagation: allow #var references to derived singletons
-│ │ │ [31m⚠[0m  [1m[35mskpkvuxwmntx[0m [34m6b06bbd070b4[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ [31m✗[0m  [1m[35mskpkvuxwmntx[0m [34m6b06bbd070b4[0m [2m(no PR)[0m
 │ │ │ │  refactor: allow #var references to any operator, not just stateful ones
-│ │ │ [31m⚠[0m  [1m[35mtsoutuqvnsmx[0m [34mc23ba6ab886c[0m [1m[35msandbox-fb2e97fd-91cb-4477-a560-a5731ecebe29[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ [31m✗[0m  [1m[35mtsoutuqvnsmx[0m [34mc23ba6ab886c[0m [1m[35msandbox-fb2e97fd-91cb-4477-a560-a5731ecebe29[0m [2m(no PR)[0m
 │ │ │ │  Fix precheck.bash --dfir clippy and compile errors from rebasing
-│ │ │ [33m⚠[0m  [1m[35mmlpnpmytkllz[0m [34m0cebcf0bb6eb[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ ○  [1m[35mmlpnpmytkllz[0m [34m0cebcf0bb6eb[0m [2m(no PR)[0m
 │ │ │ │  Remove Stratum from persist_mut and persist_mut_keyed
-│ │ │ [33m⚠[0m  [1m[35mwsvorvvkqpus[0m [34m97e30882e3fc[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ ○  [1m[35mwsvorvvkqpus[0m [34m97e30882e3fc[0m [2m(no PR)[0m
 │ │ │ │  Keep persist_mut and persist_mut_keyed with Stratum (need emit-on-flush)
-│ │ │ [33m⚠[0m  [1m[35mwqrurskqwpty[0m [34m9581723f3c93[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ ○  [1m[35mwqrurskqwpty[0m [34m9581723f3c93[0m [2m(no PR)[0m
 │ │ │ │  Fix persist_mut push-side borrow conflict; remove Stratum
-│ │ │ [33m⚠[0m  [1m[35mrkpvnlqktpkp[0m [34m6a2cb3aae6b6[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ ○  [1m[35mrkpvnlqktpkp[0m [34m6a2cb3aae6b6[0m [2m(no PR)[0m
 │ │ │ │  Investigate persist_mut push-side borrow conflict
-│ │ │ [33m⚠[0m  [1m[35mnkvnkwksstry[0m [34m8fdca125483a[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ ○  [1m[35mnkvnkwksstry[0m [34m8fdca125483a[0m [2m(no PR)[0m
 │ │ │ │  Add push-side codegen for reduce_keyed; persist_mut stays pull-only
-│ │ │ [33m⚠[0m  [1m[35mylyxylnpuwmp[0m [34m0703241d97f5[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ ○  [1m[35mylyxylnpuwmp[0m [34m0703241d97f5[0m [2m(no PR)[0m
 │ │ │ │  Add push-side codegen for reduce_keyed
-│ │ │ [33m⚠[0m  [1m[35mlkpqzyknsysm[0m [34m527f9738bd27[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ │ │ ○  [1m[35mlkpqzyknsysm[0m [34m527f9738bd27[0m [2m(no PR)[0m
 │ ├───╯  Add push-side codegen for fold_keyed, fix FoldKeyed type generics
-│ [33m⚠[0m │  [1m[35mvxwrpsrpnxnv[0m [34m51c085865aae[0m [1m[35mmingwei/push-codegen[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ ○ │  [1m[35mvxwrpsrpnxnv[0m [34m51c085865aae[0m [1m[35mmingwei/push-codegen[0m [2m(no PR)[0m
 │ │ │  accumulate size_hint
-│ [33m⚠[0m │  [1m[35muzxvymzkwsoo[0m [34m546481188e09[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ ○ │  [1m[35muzxvymzkwsoo[0m [34m546481188e09[0m [2m(no PR)[0m
 │ │ │  combine regular and borrow fold
 │ │ │ [31m✗[0m  [1m[35mrlxyoxzrtywx[0m [34m8030432675ec[0m [2m(no PR)[0m
 │ ├───╯  [32m(no description set)[0m
-│ [33m⚠[0m │  [1m[35mkvonvxptywnv[0m [34m867630ba803f[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ ○ │  [1m[35mkvonvxptywnv[0m [34m867630ba803f[0m [2m(no PR)[0m
 │ │ │  Add push-side codegen for sort and reduce operators
-│ [33m⚠[0m │  [1m[35moyqwypsoqono[0m [34m5ae86576552e[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ ○ │  [1m[35moyqwypsoqono[0m [34m5ae86576552e[0m [2m(no PR)[0m
 │ │ │  Add push-side fold codegen and restore Stratum for persist_mut
-│ [33m⚠[0m │  [1m[35monkpmnltlskr[0m [34mbedf4e182c44[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2843PR #2843]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2849PR #2849]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2850PR #2850]8;;[0m[33m][0m
+│ ○ │  [1m[35monkpmnltlskr[0m [34mbedf4e182c44[0m [2m(no PR)[0m
 │ │ │  cleanup Fold
 │ ○ │  [1m[35moyymkmznptow[0m [34m86148bb30a94[0m [1m[35mmingwei/push-fold[0m [1m[35msandbox-ff4ea805-edb6-4a68-a9c0-062239670ae2[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2844PR #2844]8;;[0m [31mClosed[0m
 ├─╯ │  feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators
