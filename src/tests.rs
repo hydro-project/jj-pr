@@ -294,6 +294,33 @@ fn stacked_prs() {
     insta::assert_snapshot!("stacked_prs_sync", plan_sync(&f));
 }
 
+/// Regression test: reversed log with non-PR siblings of trunk should not produce
+/// dangling graph edges. The non-PR commits (wip1, wip2) are children of trunk but
+/// have no PR association, so they get filtered when show_all=false. In reversed mode,
+/// trunk's children_map must not include these filtered commits.
+#[test]
+fn log_reversed_with_non_pr_siblings() {
+    let f = fixture(
+        vec![
+            entry("wip2", "chwip2", &["trunk"], "unrelated wip 2\n", &[], false),
+            entry("wip1", "chwip1", &["trunk"], "unrelated wip 1\n", &[], false),
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "main"), gh_pr(2, "feat-b", "feat-a")],
+        None,
+    );
+    insta::assert_snapshot!("log_reversed_non_pr_siblings", render_log(&f, false, true));
+    insta::assert_snapshot!("log_non_pr_siblings", render_log(&f, false, false));
+}
+
 #[test]
 fn diamond_ambiguous() {
     let f = fixture(
