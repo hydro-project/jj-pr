@@ -860,7 +860,7 @@ pub fn render_log(
         .filter(|e| {
             let cid = &*e.commit.commit_id;
             let node_key = state.commit_node.get(cid).copied();
-            show_all || (node_key.is_some() && !node_key.is_some_and(|nk| state.node_hidden.contains_key(nk)))
+            show_all || node_key.is_some_and(|nk| !state.node_hidden.contains_key(nk))
         })
         .map(|e| &*e.commit.commit_id)
         .collect();
