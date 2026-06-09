@@ -854,16 +854,29 @@ pub fn render_log(
     reversed: bool,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
-    let known_entries = jj_entries.iter().map(|e| &*e.commit.commit_id).collect::<BTreeSet<_>>();
+    // Compute the set of entries that will actually be rendered (for edge filtering).
+    let visible_entries: BTreeSet<&CommitId<str>> = jj_entries
+        .iter()
+        .filter(|e| {
+            let cid = &*e.commit.commit_id;
+            let node_key = state.commit_node.get(cid).copied();
+            show_all || node_key.is_some_and(|nk| !state.node_hidden.contains_key(nk))
+        })
+        .map(|e| &*e.commit.commit_id)
+        .collect();
 
     // Build child map for reversed edge lookup. In the forward case, parents are
     // already stored per-entry in `jj_entry.commit.parents`, but the inverse
-    // (children) must be pre-computed.
+    // (children) must be pre-computed. Only include children that will be rendered.
     let children_map: HashMap<&CommitId<str>, Vec<&CommitId<str>>> = if reversed {
         let mut map: HashMap<&CommitId<str>, Vec<&CommitId<str>>> = HashMap::new();
         for e in jj_entries {
+            let cid = &*e.commit.commit_id;
+            if !visible_entries.contains(cid) {
+                continue;
+            }
             for parent in &e.commit.parents {
-                map.entry(&**parent).or_default().push(&*e.commit.commit_id);
+                map.entry(&**parent).or_default().push(cid);
             }
         }
         map
@@ -1016,14 +1029,14 @@ pub fn render_log(
                 .get(cid)
                 .into_iter()
                 .flatten()
-                .map(|&child_cid| Ancestor::Parent(known_entries.contains(child_cid).then_some(child_cid)))
+                .map(|&child_cid| Ancestor::Parent(visible_entries.contains(child_cid).then_some(child_cid)))
                 .collect()
         } else {
             jj_entry
                 .commit
                 .parents
                 .iter()
-                .map(|cid| Ancestor::Parent(known_entries.contains(&**cid).then_some(&**cid)))
+                .map(|cid| Ancestor::Parent(visible_entries.contains(&**cid).then_some(&**cid)))
                 .collect()
         };
 
