@@ -687,6 +687,52 @@ fn create_stacked_pr() {
 }
 
 #[test]
+fn create_intermediate_pr() {
+    // Scenario: main <- a <- b <- c with PR #1 at feat-c owning all three.
+    // User creates bookmark feat-b at b and runs `jj-pr create feat-b`.
+    // Expected: new PR should claim a and b, re-stamping their trailers from #1 to the new PR.
+    // PR #1 should only own c.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c1", "chc1", &["b1"], "commit c\n\nPR: #1\n", &["feat-c"], false),
+                "feat-c",
+            ),
+            entry("b1", "chb1", &["a1"], "commit b\n\nPR: #1\n", &["feat-b"], false),
+            entry("a1", "cha1", &["trunk"], "commit a\n\nPR: #1\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-c", "main")],
+        None,
+    );
+    insta::assert_snapshot!("create_intermediate_pr", plan_create(&f, "feat-b"));
+}
+
+#[test]
+fn create_intermediate_pr_sync_after() {
+    // After creating intermediate PR #2 at feat-b, verify sync fixes the base of PR #1.
+    // Simulates state AFTER create executed: a and b have PR: #2 trailers, c has PR: #1.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c1", "chc1", &["b1"], "commit c\n\nPR: #1\n", &["feat-c"], false),
+                "feat-c",
+            ),
+            with_remote(
+                entry("b1", "chb1", &["a1"], "commit b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            entry("a1", "cha1", &["trunk"], "commit a\n\nPR: #2\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-c", "main"), gh_pr(2, "feat-b", "main")],
+        None,
+    );
+    insta::assert_snapshot!("create_intermediate_pr_show", render_show(&f, true, false));
+    insta::assert_snapshot!("create_intermediate_pr_sync_after", plan_sync(&f));
+}
+
+#[test]
 fn create_already_exists() {
     // Bookmark "feat" already has PR #1 — should error.
     let f = fixture(

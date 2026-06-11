@@ -1,0 +1,8 @@
+---
+source: src/tests.rs
+assertion_line: 708
+expression: "plan_create(&f, \"feat-b\")"
+---
+push feat-b
+create PR: "commit b" (feat-b → main) [draft]
+stamp trailer on 2 commit(s)
