@@ -1539,11 +1539,21 @@ pub fn plan_create(
     });
 
     // Walk backwards from tip to find commits that need stamping.
-    // We can't use `state.commit_node` alone here because `state` was built before
-    // this PR existed — the node assignments are stale for the new PR.
-    // However, `state` is still authoritative for *existing* PRs/trunk, so we
-    // also use it as a hard boundary to avoid stamping commits that belong to
-    // another PR but happen to lack a trailer.
+    // We can't use `state.commit_node` alone here because `state` was built before this PR existed — the node
+    // assignments are stale for the new PR. However, `state` is still authoritative for *existing* PRs/trunk, so we
+    // also use it as a hard boundary to avoid stamping commits that belong to another PR but happen to lack a trailer.
+    //
+    // Special case: claiming from an existing PR — if the tip commit currently belongs to an existing PR node, we are
+    // claiming commits from that PR into a new one. In that case, commits belonging to the `claim_from_pr` should
+    // be re-stamped with the new trailer.
+    let claim_from_pr = state.commit_node.get(&*tip_entry.commit.commit_id).and_then(|&nk| {
+        if let Node::Pr(pr_num) = state.nodes.get(nk)? {
+            Some(*pr_num)
+        } else {
+            None
+        }
+    });
+
     let parent_map: HashMap<&CommitId<str>, &JjLogEntry> =
         jj_entries.iter().map(|e| (&*e.commit.commit_id, e)).collect();
 
@@ -1564,13 +1574,14 @@ pub fn plan_create(
         // Check if state already assigns this commit to another PR or trunk/root.
         if let Some(&nk) = state.commit_node.get(&*entry.commit.commit_id) {
             match &state.nodes[nk] {
+                Node::Pr(pr) if claim_from_pr == Some(*pr) => {} // Claiming: re-stamp.
                 Node::Pr(_) | Node::Root | Node::TrunkTip => continue,
                 Node::Ambiguous { .. } => {} // May belong to the new PR.
             }
         }
         let existing = jj::parse_pr_trailer(&entry.commit.description);
-        if existing.is_some() {
-            continue; // Already has a trailer (any PR) — don't overwrite.
+        if existing.is_some() && existing != claim_from_pr {
+            continue; // Has a trailer for a different PR — don't overwrite.
         }
         stamp_change_ids.push(entry.commit.change_id.clone());
         for parent in &entry.commit.parents {
