@@ -6,6 +6,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::gh::PrNum;
 use crate::types::{Bookmark, ChangeId, CommitId, Revset, revset_union};
+
+/// Create a `jj log --no-graph` command with word-wrap disabled.
+/// This ensures structured output is not corrupted by user config.
+fn jj_log_command() -> Command {
+    let mut cmd = Command::new("jj");
+    cmd.args(["log", "--no-graph", "--config", "ui.log-word-wrap=false"]);
+    cmd
+}
+
 /// Raw commit data from `json(self)`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjCommit {
@@ -153,8 +162,8 @@ pub fn remove_pr_trailer(description: &str) -> String {
 /// Resolve a revision string to a commit_id.
 #[expect(dead_code, reason = "used by track command (TODO)")]
 pub fn resolve_revision(rev: &str) -> Result<String> {
-    let output = Command::new("jj")
-        .args(["log", "--no-graph", "-r", rev, "-T", "commit_id"])
+    let output = jj_log_command()
+        .args(["-r", rev, "-T", "commit_id"])
         .output()
         .context("Failed to resolve revision")?;
     if !output.status.success() {
@@ -192,8 +201,8 @@ pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<Bookmark>> {
 pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
     const JJ_TEMPLATE: &str = r#""{\"commit\": " ++ json(self) ++ ", \"local_bookmarks\": " ++ json(local_bookmarks) ++ ", \"remote_bookmarks\": " ++ json(remote_bookmarks) ++ ", \"immutable\": " ++ json(self.immutable()) ++ ", \"is_trunk_tip\": " ++ json(self.contained_in("trunk()")) ++ ", \"empty\": " ++ json(self.empty()) ++ ", \"is_working_copy\": " ++ json(self.contained_in("@")) ++ ", \"conflict\": " ++ json(self.conflict()) ++ "}\n""#;
 
-    let output = Command::new("jj")
-        .args(["log", "--no-graph", "-r", revset, "-T", JJ_TEMPLATE])
+    let output = jj_log_command()
+        .args(["-r", revset, "-T", JJ_TEMPLATE])
         .output()
         .context("Failed to run `jj log`")?;
 
@@ -210,7 +219,14 @@ pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
         if line.is_empty() {
             continue;
         }
-        let entry = serde_json::from_str::<JjLogEntry>(line).with_context(|| format!("Failed to parse: {line}"))?;
+        let entry = serde_json::from_str::<JjLogEntry>(line).with_context(|| {
+            let truncated = line.char_indices().nth(80).map(|(idx, _)| &line[..idx]).unwrap_or(line);
+            format!(
+                "Failed to parse jj log output as JSON.\n  \
+                 Hint: check your jj config for settings that alter template output.\n  \
+                 Content: {truncated}"
+            )
+        })?;
         entries.push(entry);
     }
     Ok(entries)
@@ -224,8 +240,8 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
     // Use present() to gracefully handle missing commits (returns empty instead of erroring).
     let inner = revset_union(oids.iter().copied());
     let revset = format!("present({inner})");
-    let output = Command::new("jj")
-        .args(["log", "--no-graph", "-r", &revset, "-T", r#"commit_id ++ "\n""#])
+    let output = jj_log_command()
+        .args(["-r", &revset, "-T", r#"commit_id ++ "\n""#])
         .output()
         .context("Failed to run `jj log` for commit existence check")?;
 
@@ -244,8 +260,8 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
 
 /// Read the description of a revision.
 pub fn read_description(revision: &Revset) -> Result<String> {
-    let output = Command::new("jj")
-        .args(["log", "--no-graph", "-r", revision.as_str(), "-T", "description"])
+    let output = jj_log_command()
+        .args(["-r", revision.as_str(), "-T", "description"])
         .output()
         .context("Failed to run `jj log` for description")?;
     if !output.status.success() {
