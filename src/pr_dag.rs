@@ -226,7 +226,15 @@ pub fn build(
             // Prefer the bookmark's tracked remote directly.
             let pr_remote = tracked_bookmarks
                 .and_then(|tb| tb.get(bookmark))
-                .and_then(|remotes| remotes.iter().next())
+                .and_then(|remotes| {
+                    if remotes.len() > 1 {
+                        tracing::warn!(
+                            "bookmark '{}' tracks multiple remotes; using first for push detection",
+                            bookmark,
+                        );
+                    }
+                    remotes.iter().next()
+                })
                 .map(|r| &**r);
             // Fall back to matching head_repo_owner against remote_owners.
             let pr_remote = pr_remote.or_else(|| {
