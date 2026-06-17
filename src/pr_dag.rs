@@ -95,8 +95,8 @@ pub fn build(
     jj_entries: &[JjLogEntry],
     prs: &BTreeMap<PrNum, &GhPr>,
     default_branch: &Bookmark<str>,
-    tracked_bookmarks: Option<&BTreeSet<Bookmark>>,
-    push_remote: &Remote<str>,
+    tracked_bookmarks: Option<&BTreeMap<Bookmark, BTreeSet<Remote>>>,
+    remote_owners: &BTreeMap<Remote, Owner>,
 ) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
@@ -142,9 +142,9 @@ pub fn build(
             for local_bookmark in jj_entry.local_bookmarks.iter() {
                 let local_bookmark_name = &*local_bookmark.name;
                 if let Some(pr) = head_to_pr.get(local_bookmark_name) {
-                    // Only consider this a PR bookmark if it's tracked on the push remote.
+                    // Only consider this a PR bookmark if it's tracked on some remote.
                     // `None` means all bookmarks are considered tracked (legacy/old fixtures).
-                    let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains(local_bookmark_name));
+                    let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains_key(local_bookmark_name));
                     if !is_tracked {
                         continue;
                     }
@@ -199,29 +199,65 @@ pub fn build(
     // Compute pr_needs_push: compare local vs remote bookmark targets for PR bookmarks.
     {
         let mut local_targets: HashMap<&Bookmark<str>, &CommitId<str>> = HashMap::new();
-        let mut remote_targets: HashMap<&Bookmark<str>, &CommitId<str>> = HashMap::new();
+        // Remote targets keyed by (bookmark, remote).
+        let mut remote_targets: HashMap<(&Bookmark<str>, &Remote<str>), &CommitId<str>> = HashMap::new();
         for jj_entry in jj_entries.iter() {
             for bm in &jj_entry.local_bookmarks {
                 local_targets.insert(&bm.name, &jj_entry.commit.commit_id);
             }
             for bm in &jj_entry.remote_bookmarks {
-                // Only consider the push remote, not @git (local tracking ref).
-                if bm.remote.as_deref() == Some(push_remote) {
-                    remote_targets.entry(&bm.name).or_insert(&jj_entry.commit.commit_id);
+                if let Some(remote) = bm.remote.as_deref() {
+                    // Exclude @git (local tracking ref, not a real push remote).
+                    if remote.as_str() == "git" {
+                        continue;
+                    }
+                    remote_targets
+                        .entry((&bm.name, remote))
+                        .or_insert(&jj_entry.commit.commit_id);
                 }
             }
         }
         for gh_pr in prs.values() {
             let bookmark = &*gh_pr.head_ref_name;
-            // Only consider bookmarks we own (tracked on push remote).
-            let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains(bookmark));
+            // Only consider bookmarks we own (tracked on some remote).
+            let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains_key(bookmark));
             if !is_tracked {
                 continue;
             }
+            // Find the remote for this PR by matching head_repo_owner against remote_owners.
+            let pr_remote = gh_pr.head_repo_owner.as_deref().and_then(|pr_owner| {
+                remote_owners.iter().find_map(|(remote, owner)| {
+                    (**owner == *pr_owner).then_some(&**remote)
+                })
+            });
+            // Fall back to the bookmark's tracked remote.
+            let pr_remote = pr_remote.or_else(|| {
+                tracked_bookmarks?
+                    .get(bookmark)?
+                    .iter()
+                    .next()
+                    .map(|r| &**r)
+            });
+
             let local = local_targets.get(bookmark);
-            let remote = remote_targets.get(bookmark);
-            if local != remote {
-                repo_state.pr_needs_push.insert(gh_pr.number);
+            match pr_remote {
+                Some(remote) => {
+                    let remote_target = remote_targets.get(&(bookmark, remote));
+                    if local != remote_target {
+                        repo_state.pr_needs_push.insert(gh_pr.number);
+                    }
+                }
+                None => {
+                    // Legacy mode (no tracked_bookmarks): compare against any non-git remote
+                    // that has this bookmark. Needs push if no remote matches local.
+                    #[expect(clippy::disallowed_methods, reason = "iteration order irrelevant — checking any match")]
+                    let any_remote_matches_local = remote_targets.iter().any(|(&(bm, _), cid)| {
+                        *bm == *bookmark && Some(cid) == local
+                    });
+                    if !any_remote_matches_local && local.is_some() {
+                        repo_state.pr_needs_push.insert(gh_pr.number);
+                    }
+                }
             }
         }
     }

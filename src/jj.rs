@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::process::Command;
 
 use anyhow::{Context, Result, bail};
@@ -177,11 +177,11 @@ pub fn load_entries() -> Result<Vec<JjLogEntry>> {
     load_entries_with_revset("trunk().. | trunk()")
 }
 
-/// Load the set of bookmark names tracked on a given remote.
-pub fn load_tracked_bookmarks(remote: &Remote<str>) -> Result<BTreeSet<Bookmark>> {
-    let template = format!(r#"if(remote == "{}", name ++ "\n")"#, remote.as_str());
+/// Load all tracked bookmarks mapped to their tracked remotes (excluding `git`).
+pub fn load_tracked_bookmarks() -> Result<BTreeMap<Bookmark, BTreeSet<Remote>>> {
+    let template = r#"name ++ "\t" ++ remote ++ "\n""#;
     let output = Command::new("jj")
-        .args(["bookmark", "list", "--tracked", "-T", &template])
+        .args(["bookmark", "list", "--tracked", "-T", template])
         .output()
         .context("Failed to run `jj bookmark list --tracked`")?;
 
@@ -191,11 +191,46 @@ pub fn load_tracked_bookmarks(remote: &Remote<str>) -> Result<BTreeSet<Bookmark>
     }
 
     let stdout = String::from_utf8(output.stdout).context("jj output not UTF-8")?;
-    Ok(stdout
-        .lines()
-        .filter(|l| !l.is_empty())
-        .map(|l| Bookmark(l.to_owned()))
-        .collect())
+    let mut map = BTreeMap::<Bookmark, BTreeSet<Remote>>::new();
+    for line in stdout.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        let Some((name, remote)) = line.split_once('\t') else {
+            continue;
+        };
+        if remote == "git" {
+            continue;
+        }
+        map.entry(Bookmark(name.to_owned()))
+            .or_default()
+            .insert(Remote(remote.to_owned()));
+    }
+    Ok(map)
+}
+
+/// Load a map of remote name → GitHub owner by parsing remote URLs.
+pub fn load_remote_owners() -> Result<BTreeMap<Remote, Owner>> {
+    let output = Command::new("jj")
+        .args(["git", "remote", "list"])
+        .output()
+        .context("Failed to run `jj git remote list`")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj git remote list failed: {stderr}");
+    }
+    let stdout = String::from_utf8(output.stdout)?;
+    let mut map = BTreeMap::new();
+    for line in stdout.lines() {
+        let mut parts = line.splitn(2, ' ');
+        let name = parts.next().unwrap_or("");
+        let url = parts.next().unwrap_or("");
+        if let Some(owner) = parse_github_owner(url) {
+            map.insert(Remote(name.to_owned()), owner);
+        }
+    }
+    Ok(map)
 }
 
 pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
@@ -325,30 +360,6 @@ pub fn push_remote() -> Result<Remote> {
         }
     }
     Ok(Remote("origin".to_owned()))
-}
-
-/// Get the owner (user/org) of a git remote by parsing its URL.
-/// Returns `None` if the remote URL can't be parsed.
-pub fn remote_owner(remote: &Remote<str>) -> Result<Option<Owner>> {
-    let output = Command::new("jj")
-        .args(["git", "remote", "list"])
-        .output()
-        .context("Failed to run `jj git remote list`")?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("jj git remote list failed: {stderr}");
-    }
-    let stdout = String::from_utf8(output.stdout)?;
-    for line in stdout.lines() {
-        // Format: "name url"
-        let mut parts = line.splitn(2, ' ');
-        let name = parts.next().unwrap_or("");
-        let url = parts.next().unwrap_or("");
-        if name == remote.as_str() {
-            return Ok(parse_github_owner(url));
-        }
-    }
-    Ok(None)
 }
 
 /// Parse the owner from a GitHub remote URL.

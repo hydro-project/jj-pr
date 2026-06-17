@@ -1,7 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use ref_cast::RefCast;
-
 use super::InputData;
 use crate::gh::{CheckStatus, GhPr, PrNum, PrStatus, ReviewDecision};
 use crate::jj::{JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
@@ -25,7 +23,7 @@ fn render_show_with_statuses(
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        Remote::ref_cast("origin"),
+        &BTreeMap::new(),
     )
     .unwrap();
     let mut buf = Vec::new();
@@ -41,7 +39,7 @@ fn render_log(input: &InputData, show_all: bool, reversed: bool) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        Remote::ref_cast("origin"),
+        &BTreeMap::new(),
     )
     .unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
@@ -66,7 +64,7 @@ fn plan_sync(input: &InputData) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        Remote::ref_cast("origin"),
+        &BTreeMap::new(),
     )
     .unwrap();
     match pr_dag::plan_sync(
@@ -92,7 +90,7 @@ fn plan_create(input: &InputData, bookmark: &str) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        Remote::ref_cast("origin"),
+        &BTreeMap::new(),
     )
     .unwrap();
     match pr_dag::plan_create(
@@ -230,7 +228,7 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
     }
 }
 
-fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>, tracked_bookmarks: Option<BTreeSet<Bookmark>>) -> InputData {
+fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>, tracked_bookmarks: Option<BTreeMap<Bookmark, BTreeSet<Remote>>>) -> InputData {
     InputData {
         jj_entries: entries,
         prs,
@@ -397,7 +395,7 @@ fn no_push_when_only_git_remote() {
         ],
         prs: vec![gh_pr(1, "feat", "main")],
         default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some(BTreeSet::new()),
+        tracked_bookmarks: Some(BTreeMap::new()),
         existing_merge_commits: None, // Not tracked on origin.
     };
     insta::assert_snapshot!("no_push_when_only_git_remote", plan_sync(&f));
@@ -418,7 +416,7 @@ fn needs_push_tracked_but_no_origin_in_revset() {
         ],
         prs: vec![gh_pr(1, "feat", "main")],
         default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some([Bookmark("feat".to_owned())].into()), // Tracked on origin.
+        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [Remote("origin".to_owned())].into())].into()), // Tracked on origin.
         existing_merge_commits: None,
     };
     insta::assert_snapshot!("needs_push_tracked_but_no_origin_in_revset", plan_sync(&f));
@@ -790,7 +788,7 @@ fn bookmark_name_collision_no_remote() {
         ],
         prs: vec![gh_pr(42, "fix-typo", "main")],
         default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some(BTreeSet::new()),
+        tracked_bookmarks: Some(BTreeMap::new()),
         existing_merge_commits: None, // No bookmarks tracked.
     };
     insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
