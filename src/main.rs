@@ -236,8 +236,6 @@ fn run() -> Result<()> {
         }
         Command::Create(args) => {
             let push_remote_config = jj::push_remote_config()?;
-            // Resolved separately from InputData — requires a `gh` API call (~600ms).
-            let upstream_owner = gh::upstream_repo_owner().ok();
             let plan = pr_dag::plan_create(
                 &state,
                 &prs,
@@ -245,7 +243,7 @@ fn run() -> Result<()> {
                 &input.default_branch,
                 input.tracked_bookmarks.as_ref(),
                 &input.remote_owners,
-                upstream_owner.as_deref(),
+                gh::upstream_repo_owner,
                 push_remote_config.as_deref(),
                 &args.bookmark,
                 args.title.as_deref(),

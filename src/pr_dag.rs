@@ -1521,7 +1521,7 @@ pub fn plan_create(
     default_branch: &Bookmark<str>,
     tracked_bookmarks: Option<&BTreeMap<Bookmark, BTreeSet<Remote>>>,
     remote_owners: &BTreeMap<Remote, Owner>,
-    upstream_owner: Option<&Owner<str>>,
+    upstream_owner_fn: impl FnOnce() -> Result<Owner>,
     push_remote_config: Option<&Remote<str>>,
     bookmark: &str,
     title: Option<&str>,
@@ -1667,16 +1667,27 @@ pub fn plan_create(
             (owner, remote.to_owned())
         }
     };
-    let upstream_owner = upstream_owner.map(|o| o.to_owned());
-    let Some(head_owner) = head_owner.or_else(|| upstream_owner.clone()) else {
-        anyhow::bail!(
-            "cannot determine the GitHub owner for bookmark '{}'. \
-             Ensure the remote URL is a GitHub URL and run `gh repo set-default`.",
-            bookmark,
-        );
+    let Some(head_owner) = head_owner else {
+        // head_owner not resolved from remote — need upstream_owner as fallback.
+        let upstream_owner = upstream_owner_fn().context(
+            "cannot determine upstream repo owner.\n\
+             Hint: run `gh repo set-default` to configure the default repository.",
+        )?;
+        return Ok(CreatePlan {
+            bookmark: Bookmark(bookmark.to_owned()),
+            base,
+            title,
+            body,
+            stamp_change_ids,
+            head_owner: upstream_owner.clone(),
+            upstream_owner: Some(upstream_owner),
+            push_remote,
+        });
     };
 
-    // Fork workflows can't stack PRs — GitHub requires base to exist on upstream.
+    // Fork detection: only call upstream_owner_fn if head_owner was resolved
+    // and we need to check if it differs from upstream.
+    let upstream_owner = upstream_owner_fn().ok();
     if upstream_owner.as_deref().is_some_and(|u| *u != *head_owner) {
         base = default_branch.to_owned();
     }
