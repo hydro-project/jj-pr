@@ -194,7 +194,7 @@ fn run() -> Result<()> {
             Ok(())
         }
         Command::Create(args) => {
-            let plan = pr_dag::plan_create(
+            let mut plan = pr_dag::plan_create(
                 &state,
                 &prs,
                 &input.jj_entries,
@@ -203,18 +203,23 @@ fn run() -> Result<()> {
                 args.title.as_deref(),
                 args.body.as_deref(),
             )?;
+            // Determine fork owner for cross-repo PRs: if the push remote's
+            // owner differs from the upstream repo owner, it's a fork.
+            if let Some(push_owner) = jj::remote_owner(&push_remote)? {
+                if let Ok(upstream) = gh::repo_owner() {
+                    if push_owner != upstream {
+                        plan.fork_owner = Some(push_owner);
+                        plan.upstream_owner = Some(upstream);
+                    }
+                }
+            }
             eprint!("{plan}");
             if args.dry_run {
                 eprintln!("\n{}", style::warn("Dry run: no changes applied."));
             } else if !ui::confirm("Create PR?", yes) {
                 anyhow::bail!("Aborted.");
             } else {
-                // Determine fork owner for cross-repo PRs: if the push remote's
-                // owner differs from the upstream repo owner, it's a fork.
-                let fork_owner = jj::remote_owner(&push_remote)?.filter(|push_owner| {
-                    gh::repo_owner().ok().is_some_and(|upstream| *push_owner != upstream)
-                });
-                pr_dag::execute_create(&plan, fork_owner.as_deref())?;
+                pr_dag::execute_create(&plan)?;
             }
             Ok(())
         }
