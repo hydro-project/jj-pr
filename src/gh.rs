@@ -38,8 +38,8 @@ fn gh_command() -> Result<Command> {
     Ok(cmd)
 }
 
-/// Get the owner of the upstream (canonical) repo as `gh` resolves it.
-pub fn repo_owner() -> Result<Owner> {
+/// Get the owner of the upstream (base) repo as `gh` resolves it.
+pub fn upstream_repo_owner() -> Result<Owner> {
     let output = gh_command()?
         .args(["repo", "view", "--json", "owner", "-q", ".owner.login"])
         .output()

@@ -27,6 +27,7 @@ pub(crate) struct InputData {
     pub(crate) default_branch: types::Bookmark,
     /// Bookmark names → tracked remotes (excluding `git`).
     /// `None` means all bookmarks are considered tracked (legacy behavior).
+    // TODO(mingwei): upgrade old fixtures to the map format so we can remove the legacy array deserialization.
     #[serde(default, deserialize_with = "deserialize_tracked_bookmarks")]
     pub(crate) tracked_bookmarks: Option<BTreeMap<types::Bookmark, BTreeSet<types::Remote>>>,
     /// Merge commit OIDs that exist in the local repo (for stale trunk detection).
@@ -43,6 +44,7 @@ impl InputData {
 
 /// Deserialize `tracked_bookmarks` from either the legacy array format (list of bookmark names,
 /// all assumed tracked on "origin") or the new map format (bookmark → set of remotes).
+// TODO(mingwei): remove legacy array handling once all fixtures are upgraded to map format.
 fn deserialize_tracked_bookmarks<'de, D>(
     deserializer: D,
 ) -> std::result::Result<Option<BTreeMap<types::Bookmark, BTreeSet<types::Remote>>>, D::Error>
@@ -127,7 +129,7 @@ fn run() -> Result<()> {
         return install_aliases(args.repo);
     }
 
-    // Step 1: Load jj entries (the only local I/O).
+    // Step 1: Load jj entries.
     let jj_entries = jj::load_entries()?;
 
     // Step 2: Extract PR numbers from trailers and local bookmark names.
@@ -238,7 +240,7 @@ fn run() -> Result<()> {
                 args.body.as_deref(),
             )?;
             // Resolve repo owners for display and API.
-            plan.upstream_owner = gh::repo_owner()?;
+            plan.upstream_owner = gh::upstream_repo_owner()?;
             // Determine head owner from the bookmark's tracked remote.
             let bookmark_ref = types::Bookmark::ref_cast(&*args.bookmark);
             let bookmark_remotes = input.tracked_bookmarks.as_ref().and_then(|tb| tb.get(bookmark_ref));
@@ -257,7 +259,13 @@ fn run() -> Result<()> {
                 _ => {
                     // Not yet tracked — use git.push config to determine where to push.
                     // `jj git push` will auto-track the bookmark on the target remote.
-                    let push_remote = jj::push_remote()?;
+                    let push_remote = jj::push_remote_config()?.with_context(|| {
+                        format!(
+                            "bookmark '{}' is not tracked on any remote and `git.push` is not configured.\n\
+                             Either run `jj bookmark track {}@<remote>` or set `jj config set --repo git.push \"<remote>\"`.",
+                            args.bookmark, args.bookmark,
+                        )
+                    })?;
                     let owner = remote_owners.get(&push_remote).cloned();
                     (owner, push_remote)
                 }

@@ -159,7 +159,7 @@ jj git remote add fork https://github.com/YOUR_USERNAME/REPO.git
 ```sh
 jj config set --repo git.push "fork"
 ```
-This tells `jj pr create` where to push new bookmarks. After the first push, jj automatically tracks the bookmark on the fork remote.
+This tells `jj pr create` where to push bookmarks that aren't yet tracked on any remote.
 
 3. Create bookmarks and PRs as normal:
 ```sh
@@ -180,6 +180,7 @@ create PR: "my feature" (upstream-org:main ← your-username:my-branch) [draft]
 ## Known Limitations
 
 - **No stacked PRs in fork workflows** — GitHub requires the base branch to exist on the upstream repo. Since intermediate branches only exist on your fork, all fork PRs target the default branch (e.g. `main`). Local DAG structure is preserved in jj but not reflected in GitHub's PR chain.
+- **Multi-parent PRs target the default branch** — GitHub PRs can only have a single base branch. If a PR has multiple parents in the DAG, it targets the default branch instead of stacking.
 - **One tracked remote per PR bookmark** — if a bookmark tracks multiple non-git remotes, `jj pr create` will error. Untrack one with `jj bookmark untrack`.
-- **Multiple PRs sharing the same bookmark** — if you have e.g. an open and a closed/merged PR both using the same branch name, only one will be tracked. See the `head_to_pr` TODO in `pr_dag.rs`.
+- **Multiple PRs sharing the same bookmark** — if you have e.g. an open and a closed/merged PR both using the same branch name, only one will be tracked.
 - Some other things, probably

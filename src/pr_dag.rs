@@ -11,6 +11,10 @@ use crate::graph_algorithms;
 use crate::jj::{self, JjLogEntry};
 use crate::types::{AsRevset, Bookmark, ChangeId, CommitId, Owner, Remote};
 
+/// The `@git` tracking remote (local-only, not a real push target).
+// SAFETY: `Remote` is `#[repr(transparent)]` over `str`, so this transmute is sound.
+const REMOTE_GIT: &Remote<str> = unsafe { std::mem::transmute::<&str, &Remote<str>>("git") };
+
 new_key_type! {
     pub struct NodeKey;
 }
@@ -199,8 +203,8 @@ pub fn build(
     // Compute pr_needs_push: compare local vs remote bookmark targets for PR bookmarks.
     {
         let mut local_targets: HashMap<&Bookmark<str>, &CommitId<str>> = HashMap::new();
-        // Remote targets keyed by (bookmark, remote).
-        let mut remote_targets: HashMap<(&Bookmark<str>, &Remote<str>), &CommitId<str>> = HashMap::new();
+        // Remote targets keyed by (bookmark, remote). BTreeMap enables range queries by bookmark.
+        let mut remote_targets: BTreeMap<(&Bookmark<str>, &Remote<str>), &CommitId<str>> = BTreeMap::new();
         for jj_entry in jj_entries.iter() {
             for bm in &jj_entry.local_bookmarks {
                 local_targets.insert(&bm.name, &jj_entry.commit.commit_id);
@@ -208,7 +212,7 @@ pub fn build(
             for bm in &jj_entry.remote_bookmarks {
                 if let Some(remote) = bm.remote.as_deref() {
                     // Exclude @git (local tracking ref, not a real push remote).
-                    if remote.as_str() == "git" {
+                    if remote == REMOTE_GIT {
                         continue;
                     }
                     remote_targets
@@ -244,13 +248,10 @@ pub fn build(
                 None => {
                     // Legacy mode (no tracked_bookmarks): compare against any non-git remote
                     // that has this bookmark. Needs push if no remote matches local.
-                    #[expect(
-                        clippy::disallowed_methods,
-                        reason = "iteration order irrelevant — checking any match"
-                    )]
                     let any_remote_matches_local = remote_targets
-                        .iter()
-                        .any(|(&(bm, _), cid)| *bm == *bookmark && Some(cid) == local);
+                        .range((bookmark, Remote::ref_cast(""))..)
+                        .take_while(|&((bm, _), _)| **bm == *bookmark)
+                        .any(|(_, cid)| Some(cid) == local);
                     if !any_remote_matches_local && local.is_some() {
                         repo_state.pr_needs_push.insert(gh_pr.number);
                     }
@@ -1634,6 +1635,7 @@ pub fn plan_create(
         title,
         body,
         stamp_change_ids,
+        // TODO(mingwei): resolve these inside plan_create instead of setting empty placeholders.
         head_owner: Owner(String::new()),
         upstream_owner: Owner(String::new()),
         push_remote: Remote(String::new()),

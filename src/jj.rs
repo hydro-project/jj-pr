@@ -223,9 +223,9 @@ pub fn load_remote_owners() -> Result<BTreeMap<Remote, Owner>> {
     let stdout = String::from_utf8(output.stdout)?;
     let mut map = BTreeMap::new();
     for line in stdout.lines() {
-        let mut parts = line.splitn(2, ' ');
-        let name = parts.next().unwrap_or("");
-        let url = parts.next().unwrap_or("");
+        let Some((name, url)) = line.split_once(' ') else {
+            continue;
+        };
         if let Some(owner) = parse_github_owner(url) {
             map.insert(Remote(name.to_owned()), owner);
         }
@@ -354,8 +354,9 @@ pub fn git_push_bookmark(bookmark: &Bookmark<str>, remote: &Remote<str>) -> Resu
     Ok(())
 }
 
-/// Get the configured push remote name. Reads `git.push` from jj config, defaults to "origin".
-pub fn push_remote() -> Result<Remote> {
+/// Get the configured push remote name from `git.push` jj config.
+/// Returns `None` if not configured.
+pub fn push_remote_config() -> Result<Option<Remote>> {
     let output = Command::new("jj")
         .args(["config", "get", "git.push"])
         .output()
@@ -363,10 +364,10 @@ pub fn push_remote() -> Result<Remote> {
     if output.status.success() {
         let remote = String::from_utf8(output.stdout)?.trim().trim_matches('"').to_owned();
         if !remote.is_empty() {
-            return Ok(Remote(remote));
+            return Ok(Some(Remote(remote)));
         }
     }
-    Ok(Remote("origin".to_owned()))
+    Ok(None)
 }
 
 /// Parse the owner from a GitHub remote URL.
