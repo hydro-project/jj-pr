@@ -837,7 +837,7 @@ fn create_fork_workflow() {
 
     // Base should be forced to "main" (not "feat-a") because it's a fork workflow.
     assert_eq!(plan.base.as_str(), "main");
-    assert_eq!(plan.head_owner.as_str(), "my-fork-org");
+    assert_eq!(plan.head_owner.as_deref().unwrap().as_str(), "my-fork-org");
     assert_eq!(plan.upstream_owner.as_deref().unwrap().as_str(), "upstream-org");
     assert_eq!(plan.push_remote.as_str(), "fork");
 }

@@ -1,8 +1,8 @@
 ---
 source: src/tests.rs
-assertion_line: 679
+assertion_line: 687
 expression: "plan_create(&f, \"feat\")"
 ---
 push feat
-create PR: "second commit" (test:main ← test:feat) [draft]
+create PR: "second commit" (test:main ← feat) [draft]
 stamp trailer on 2 commit(s)

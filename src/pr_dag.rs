@@ -1494,11 +1494,9 @@ pub struct CreatePlan {
     pub body: String,
     /// Change IDs of commits that will be stamped with the PR trailer.
     pub stamp_change_ids: Vec<ChangeId>,
-    /// Owner of the repo the head branch is pushed to.
-    pub head_owner: Owner,
-    /// Owner of the upstream repo the PR targets.
-    /// `None` when upstream owner is unknown (legacy fixtures without `upstream_owner`).
-    // TODO(mingwei): make non-optional once fixtures always include upstream_owner.
+    /// Owner of the repo the head branch is pushed to. `None` for same-repo PRs.
+    pub head_owner: Option<Owner>,
+    /// Owner of the upstream repo the PR targets. `None` if unresolvable.
     pub upstream_owner: Option<Owner>,
     /// Remote to push the bookmark to.
     pub push_remote: Remote,
@@ -1508,10 +1506,14 @@ impl fmt::Display for CreatePlan {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "push {}", self.bookmark)?;
         let upstream = self.upstream_owner.as_deref().map_or("?", |o| o.as_str());
+        let head = match &self.head_owner {
+            Some(owner) => format!("{}:{}", owner, self.bookmark),
+            None => self.bookmark.to_string(),
+        };
         writeln!(
             f,
-            "create PR: \"{}\" ({}:{} ← {}:{}) [draft]",
-            self.title, upstream, self.base, self.head_owner, self.bookmark,
+            "create PR: \"{}\" ({}:{} ← {}) [draft]",
+            self.title, upstream, self.base, head,
         )?;
         if !self.stamp_change_ids.is_empty() {
             writeln!(f, "stamp trailer on {} commit(s)", self.stamp_change_ids.len())?;
@@ -1675,30 +1677,21 @@ pub fn plan_create(
             (owner, remote.to_owned())
         }
     };
-    let Some(head_owner) = head_owner else {
-        // head_owner not resolved from remote — need upstream_owner as fallback.
-        let upstream_owner = upstream_owner_fn().context(
-            "cannot determine upstream repo owner.\n\
-             Hint: run `gh repo set-default` to configure the default repository.",
-        )?;
-        return Ok(CreatePlan {
-            bookmark: Bookmark(bookmark.to_owned()),
-            base,
-            title,
-            body,
-            stamp_change_ids,
-            head_owner: upstream_owner.clone(),
-            upstream_owner: Some(upstream_owner),
-            push_remote,
-        });
-    };
 
-    // Fork detection: only call upstream_owner_fn if head_owner was resolved
-    // and we need to check if it differs from upstream.
-    let upstream_owner = upstream_owner_fn().ok();
-    if upstream_owner.as_deref().is_some_and(|u| *u != *head_owner) {
-        base = default_branch.to_owned();
-    }
+    // Determine if this is a fork workflow by comparing head_owner against upstream.
+    let mut plan_head_owner = None;
+    let upstream_owner = if let Some(ho) = head_owner {
+        let upstream_owner = upstream_owner_fn().ok();
+        if upstream_owner.as_deref().is_some_and(|u| *u != *ho) {
+            // Fork workflow — force base to default_branch.
+            base = default_branch.to_owned();
+            plan_head_owner = Some(ho);
+        }
+        upstream_owner
+    } else {
+        // Can't resolve head owner from remote — same-repo workflow assumed.
+        upstream_owner_fn().ok()
+    };
 
     Ok(CreatePlan {
         bookmark: Bookmark(bookmark.to_owned()),
@@ -1706,7 +1699,7 @@ pub fn plan_create(
         title,
         body,
         stamp_change_ids,
-        head_owner,
+        head_owner: plan_head_owner,
         upstream_owner,
         push_remote,
     })
@@ -1718,13 +1711,16 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
     jj::git_push_bookmark(&plan.bookmark, &plan.push_remote)?;
 
     let upstream = plan.upstream_owner.as_deref().map_or("?", |o| o.as_str());
+    let head = match &plan.head_owner {
+        Some(owner) => format!("{}:{}", owner, crate::style::bookmark(&plan.bookmark)),
+        None => crate::style::bookmark(&plan.bookmark),
+    };
     eprintln!(
-        "Creating PR: {} ({}:{} ← {}:{}) [draft]",
+        "Creating PR: {} ({}:{} ← {}) [draft]",
         plan.title,
         upstream,
         crate::style::bookmark(&plan.base),
-        plan.head_owner,
-        crate::style::bookmark(&plan.bookmark),
+        head,
     );
     let (pr_number, pr_url) = gh::create_pr(
         &plan.bookmark,
@@ -1732,7 +1728,7 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
         &plan.title,
         &plan.body,
         true,
-        &plan.head_owner,
+        plan.head_owner.as_deref(),
     )?;
     eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
