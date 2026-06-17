@@ -1599,7 +1599,8 @@ pub fn plan_create(
 }
 
 /// Execute a planned PR creation. Performs side effects: push, create PR, stamp trailers.
-pub fn execute_create(plan: &CreatePlan) -> Result<()> {
+/// `fork_owner` should be `Some("OWNER")` when pushing to a fork remote (cross-repo PR).
+pub fn execute_create(plan: &CreatePlan, fork_owner: Option<&str>) -> Result<()> {
     eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
     jj::git_push_bookmark(&plan.bookmark)?;
 
@@ -1609,7 +1610,7 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
         crate::style::bookmark(&plan.bookmark),
         crate::style::bookmark(&plan.base),
     );
-    let (pr_number, pr_url) = gh::create_pr(&plan.bookmark, &plan.base, &plan.title, &plan.body, true)?;
+    let (pr_number, pr_url) = gh::create_pr(&plan.bookmark, &plan.base, &plan.title, &plan.body, true, fork_owner)?;
     eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
     if !plan.stamp_change_ids.is_empty() {

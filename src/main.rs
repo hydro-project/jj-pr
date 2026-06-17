@@ -108,8 +108,9 @@ fn run() -> Result<()> {
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
     let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, local_bookmarks)?;
 
-    // Step 4: Load tracked bookmarks (fast, ~25ms).
-    let tracked_bookmarks = jj::load_tracked_bookmarks("origin")?;
+    // Step 4: Load tracked bookmarks and push remote config (fast, ~25ms).
+    let push_remote = jj::push_remote()?;
+    let tracked_bookmarks = jj::load_tracked_bookmarks(&push_remote)?;
 
     // Step 5: Check which merged PRs have their merge commit in the local repo.
     let merge_oids: Vec<&types::CommitId<str>> = prs
@@ -138,7 +139,6 @@ fn run() -> Result<()> {
         return Ok(());
     }
 
-    let push_remote = jj::push_remote()?;
     let prs = input.prs_map();
     let state = pr_dag::build(
         &input.jj_entries,
@@ -209,7 +209,13 @@ fn run() -> Result<()> {
             } else if !ui::confirm("Create PR?", yes) {
                 anyhow::bail!("Aborted.");
             } else {
-                pr_dag::execute_create(&plan)?;
+                // Determine fork owner for cross-repo PRs.
+                let fork_owner = if push_remote != "origin" {
+                    jj::remote_owner(&push_remote)?
+                } else {
+                    None
+                };
+                pr_dag::execute_create(&plan, fork_owner.as_deref())?;
             }
             Ok(())
         }
