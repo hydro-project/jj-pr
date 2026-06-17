@@ -93,20 +93,21 @@ fn plan_create(input: &InputData, bookmark: &str) -> String {
         &BTreeMap::new(),
     )
     .unwrap();
+    let upstream = Owner("test".to_owned());
     match pr_dag::plan_create(
         &state,
         &prs,
         &input.jj_entries,
         &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+        &input.remote_owners,
+        Some(&upstream),
+        None,
         bookmark,
         None,
         None,
     ) {
-        Ok(mut plan) => {
-            plan.head_owner = Owner("test".to_owned());
-            plan.upstream_owner = Owner("test".to_owned());
-            plan.to_string()
-        }
+        Ok(plan) => plan.to_string(),
         Err(e) => format!("ERROR: {e}"),
     }
 }
@@ -239,6 +240,8 @@ fn fixture(
         default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks,
         existing_merge_commits: None, // Legacy: all merge commits considered present.
+        remote_owners: BTreeMap::new(),
+        upstream_owner: None,
     }
 }
 
@@ -400,7 +403,9 @@ fn no_push_when_only_git_remote() {
         prs: vec![gh_pr(1, "feat", "main")],
         default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: Some(BTreeMap::new()),
-        existing_merge_commits: None, // Not tracked on origin.
+        existing_merge_commits: None,   // Not tracked on origin.
+        remote_owners: BTreeMap::new(), // Legacy.
+        upstream_owner: None,           // Legacy.
     };
     insta::assert_snapshot!("no_push_when_only_git_remote", plan_sync(&f));
 }
@@ -422,6 +427,8 @@ fn needs_push_tracked_but_no_origin_in_revset() {
         default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [Remote("origin".to_owned())].into())].into()), /* Tracked on origin. */
         existing_merge_commits: None,
+        remote_owners: BTreeMap::new(), // Legacy.
+        upstream_owner: None,           // Legacy.
     };
     insta::assert_snapshot!("needs_push_tracked_but_no_origin_in_revset", plan_sync(&f));
 }
@@ -793,7 +800,9 @@ fn bookmark_name_collision_no_remote() {
         prs: vec![gh_pr(42, "fix-typo", "main")],
         default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: Some(BTreeMap::new()),
-        existing_merge_commits: None, // No bookmarks tracked.
+        existing_merge_commits: None,   // No bookmarks tracked.
+        remote_owners: BTreeMap::new(), // Legacy.
+        upstream_owner: None,           // Legacy.
     };
     insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
 }
@@ -814,6 +823,8 @@ fn stale_trunk_skips_abandon() {
         default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: None,
         existing_merge_commits: Some(std::collections::HashSet::new()), // Empty = nothing fetched.
+        remote_owners: BTreeMap::new(),                                 // Legacy.
+        upstream_owner: None,                                           // Legacy.
     };
     insta::assert_snapshot!("stale_trunk_skips_abandon", plan_sync(&f));
 }

@@ -1511,11 +1511,16 @@ impl fmt::Display for CreatePlan {
 }
 
 /// Plan the creation of a new PR for an existing bookmark. Pure — no side effects.
+#[expect(clippy::too_many_arguments, reason = "will refactor into a struct later")]
 pub fn plan_create(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     default_branch: &Bookmark<str>,
+    tracked_bookmarks: Option<&BTreeMap<Bookmark, BTreeSet<Remote>>>,
+    remote_owners: &BTreeMap<Remote, Owner>,
+    upstream_owner: Option<&Owner<str>>,
+    push_remote_config: Option<&Remote<str>>,
     bookmark: &str,
     title: Option<&str>,
     body: Option<&str>,
@@ -1555,7 +1560,7 @@ pub fn plan_create(
         );
     }
 
-    let base = find_base_branch(state, prs, jj_entries, bookmark_ref, default_branch);
+    let mut base = find_base_branch(state, prs, jj_entries, bookmark_ref, default_branch);
 
     let title = title.map(|s| s.to_owned()).unwrap_or_else(|| {
         tip_entry
@@ -1629,16 +1634,56 @@ pub fn plan_create(
         }
     }
 
+    // Resolve push remote and head owner.
+    let bookmark_remotes = tracked_bookmarks.and_then(|tb| tb.get(bookmark_ref));
+    let (head_owner, push_remote) = match (bookmark_remotes, tracked_bookmarks) {
+        (Some(remotes), _) if remotes.len() == 1 => {
+            let remote = remotes.iter().next().unwrap();
+            (remote_owners.get(remote).cloned(), remote.clone())
+        }
+        (Some(remotes), _) if remotes.len() > 1 => {
+            anyhow::bail!(
+                "bookmark '{}' tracks multiple remotes ({}). Untrack one with `jj bookmark untrack`.",
+                bookmark,
+                remotes.iter().map(|r| r.to_string()).collect::<Vec<_>>().join(", "),
+            );
+        }
+        (_, None) => {
+            // Legacy mode (no tracked_bookmarks data) — default to "origin".
+            (None, Remote("origin".to_owned()))
+        }
+        _ => {
+            // Not yet tracked — use git.push config to determine where to push.
+            let remote = push_remote_config.with_context(|| {
+                format!(
+                    "bookmark '{}' is not tracked on any remote and `git.push` is not configured.\n\
+                     Either run `jj bookmark track {}@<remote>` or set `jj config set --repo git.push \"<remote>\"`.",
+                    bookmark, bookmark,
+                )
+            })?;
+            let owner = remote_owners.get(remote).cloned();
+            (owner, remote.to_owned())
+        }
+    };
+    let upstream_owner = upstream_owner
+        .map(|o| o.to_owned())
+        .unwrap_or_else(|| Owner(String::new()));
+    let head_owner = head_owner.unwrap_or_else(|| upstream_owner.clone());
+
+    // Fork workflows can't stack PRs — GitHub requires base to exist on upstream.
+    if head_owner != upstream_owner {
+        base = default_branch.to_owned();
+    }
+
     Ok(CreatePlan {
         bookmark: Bookmark(bookmark.to_owned()),
         base,
         title,
         body,
         stamp_change_ids,
-        // TODO(mingwei): resolve these inside plan_create instead of setting empty placeholders.
-        head_owner: Owner(String::new()),
-        upstream_owner: Owner(String::new()),
-        push_remote: Remote(String::new()),
+        head_owner,
+        upstream_owner,
+        push_remote,
     })
 }
 

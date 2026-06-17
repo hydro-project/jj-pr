@@ -15,7 +15,6 @@ use std::sync::OnceLock;
 use anyhow::{Context, Result};
 use clap::Parser;
 use cli::{Cli, Command};
-use ref_cast::RefCast;
 use serde::{Deserialize, Serialize};
 
 /// Raw input data loaded from jj and gh, before any derived state is computed.
@@ -32,8 +31,17 @@ pub(crate) struct InputData {
     pub(crate) tracked_bookmarks: Option<BTreeMap<types::Bookmark, BTreeSet<types::Remote>>>,
     /// Merge commit OIDs that exist in the local repo (for stale trunk detection).
     /// `None` means all merge commits are considered present (legacy behavior).
+    // TODO(mingwei): upgrade fixtures to always include this field.
     #[serde(default)]
     pub(crate) existing_merge_commits: Option<std::collections::HashSet<types::CommitId>>,
+    /// Remote name → GitHub owner, for all configured git remotes.
+    // TODO(mingwei): upgrade fixtures to always include this field.
+    #[serde(default)]
+    pub(crate) remote_owners: BTreeMap<types::Remote, types::Owner>,
+    /// Owner of the upstream (base) repo as resolved by `gh`.
+    // TODO(mingwei): upgrade fixtures to always include this field.
+    #[serde(default)]
+    pub(crate) upstream_owner: Option<types::Owner>,
 }
 
 impl InputData {
@@ -144,9 +152,10 @@ fn run() -> Result<()> {
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
     let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, local_bookmarks)?;
 
-    // Step 4: Load tracked bookmarks and remote owners (fast, ~25ms each).
+    // Step 4: Load tracked bookmarks, remote owners, and upstream owner.
     let tracked_bookmarks = jj::load_tracked_bookmarks()?;
     let remote_owners = jj::load_remote_owners()?;
+    let upstream_owner = gh::upstream_repo_owner().ok();
 
     // Step 5: Check which merged PRs have their merge commit in the local repo.
     let merge_oids: Vec<&types::CommitId<str>> = prs
@@ -163,6 +172,8 @@ fn run() -> Result<()> {
         default_branch,
         tracked_bookmarks: Some(tracked_bookmarks),
         existing_merge_commits: Some(existing_merge_commits),
+        remote_owners,
+        upstream_owner,
     });
 
     // Handle util commands that need input data.
@@ -181,7 +192,7 @@ fn run() -> Result<()> {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        &remote_owners,
+        &input.remote_owners,
     )?;
 
     let result = match command {
@@ -230,52 +241,20 @@ fn run() -> Result<()> {
             Ok(())
         }
         Command::Create(args) => {
-            let mut plan = pr_dag::plan_create(
+            let push_remote_config = jj::push_remote_config()?;
+            let plan = pr_dag::plan_create(
                 &state,
                 &prs,
                 &input.jj_entries,
                 &input.default_branch,
+                input.tracked_bookmarks.as_ref(),
+                &input.remote_owners,
+                input.upstream_owner.as_deref(),
+                push_remote_config.as_deref(),
                 &args.bookmark,
                 args.title.as_deref(),
                 args.body.as_deref(),
             )?;
-            // Resolve repo owners for display and API.
-            plan.upstream_owner = gh::upstream_repo_owner()?;
-            // Determine head owner from the bookmark's tracked remote.
-            let bookmark_ref = types::Bookmark::ref_cast(&*args.bookmark);
-            let bookmark_remotes = input.tracked_bookmarks.as_ref().and_then(|tb| tb.get(bookmark_ref));
-            let (head_owner, push_remote) = match bookmark_remotes {
-                Some(remotes) if remotes.len() == 1 => {
-                    let remote = remotes.iter().next().unwrap();
-                    (remote_owners.get(remote).cloned(), remote.clone())
-                }
-                Some(remotes) if remotes.len() > 1 => {
-                    anyhow::bail!(
-                        "bookmark '{}' tracks multiple remotes ({}). Untrack one with `jj bookmark untrack`.",
-                        args.bookmark,
-                        remotes.iter().map(|r| r.to_string()).collect::<Vec<_>>().join(", "),
-                    );
-                }
-                _ => {
-                    // Not yet tracked — use git.push config to determine where to push.
-                    // `jj git push` will auto-track the bookmark on the target remote.
-                    let push_remote = jj::push_remote_config()?.with_context(|| {
-                        format!(
-                            "bookmark '{}' is not tracked on any remote and `git.push` is not configured.\n\
-                             Either run `jj bookmark track {}@<remote>` or set `jj config set --repo git.push \"<remote>\"`.",
-                            args.bookmark, args.bookmark,
-                        )
-                    })?;
-                    let owner = remote_owners.get(&push_remote).cloned();
-                    (owner, push_remote)
-                }
-            };
-            plan.head_owner = head_owner.unwrap_or_else(|| plan.upstream_owner.clone());
-            plan.push_remote = push_remote;
-            // Fork workflows can't stack PRs — GitHub requires base to exist on upstream.
-            if plan.head_owner != plan.upstream_owner {
-                plan.base = input.default_branch.clone();
-            }
             eprint!("{plan}");
             if args.dry_run {
                 eprintln!("\n{}", style::warn("Dry run: no changes applied."));
