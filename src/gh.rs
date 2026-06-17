@@ -384,11 +384,16 @@ pub fn create_pr(
     title: &str,
     body: &str,
     draft: bool,
+    fork_owner: Option<&str>,
 ) -> Result<(PrNum, String)> {
-    let head = head.as_str();
+    // For cross-repo (fork) PRs, GitHub requires "OWNER:branch" as the head ref.
+    let head_ref = match fork_owner {
+        Some(owner) => format!("{owner}:{}", head.as_str()),
+        None => head.as_str().to_owned(),
+    };
     let base = base.as_str();
     let mut args = vec![
-        "pr", "create", "--head", head, "--base", base, "--title", title, "--body", body,
+        "pr", "create", "--head", &head_ref, "--base", base, "--title", title, "--body", body,
     ];
     if draft {
         args.push("--draft");

@@ -327,6 +327,44 @@ pub fn push_remote() -> Result<String> {
     Ok("origin".to_owned())
 }
 
+/// Get the owner (user/org) of a git remote by parsing its URL.
+/// Returns `None` if the remote URL can't be parsed.
+pub fn remote_owner(remote: &str) -> Result<Option<String>> {
+    let output = Command::new("jj")
+        .args(["git", "remote", "list"])
+        .output()
+        .context("Failed to run `jj git remote list`")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj git remote list failed: {stderr}");
+    }
+    let stdout = String::from_utf8(output.stdout)?;
+    for line in stdout.lines() {
+        // Format: "name url"
+        let mut parts = line.splitn(2, ' ');
+        let name = parts.next().unwrap_or("");
+        let url = parts.next().unwrap_or("");
+        if name == remote {
+            return Ok(parse_github_owner(url));
+        }
+    }
+    Ok(None)
+}
+
+/// Parse the owner from a GitHub remote URL.
+/// Supports HTTPS (`https://github.com/OWNER/REPO`) and SSH (`git@github.com:OWNER/REPO`).
+fn parse_github_owner(url: &str) -> Option<String> {
+    if let Some(path) = url.strip_prefix("https://github.com/") {
+        // OWNER/REPO.git or OWNER/REPO
+        path.split('/').next().map(|s| s.to_owned())
+    } else if let Some(path) = url.strip_prefix("git@github.com:") {
+        // OWNER/REPO.git or OWNER/REPO
+        path.split('/').next().map(|s| s.to_owned())
+    } else {
+        None
+    }
+}
+
 /// Set a bookmark to point at a revision.
 #[expect(dead_code, reason = "used by track command (TODO)")]
 pub fn bookmark_set(name: &Bookmark<str>, revision: &Revset) -> Result<()> {
@@ -479,5 +517,30 @@ mod tests {
     fn set_pr_trailer_replace_with_trailing_blank_lines() {
         let result = set_pr_trailer("fix\n\nPR: #10\n\n", PrNum::new(20).unwrap());
         assert_eq!(result, "fix\n\nPR: #20\n\n");
+    }
+
+    #[test]
+    fn parse_github_owner_https() {
+        assert_eq!(
+            parse_github_owner("https://github.com/MingweiSamuel/cargo-smart-release.git"),
+            Some("MingweiSamuel".to_owned()),
+        );
+        assert_eq!(
+            parse_github_owner("https://github.com/hydro-project/jj-pr"),
+            Some("hydro-project".to_owned()),
+        );
+    }
+
+    #[test]
+    fn parse_github_owner_ssh() {
+        assert_eq!(
+            parse_github_owner("git@github.com:MingweiSamuel/cargo-smart-release.git"),
+            Some("MingweiSamuel".to_owned()),
+        );
+    }
+
+    #[test]
+    fn parse_github_owner_unknown() {
+        assert_eq!(parse_github_owner("https://gitlab.com/foo/bar"), None);
     }
 }
