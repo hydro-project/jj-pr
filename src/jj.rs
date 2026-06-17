@@ -333,16 +333,16 @@ pub fn describe_stdin(revision: &Revset, description: &str) -> Result<()> {
     Ok(())
 }
 
-/// Push a bookmark to the remote.
-pub fn git_push_bookmark(bookmark: &Bookmark<str>) -> Result<()> {
+/// Push a bookmark to a specific remote.
+pub fn git_push_bookmark(bookmark: &Bookmark<str>, remote: &Remote<str>) -> Result<()> {
     let output = Command::new("jj")
-        .args(["git", "push", "--bookmark", bookmark.as_str()])
+        .args(["git", "push", "--bookmark", bookmark.as_str(), "--remote", remote.as_str()])
         .output()
         .context("Failed to run `jj git push`")?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("jj git push --bookmark {bookmark} failed: {stderr}");
+        bail!("jj git push --bookmark {bookmark} --remote {remote} failed: {stderr}");
     }
     Ok(())
 }

@@ -1493,6 +1493,8 @@ pub struct CreatePlan {
     pub head_owner: Owner,
     /// Owner of the upstream repo the PR targets.
     pub upstream_owner: Owner,
+    /// Remote to push the bookmark to.
+    pub push_remote: Remote,
 }
 
 impl fmt::Display for CreatePlan {
@@ -1637,13 +1639,14 @@ pub fn plan_create(
         stamp_change_ids,
         head_owner: Owner(String::new()),
         upstream_owner: Owner(String::new()),
+        push_remote: Remote(String::new()),
     })
 }
 
 /// Execute a planned PR creation. Performs side effects: push, create PR, stamp trailers.
 pub fn execute_create(plan: &CreatePlan) -> Result<()> {
     eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
-    jj::git_push_bookmark(&plan.bookmark)?;
+    jj::git_push_bookmark(&plan.bookmark, &plan.push_remote)?;
 
     eprintln!(
         "Creating PR: {} ({}:{} ← {}:{}) [draft]",

@@ -245,10 +245,10 @@ fn run() -> Result<()> {
                 .tracked_bookmarks
                 .as_ref()
                 .and_then(|tb| tb.get(bookmark_ref));
-            let head_owner = match bookmark_remotes {
+            let (head_owner, push_remote) = match bookmark_remotes {
                 Some(remotes) if remotes.len() == 1 => {
                     let remote = remotes.iter().next().unwrap();
-                    remote_owners.get(remote).cloned()
+                    (remote_owners.get(remote).cloned(), remote.clone())
                 }
                 Some(remotes) if remotes.len() > 1 => {
                     anyhow::bail!(
@@ -260,10 +260,12 @@ fn run() -> Result<()> {
                 _ => {
                     // Untracked — fall back to push remote config.
                     let push_remote = jj::push_remote()?;
-                    remote_owners.get(&push_remote).cloned()
+                    let owner = remote_owners.get(&push_remote).cloned();
+                    (owner, push_remote)
                 }
             };
             plan.head_owner = head_owner.unwrap_or_else(|| plan.upstream_owner.clone());
+            plan.push_remote = push_remote;
             eprint!("{plan}");
             if args.dry_run {
                 eprintln!("\n{}", style::warn("Dry run: no changes applied."));
