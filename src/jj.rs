@@ -179,7 +179,7 @@ pub fn load_entries() -> Result<Vec<JjLogEntry>> {
 
 /// Load all tracked bookmarks mapped to their tracked remotes (excluding `git`).
 pub fn load_tracked_bookmarks() -> Result<BTreeMap<Bookmark, BTreeSet<Remote>>> {
-    let template = r#"name ++ "\t" ++ remote ++ "\n""#;
+    let template = r#"if(remote, name ++ "\t" ++ remote ++ "\n")"#;
     let output = Command::new("jj")
         .args(["bookmark", "list", "--tracked", "-T", template])
         .output()
@@ -228,7 +228,7 @@ pub fn load_remote_owners() -> Result<BTreeMap<Remote, Owner>> {
             continue;
         };
         if let Some(owner) = parse_github_owner(url.trim()) {
-            map.insert(Remote(name.to_owned()), owner);
+            map.insert(Remote(name.to_owned()), owner.to_owned());
         }
     }
     Ok(map)
@@ -373,16 +373,11 @@ pub fn push_remote_config() -> Result<Option<Remote>> {
 
 /// Parse the owner from a GitHub remote URL.
 /// Supports HTTPS (`https://github.com/OWNER/REPO`) and SSH (`git@github.com:OWNER/REPO`).
-fn parse_github_owner(url: &str) -> Option<Owner> {
-    if let Some(path) = url.strip_prefix("https://github.com/") {
-        // OWNER/REPO.git or OWNER/REPO
-        path.split('/').next().map(|s| Owner(s.to_owned()))
-    } else if let Some(path) = url.strip_prefix("git@github.com:") {
-        // OWNER/REPO.git or OWNER/REPO
-        path.split('/').next().map(|s| Owner(s.to_owned()))
-    } else {
-        None
-    }
+fn parse_github_owner(url: &str) -> Option<&Owner<str>> {
+    let path = url
+        .strip_prefix("https://github.com/")
+        .or_else(|| url.strip_prefix("git@github.com:"))?;
+    path.split('/').next().map(Owner::ref_cast)
 }
 
 /// Set a bookmark to point at a revision.
@@ -410,22 +405,6 @@ pub fn bookmark_delete(name: &Bookmark<str>) -> Result<()> {
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         bail!("jj bookmark delete {name} failed: {stderr}");
-    }
-    Ok(())
-}
-
-#[expect(dead_code, reason = "may be needed for future workflows")]
-/// Track a remote bookmark.
-pub fn bookmark_track(name: &Bookmark<str>, remote: &Remote<str>) -> Result<()> {
-    let refname = format!("{name}@{remote}");
-    let output = Command::new("jj")
-        .args(["bookmark", "track", &refname])
-        .output()
-        .context("Failed to run `jj bookmark track`")?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("jj bookmark track {refname} failed: {stderr}");
     }
     Ok(())
 }
@@ -543,11 +522,11 @@ mod tests {
     fn parse_github_owner_https() {
         assert_eq!(
             parse_github_owner("https://github.com/MingweiSamuel/cargo-smart-release.git"),
-            Some(Owner("MingweiSamuel".to_owned())),
+            Some(Owner::ref_cast("MingweiSamuel")),
         );
         assert_eq!(
             parse_github_owner("https://github.com/hydro-project/jj-pr"),
-            Some(Owner("hydro-project".to_owned())),
+            Some(Owner::ref_cast("hydro-project")),
         );
     }
 
@@ -555,7 +534,7 @@ mod tests {
     fn parse_github_owner_ssh() {
         assert_eq!(
             parse_github_owner("git@github.com:MingweiSamuel/cargo-smart-release.git"),
-            Some(Owner("MingweiSamuel".to_owned())),
+            Some(Owner::ref_cast("MingweiSamuel")),
         );
     }
 

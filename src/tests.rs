@@ -4,7 +4,7 @@ use super::InputData;
 use crate::gh::{CheckStatus, GhPr, PrNum, PrStatus, ReviewDecision};
 use crate::jj::{JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
-use crate::types::{Bookmark, ChangeId, CommitId, Owner, Remote};
+use crate::types::{Bookmark, ChangeId, CommitId, Owner, REMOTE_ORIGIN, Remote};
 
 fn render_show(input: &InputData, show_all: bool, reversed: bool) -> String {
     render_show_with_statuses(input, &BTreeMap::new(), show_all, reversed)
@@ -159,7 +159,7 @@ fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str]
 fn with_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e.remote_bookmarks.push(JjRemoteBookmark {
         name: Bookmark(name.to_owned()),
-        remote: Some(Remote("origin".to_owned())),
+        remote: Some(REMOTE_ORIGIN.to_owned()),
         target: vec![Some(e.commit.commit_id.clone())],
     });
     e
@@ -425,7 +425,7 @@ fn needs_push_tracked_but_no_origin_in_revset() {
         ],
         prs: vec![gh_pr(1, "feat", "main")],
         default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [Remote("origin".to_owned())].into())].into()), /* Tracked on origin. */
+        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [REMOTE_ORIGIN.to_owned()].into())].into()), /* Tracked on origin. */
         existing_merge_commits: None,
         remote_owners: BTreeMap::new(), // Legacy.
         upstream_owner: None,           // Legacy.

@@ -2,18 +2,13 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
 
 use anyhow::Result;
-use ref_cast::RefCast;
 use renderdag::{Ancestor, GraphRowRenderer, Renderer};
 use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 
 use crate::gh::{GhPr, PrNum};
 use crate::graph_algorithms;
 use crate::jj::{self, JjLogEntry};
-use crate::types::{AsRevset, Bookmark, ChangeId, CommitId, Owner, Remote};
-
-/// The `@git` tracking remote (local-only, not a real push target).
-// SAFETY: `Remote` is `#[repr(transparent)]` over `str`, so this transmute is sound.
-const REMOTE_GIT: &Remote<str> = unsafe { std::mem::transmute::<&str, &Remote<str>>("git") };
+use crate::types::{AsRevset, Bookmark, ChangeId, CommitId, Owner, REMOTE_GIT, REMOTE_ORIGIN, Remote};
 
 new_key_type! {
     pub struct NodeKey;
@@ -1490,7 +1485,9 @@ pub struct CreatePlan {
     /// Owner of the repo the head branch is pushed to.
     pub head_owner: Owner,
     /// Owner of the upstream repo the PR targets.
-    pub upstream_owner: Owner,
+    /// `None` when upstream owner is unknown (legacy fixtures without `upstream_owner`).
+    // TODO(mingwei): make non-optional once fixtures always include upstream_owner.
+    pub upstream_owner: Option<Owner>,
     /// Remote to push the bookmark to.
     pub push_remote: Remote,
 }
@@ -1498,10 +1495,11 @@ pub struct CreatePlan {
 impl fmt::Display for CreatePlan {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "push {}", self.bookmark)?;
+        let upstream = self.upstream_owner.as_deref().map_or("?", |o| o.as_str());
         writeln!(
             f,
             "create PR: \"{}\" ({}:{} ← {}:{}) [draft]",
-            self.title, self.upstream_owner, self.base, self.head_owner, self.bookmark,
+            self.title, upstream, self.base, self.head_owner, self.bookmark,
         )?;
         if !self.stamp_change_ids.is_empty() {
             writeln!(f, "stamp trailer on {} commit(s)", self.stamp_change_ids.len())?;
@@ -1650,7 +1648,7 @@ pub fn plan_create(
         }
         (_, None) => {
             // Legacy mode (no tracked_bookmarks data) — default to "origin".
-            (None, Remote("origin".to_owned()))
+            (None, REMOTE_ORIGIN.to_owned())
         }
         _ => {
             // Not yet tracked — use git.push config to determine where to push.
@@ -1665,13 +1663,17 @@ pub fn plan_create(
             (owner, remote.to_owned())
         }
     };
-    let upstream_owner = upstream_owner
-        .map(|o| o.to_owned())
-        .unwrap_or_else(|| Owner(String::new()));
-    let head_owner = head_owner.unwrap_or_else(|| upstream_owner.clone());
+    let upstream_owner = upstream_owner.map(|o| o.to_owned());
+    let Some(head_owner) = head_owner.or_else(|| upstream_owner.clone()) else {
+        anyhow::bail!(
+            "cannot determine the GitHub owner for bookmark '{}'. \
+             Ensure the remote URL is a GitHub URL, or set `upstream_owner` in the repo config.",
+            bookmark,
+        );
+    };
 
     // Fork workflows can't stack PRs — GitHub requires base to exist on upstream.
-    if head_owner != upstream_owner {
+    if upstream_owner.as_deref().is_some_and(|u| *u != *head_owner) {
         base = default_branch.to_owned();
     }
 
@@ -1692,10 +1694,11 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
     eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
     jj::git_push_bookmark(&plan.bookmark, &plan.push_remote)?;
 
+    let upstream = plan.upstream_owner.as_deref().map_or("?", |o| o.as_str());
     eprintln!(
         "Creating PR: {} ({}:{} ← {}:{}) [draft]",
         plan.title,
-        plan.upstream_owner,
+        upstream,
         crate::style::bookmark(&plan.base),
         plan.head_owner,
         crate::style::bookmark(&plan.bookmark),

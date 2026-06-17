@@ -12,7 +12,7 @@ anstream = "0.6"
 anstyle = "1"
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
-ref-cast = "1"
+ref-cast = "1.0.11"
 sapling-renderdag = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

@@ -71,7 +71,7 @@ where
             let mut map = BTreeMap::new();
             for item in arr {
                 let name: types::Bookmark = serde_json::from_value(item).map_err(D::Error::custom)?;
-                map.insert(name, [types::Remote("origin".to_owned())].into());
+                map.insert(name, [types::REMOTE_ORIGIN.to_owned()].into());
             }
             Ok(Some(map))
         }

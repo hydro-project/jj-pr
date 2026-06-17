@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::fmt::{self, Display, Write};
 use std::ops::Deref;
 
-use ref_cast::RefCast;
+use ref_cast::{RefCastCustom, ref_cast_custom};
 use serde::{Deserialize, Serialize};
 
 /// A jj revset expression. Wraps a `String` that can be passed directly to `-r`.
@@ -72,46 +72,50 @@ macro_rules! newtype_str {
             $( #[$meta:meta] )* $vis:vis $Name:ident;
         )*
     ) => {
-        $(
-            $( #[$meta] )*
-            #[derive(Clone, Debug, Deserialize, Serialize, Eq, Hash, Ord, PartialEq, PartialOrd, RefCast)]
-            #[repr(transparent)]
-            #[serde(transparent)]
-            $vis struct $Name<T: ?Sized = String>(pub T);
+          $(
+              $( #[$meta] )*
+              #[derive(Clone, Debug, Deserialize, Serialize, Eq, Hash, Ord, PartialEq, PartialOrd, RefCastCustom)]
+              #[repr(transparent)]
+              #[serde(transparent)]
+              $vis struct $Name<T: ?Sized = String>(pub T);
 
-            impl<T: ?Sized + Display> Display for $Name<T> {
-                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    self.0.fmt(f)
-                }
-            }
+              impl<T: ?Sized + Display> Display for $Name<T> {
+                  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                      self.0.fmt(f)
+                  }
+              }
 
-            impl<T: ?Sized + Deref> Deref for $Name<T> {
-                type Target = $Name<T::Target>;
-                fn deref(&self) -> &Self::Target {
-                    $Name::ref_cast(self.0.deref())
-                }
-            }
+              impl<T: ?Sized + Deref<Target = str>> Deref for $Name<T> {
+                  type Target = $Name<str>;
+                  fn deref(&self) -> &Self::Target {
+                      $Name::ref_cast(self.0.deref())
+                  }
+              }
 
-            impl Borrow<$Name<str>> for $Name {
-                fn borrow(&self) -> &$Name<str> {
-                    self
-                }
-            }
+              impl Borrow<$Name<str>> for $Name {
+                  fn borrow(&self) -> &$Name<str> {
+                      self
+                  }
+              }
 
-            impl ToOwned for $Name<str> {
-                type Owned = $Name<String>;
-                fn to_owned(&self) -> Self::Owned {
-                    $Name(self.0.to_owned())
-                }
-            }
+              impl ToOwned for $Name<str> {
+                  type Owned = $Name<String>;
+                  fn to_owned(&self) -> Self::Owned {
+                      $Name(self.0.to_owned())
+                  }
+              }
 
-            impl $Name<str> {
-                /// Returns the inner `&str`, for passing to external APIs that require it.
-                pub fn as_str(&self) -> &str {
-                    &self.0
-                }
-            }
-        )*
+              impl $Name<str> {
+                  /// Returns the inner `&str`, for passing to external APIs that require it.
+                  pub fn as_str(&self) -> &str {
+                      &self.0
+                  }
+
+                  /// Cast `&str` to `&Name<str>`.
+                  #[ref_cast_custom]
+                  pub const fn ref_cast(s: &str) -> &Self;
+              }
+          )*
     };
 }
 
@@ -131,3 +135,9 @@ newtype_str! {
     /// A GitHub owner (user or organization, e.g. "hydro-project").
     pub Owner;
 }
+
+/// The `@git` tracking remote (local-only, not a real push target).
+pub const REMOTE_GIT: &Remote<str> = Remote::ref_cast("git");
+
+/// The default remote name.
+pub const REMOTE_ORIGIN: &Remote<str> = Remote::ref_cast("origin");
