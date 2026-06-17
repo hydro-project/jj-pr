@@ -209,12 +209,11 @@ fn run() -> Result<()> {
             } else if !ui::confirm("Create PR?", yes) {
                 anyhow::bail!("Aborted.");
             } else {
-                // Determine fork owner for cross-repo PRs.
-                let fork_owner = if push_remote != "origin" {
-                    jj::remote_owner(&push_remote)?
-                } else {
-                    None
-                };
+                // Determine fork owner for cross-repo PRs: if the push remote's
+                // owner differs from the upstream repo owner, it's a fork.
+                let fork_owner = jj::remote_owner(&push_remote)?.filter(|push_owner| {
+                    gh::repo_owner().ok().is_some_and(|upstream| *push_owner != upstream)
+                });
                 pr_dag::execute_create(&plan, fork_owner.as_deref())?;
             }
             Ok(())
