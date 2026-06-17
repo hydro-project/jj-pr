@@ -1453,27 +1453,19 @@ pub struct CreatePlan {
     pub body: String,
     /// Change IDs of commits that will be stamped with the PR trailer.
     pub stamp_change_ids: Vec<ChangeId>,
-    /// Fork owner for cross-repo PRs (prefixed to head ref in display/API).
-    pub fork_owner: Option<String>,
-    /// Upstream repo owner (prefixed to base ref in display for fork PRs).
-    pub upstream_owner: Option<String>,
+    /// Owner of the repo the head branch is pushed to.
+    pub head_owner: String,
+    /// Owner of the upstream repo the PR targets.
+    pub upstream_owner: String,
 }
 
 impl fmt::Display for CreatePlan {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "push {}", self.bookmark)?;
-        let head = match &self.fork_owner {
-            Some(owner) => format!("{owner}:{}", self.bookmark),
-            None => self.bookmark.to_string(),
-        };
-        let base = match &self.upstream_owner {
-            Some(owner) => format!("{owner}:{}", self.base),
-            None => self.base.to_string(),
-        };
         writeln!(
             f,
-            "create PR: \"{}\" ({} ← {}) [draft]",
-            self.title, base, head,
+            "create PR: \"{}\" ({}:{} ← {}:{}) [draft]",
+            self.title, self.upstream_owner, self.base, self.head_owner, self.bookmark,
         )?;
         if !self.stamp_change_ids.is_empty() {
             writeln!(f, "stamp trailer on {} commit(s)", self.stamp_change_ids.len())?;
@@ -1607,8 +1599,8 @@ pub fn plan_create(
         title,
         body,
         stamp_change_ids,
-        fork_owner: None,
-        upstream_owner: None,
+        head_owner: String::new(),
+        upstream_owner: String::new(),
     })
 }
 
@@ -1617,21 +1609,22 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
     eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
     jj::git_push_bookmark(&plan.bookmark)?;
 
-    let head_display = match &plan.fork_owner {
-        Some(owner) => format!("{owner}:{}", crate::style::bookmark(&plan.bookmark)),
-        None => crate::style::bookmark(&plan.bookmark),
-    };
-    let base_display = match &plan.upstream_owner {
-        Some(owner) => format!("{owner}:{}", crate::style::bookmark(&plan.base)),
-        None => crate::style::bookmark(&plan.base),
-    };
     eprintln!(
-        "Creating PR: {} ({} ← {}) [draft]",
+        "Creating PR: {} ({}:{} ← {}:{}) [draft]",
         plan.title,
-        base_display,
-        head_display,
+        plan.upstream_owner,
+        crate::style::bookmark(&plan.base),
+        plan.head_owner,
+        crate::style::bookmark(&plan.bookmark),
     );
-    let (pr_number, pr_url) = gh::create_pr(&plan.bookmark, &plan.base, &plan.title, &plan.body, true, plan.fork_owner.as_deref())?;
+    let (pr_number, pr_url) = gh::create_pr(
+        &plan.bookmark,
+        &plan.base,
+        &plan.title,
+        &plan.body,
+        true,
+        &plan.head_owner,
+    )?;
     eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
     if !plan.stamp_change_ids.is_empty() {

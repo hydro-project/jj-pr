@@ -203,16 +203,9 @@ fn run() -> Result<()> {
                 args.title.as_deref(),
                 args.body.as_deref(),
             )?;
-            // Determine fork owner for cross-repo PRs: if the push remote's
-            // owner differs from the upstream repo owner, it's a fork.
-            if let Some(push_owner) = jj::remote_owner(&push_remote)? {
-                if let Ok(upstream) = gh::repo_owner() {
-                    if push_owner != upstream {
-                        plan.fork_owner = Some(push_owner);
-                        plan.upstream_owner = Some(upstream);
-                    }
-                }
-            }
+            // Always resolve repo owners for display and API.
+            plan.upstream_owner = gh::repo_owner()?;
+            plan.head_owner = jj::remote_owner(&push_remote)?.unwrap_or_else(|| plan.upstream_owner.clone());
             eprint!("{plan}");
             if args.dry_run {
                 eprintln!("\n{}", style::warn("Dry run: no changes applied."));
