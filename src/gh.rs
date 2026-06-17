@@ -38,6 +38,19 @@ fn gh_command() -> Result<Command> {
     Ok(cmd)
 }
 
+/// Get the owner of the upstream (canonical) repo as `gh` resolves it.
+pub fn repo_owner() -> Result<String> {
+    let output = gh_command()?
+        .args(["repo", "view", "--json", "owner", "-q", ".owner.login"])
+        .output()
+        .context("Failed to run `gh repo view`")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("gh repo view failed: {stderr}");
+    }
+    Ok(String::from_utf8(output.stdout)?.trim().to_owned())
+}
+
 /// Newtype for GitHub PR numbers.
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[serde(transparent)]
