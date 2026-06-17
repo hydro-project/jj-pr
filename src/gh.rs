@@ -8,7 +8,7 @@ use std::sync::OnceLock;
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Bookmark, CommitId};
+use crate::types::{Bookmark, CommitId, Owner};
 
 /// Resolve the git directory via `jj git root` (cached, fallible).
 fn git_dir() -> Result<&'static Path> {
@@ -39,7 +39,7 @@ fn gh_command() -> Result<Command> {
 }
 
 /// Get the owner of the upstream (canonical) repo as `gh` resolves it.
-pub fn repo_owner() -> Result<String> {
+pub fn repo_owner() -> Result<Owner> {
     let output = gh_command()?
         .args(["repo", "view", "--json", "owner", "-q", ".owner.login"])
         .output()
@@ -48,7 +48,7 @@ pub fn repo_owner() -> Result<String> {
         let stderr = String::from_utf8_lossy(&output.stderr);
         bail!("gh repo view failed: {stderr}");
     }
-    Ok(String::from_utf8(output.stdout)?.trim().to_owned())
+    Ok(Owner(String::from_utf8(output.stdout)?.trim().to_owned()))
 }
 
 /// Newtype for GitHub PR numbers.
@@ -110,7 +110,7 @@ pub struct GhPr {
     pub merge_commit_oid: Option<CommitId>,
     /// The owner (user/org) of the head repository (fork). None if same repo.
     #[serde(default)]
-    pub head_repo_owner: Option<String>,
+    pub head_repo_owner: Option<Owner>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -228,7 +228,7 @@ struct MergeCommit {
 
 #[derive(Deserialize)]
 struct HeadRepoOwner {
-    login: String,
+    login: Owner,
 }
 
 #[derive(Deserialize)]
@@ -397,10 +397,10 @@ pub fn create_pr(
     title: &str,
     body: &str,
     draft: bool,
-    head_owner: &str,
+    head_owner: &Owner<str>,
 ) -> Result<(PrNum, String)> {
     // GitHub requires "OWNER:branch" for the head ref.
-    let head_ref = format!("{head_owner}:{}", head.as_str());
+    let head_ref = format!("{}:{}", head_owner.as_str(), head.as_str());
     let base = base.as_str();
     let mut args = vec![
         "pr", "create", "--head", &head_ref, "--base", base, "--title", title, "--body", body,

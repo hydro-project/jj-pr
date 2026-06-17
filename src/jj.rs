@@ -5,7 +5,7 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
 use crate::gh::PrNum;
-use crate::types::{Bookmark, ChangeId, CommitId, Revset, revset_union};
+use crate::types::{Bookmark, ChangeId, CommitId, Owner, Remote, Revset, revset_union};
 
 /// Create a `jj log --no-graph` command with word-wrap disabled.
 /// This ensures structured output is not corrupted by user config.
@@ -35,7 +35,7 @@ pub struct JjBookmark {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjRemoteBookmark {
     pub name: Bookmark,
-    pub remote: Option<String>,
+    pub remote: Option<Remote>,
     pub target: Vec<Option<CommitId>>,
 }
 
@@ -178,8 +178,8 @@ pub fn load_entries() -> Result<Vec<JjLogEntry>> {
 }
 
 /// Load the set of bookmark names tracked on a given remote.
-pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<Bookmark>> {
-    let template = format!(r#"if(remote == "{remote}", name ++ "\n")"#);
+pub fn load_tracked_bookmarks(remote: &Remote<str>) -> Result<BTreeSet<Bookmark>> {
+    let template = format!(r#"if(remote == "{}", name ++ "\n")"#, remote.as_str());
     let output = Command::new("jj")
         .args(["bookmark", "list", "--tracked", "-T", &template])
         .output()
@@ -313,7 +313,7 @@ pub fn git_push_bookmark(bookmark: &Bookmark<str>) -> Result<()> {
 }
 
 /// Get the configured push remote name. Reads `git.push` from jj config, defaults to "origin".
-pub fn push_remote() -> Result<String> {
+pub fn push_remote() -> Result<Remote> {
     let output = Command::new("jj")
         .args(["config", "get", "git.push"])
         .output()
@@ -321,15 +321,15 @@ pub fn push_remote() -> Result<String> {
     if output.status.success() {
         let remote = String::from_utf8(output.stdout)?.trim().trim_matches('"').to_owned();
         if !remote.is_empty() {
-            return Ok(remote);
+            return Ok(Remote(remote));
         }
     }
-    Ok("origin".to_owned())
+    Ok(Remote("origin".to_owned()))
 }
 
 /// Get the owner (user/org) of a git remote by parsing its URL.
 /// Returns `None` if the remote URL can't be parsed.
-pub fn remote_owner(remote: &str) -> Result<Option<String>> {
+pub fn remote_owner(remote: &Remote<str>) -> Result<Option<Owner>> {
     let output = Command::new("jj")
         .args(["git", "remote", "list"])
         .output()
@@ -344,7 +344,7 @@ pub fn remote_owner(remote: &str) -> Result<Option<String>> {
         let mut parts = line.splitn(2, ' ');
         let name = parts.next().unwrap_or("");
         let url = parts.next().unwrap_or("");
-        if name == remote {
+        if name == remote.as_str() {
             return Ok(parse_github_owner(url));
         }
     }
@@ -353,13 +353,13 @@ pub fn remote_owner(remote: &str) -> Result<Option<String>> {
 
 /// Parse the owner from a GitHub remote URL.
 /// Supports HTTPS (`https://github.com/OWNER/REPO`) and SSH (`git@github.com:OWNER/REPO`).
-fn parse_github_owner(url: &str) -> Option<String> {
+fn parse_github_owner(url: &str) -> Option<Owner> {
     if let Some(path) = url.strip_prefix("https://github.com/") {
         // OWNER/REPO.git or OWNER/REPO
-        path.split('/').next().map(|s| s.to_owned())
+        path.split('/').next().map(|s| Owner(s.to_owned()))
     } else if let Some(path) = url.strip_prefix("git@github.com:") {
         // OWNER/REPO.git or OWNER/REPO
-        path.split('/').next().map(|s| s.to_owned())
+        path.split('/').next().map(|s| Owner(s.to_owned()))
     } else {
         None
     }
@@ -396,7 +396,7 @@ pub fn bookmark_delete(name: &Bookmark<str>) -> Result<()> {
 
 #[expect(dead_code, reason = "may be needed for future workflows")]
 /// Track a remote bookmark.
-pub fn bookmark_track(name: &Bookmark<str>, remote: &str) -> Result<()> {
+pub fn bookmark_track(name: &Bookmark<str>, remote: &Remote<str>) -> Result<()> {
     let refname = format!("{name}@{remote}");
     let output = Command::new("jj")
         .args(["bookmark", "track", &refname])
@@ -523,11 +523,11 @@ mod tests {
     fn parse_github_owner_https() {
         assert_eq!(
             parse_github_owner("https://github.com/MingweiSamuel/cargo-smart-release.git"),
-            Some("MingweiSamuel".to_owned()),
+            Some(Owner("MingweiSamuel".to_owned())),
         );
         assert_eq!(
             parse_github_owner("https://github.com/hydro-project/jj-pr"),
-            Some("hydro-project".to_owned()),
+            Some(Owner("hydro-project".to_owned())),
         );
     }
 
@@ -535,7 +535,7 @@ mod tests {
     fn parse_github_owner_ssh() {
         assert_eq!(
             parse_github_owner("git@github.com:MingweiSamuel/cargo-smart-release.git"),
-            Some("MingweiSamuel".to_owned()),
+            Some(Owner("MingweiSamuel".to_owned())),
         );
     }
 

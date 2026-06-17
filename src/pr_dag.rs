@@ -9,7 +9,7 @@ use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 use crate::gh::{GhPr, PrNum};
 use crate::graph_algorithms;
 use crate::jj::{self, JjLogEntry};
-use crate::types::{AsRevset, Bookmark, ChangeId, CommitId};
+use crate::types::{AsRevset, Bookmark, ChangeId, CommitId, Owner, Remote};
 
 new_key_type! {
     pub struct NodeKey;
@@ -96,7 +96,7 @@ pub fn build(
     prs: &BTreeMap<PrNum, &GhPr>,
     default_branch: &Bookmark<str>,
     tracked_bookmarks: Option<&BTreeSet<Bookmark>>,
-    push_remote: &str,
+    push_remote: &Remote<str>,
 ) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
@@ -1454,9 +1454,9 @@ pub struct CreatePlan {
     /// Change IDs of commits that will be stamped with the PR trailer.
     pub stamp_change_ids: Vec<ChangeId>,
     /// Owner of the repo the head branch is pushed to.
-    pub head_owner: String,
+    pub head_owner: Owner,
     /// Owner of the upstream repo the PR targets.
-    pub upstream_owner: String,
+    pub upstream_owner: Owner,
 }
 
 impl fmt::Display for CreatePlan {
@@ -1599,8 +1599,8 @@ pub fn plan_create(
         title,
         body,
         stamp_change_ids,
-        head_owner: String::new(),
-        upstream_owner: String::new(),
+        head_owner: Owner(String::new()),
+        upstream_owner: Owner(String::new()),
     })
 }
 

@@ -124,4 +124,10 @@ newtype_str! {
 
     /// A bookmark (branch) name.
     pub Bookmark;
+
+    /// A git remote name (e.g. "origin", "fork").
+    pub Remote;
+
+    /// A GitHub owner (user or organization, e.g. "hydro-project").
+    pub Owner;
 }

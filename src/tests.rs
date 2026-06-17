@@ -1,10 +1,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 
+use ref_cast::RefCast;
+
 use super::InputData;
 use crate::gh::{CheckStatus, GhPr, PrNum, PrStatus, ReviewDecision};
 use crate::jj::{JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
-use crate::types::{Bookmark, ChangeId, CommitId};
+use crate::types::{Bookmark, ChangeId, CommitId, Owner, Remote};
 
 fn render_show(input: &InputData, show_all: bool, reversed: bool) -> String {
     render_show_with_statuses(input, &BTreeMap::new(), show_all, reversed)
@@ -23,7 +25,7 @@ fn render_show_with_statuses(
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        "origin",
+        Remote::ref_cast("origin"),
     )
     .unwrap();
     let mut buf = Vec::new();
@@ -39,7 +41,7 @@ fn render_log(input: &InputData, show_all: bool, reversed: bool) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        "origin",
+        Remote::ref_cast("origin"),
     )
     .unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
@@ -64,7 +66,7 @@ fn plan_sync(input: &InputData) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        "origin",
+        Remote::ref_cast("origin"),
     )
     .unwrap();
     match pr_dag::plan_sync(
@@ -90,7 +92,7 @@ fn plan_create(input: &InputData, bookmark: &str) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        "origin",
+        Remote::ref_cast("origin"),
     )
     .unwrap();
     match pr_dag::plan_create(
@@ -103,8 +105,8 @@ fn plan_create(input: &InputData, bookmark: &str) -> String {
         None,
     ) {
         Ok(mut plan) => {
-            plan.head_owner = "test".to_owned();
-            plan.upstream_owner = "test".to_owned();
+            plan.head_owner = Owner("test".to_owned());
+            plan.upstream_owner = Owner("test".to_owned());
             plan.to_string()
         }
         Err(e) => format!("ERROR: {e}"),
@@ -158,7 +160,7 @@ fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str]
 fn with_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e.remote_bookmarks.push(JjRemoteBookmark {
         name: Bookmark(name.to_owned()),
-        remote: Some("origin".to_owned()),
+        remote: Some(Remote("origin".to_owned())),
         target: vec![Some(e.commit.commit_id.clone())],
     });
     e
@@ -177,7 +179,7 @@ fn with_working_copy(mut e: JjLogEntry) -> JjLogEntry {
 fn with_git_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e.remote_bookmarks.push(JjRemoteBookmark {
         name: Bookmark(name.to_owned()),
-        remote: Some("git".to_owned()),
+        remote: Some(Remote("git".to_owned())),
         target: vec![Some(e.commit.commit_id.clone())],
     });
     e
