@@ -336,7 +336,14 @@ pub fn describe_stdin(revision: &Revset, description: &str) -> Result<()> {
 /// Push a bookmark to a specific remote.
 pub fn git_push_bookmark(bookmark: &Bookmark<str>, remote: &Remote<str>) -> Result<()> {
     let output = Command::new("jj")
-        .args(["git", "push", "--bookmark", bookmark.as_str(), "--remote", remote.as_str()])
+        .args([
+            "git",
+            "push",
+            "--bookmark",
+            bookmark.as_str(),
+            "--remote",
+            remote.as_str(),
+        ])
         .output()
         .context("Failed to run `jj git push`")?;
 
@@ -345,6 +352,21 @@ pub fn git_push_bookmark(bookmark: &Bookmark<str>, remote: &Remote<str>) -> Resu
         bail!("jj git push --bookmark {bookmark} --remote {remote} failed: {stderr}");
     }
     Ok(())
+}
+
+/// Get the configured push remote name. Reads `git.push` from jj config, defaults to "origin".
+pub fn push_remote() -> Result<Remote> {
+    let output = Command::new("jj")
+        .args(["config", "get", "git.push"])
+        .output()
+        .context("Failed to run `jj config get`")?;
+    if output.status.success() {
+        let remote = String::from_utf8(output.stdout)?.trim().trim_matches('"').to_owned();
+        if !remote.is_empty() {
+            return Ok(Remote(remote));
+        }
+    }
+    Ok(Remote("origin".to_owned()))
 }
 
 /// Parse the owner from a GitHub remote URL.

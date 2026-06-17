@@ -241,10 +241,7 @@ fn run() -> Result<()> {
             plan.upstream_owner = gh::repo_owner()?;
             // Determine head owner from the bookmark's tracked remote.
             let bookmark_ref = types::Bookmark::ref_cast(&*args.bookmark);
-            let bookmark_remotes = input
-                .tracked_bookmarks
-                .as_ref()
-                .and_then(|tb| tb.get(bookmark_ref));
+            let bookmark_remotes = input.tracked_bookmarks.as_ref().and_then(|tb| tb.get(bookmark_ref));
             let (head_owner, push_remote) = match bookmark_remotes {
                 Some(remotes) if remotes.len() == 1 => {
                     let remote = remotes.iter().next().unwrap();
@@ -258,10 +255,11 @@ fn run() -> Result<()> {
                     );
                 }
                 _ => {
-                    anyhow::bail!(
-                        "bookmark '{}' is not tracked on any remote. Run `jj bookmark track {}@<remote>` first.",
-                        args.bookmark, args.bookmark,
-                    );
+                    // Not yet tracked — use git.push config to determine where to push.
+                    // `jj git push` will auto-track the bookmark on the target remote.
+                    let push_remote = jj::push_remote()?;
+                    let owner = remote_owners.get(&push_remote).cloned();
+                    (owner, push_remote)
                 }
             };
             plan.head_owner = head_owner.unwrap_or_else(|| plan.upstream_owner.clone());

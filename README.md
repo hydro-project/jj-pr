@@ -159,21 +159,17 @@ jj git remote add fork https://github.com/YOUR_USERNAME/REPO.git
 ```sh
 jj config set --repo git.push "fork"
 ```
-This ensures `jj git push` targets your fork and automatically tracks bookmarks there.
+This tells `jj pr create` where to push new bookmarks. After the first push, jj automatically tracks the bookmark on the fork remote.
 
-3. Push your bookmark (this also tracks it on the fork remote):
+3. Create bookmarks and PRs as normal:
 ```sh
-jj git push --bookmark my-branch
-```
-
-4. Create the PR:
-```sh
+jj bookmark create my-branch
 jj pr create my-branch
 ```
 
 `jj pr create` will automatically:
 - Detect the fork by comparing the remote's GitHub owner against the upstream owner
-- Push to the correct remote (the one the bookmark is tracked on)
+- Push to the correct remote
 - Pass `YOUR_USERNAME:branch` as the head ref so GitHub creates a cross-repo PR
 
 The display shows both owners:

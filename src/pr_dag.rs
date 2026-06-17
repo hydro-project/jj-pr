@@ -226,18 +226,12 @@ pub fn build(
             }
             // Find the remote for this PR by matching head_repo_owner against remote_owners.
             let pr_remote = gh_pr.head_repo_owner.as_deref().and_then(|pr_owner| {
-                remote_owners.iter().find_map(|(remote, owner)| {
-                    (**owner == *pr_owner).then_some(&**remote)
-                })
+                remote_owners
+                    .iter()
+                    .find_map(|(remote, owner)| (**owner == *pr_owner).then_some(&**remote))
             });
             // Fall back to the bookmark's tracked remote.
-            let pr_remote = pr_remote.or_else(|| {
-                tracked_bookmarks?
-                    .get(bookmark)?
-                    .iter()
-                    .next()
-                    .map(|r| &**r)
-            });
+            let pr_remote = pr_remote.or_else(|| tracked_bookmarks?.get(bookmark)?.iter().next().map(|r| &**r));
 
             let local = local_targets.get(bookmark);
             match pr_remote {
@@ -250,10 +244,13 @@ pub fn build(
                 None => {
                     // Legacy mode (no tracked_bookmarks): compare against any non-git remote
                     // that has this bookmark. Needs push if no remote matches local.
-                    #[expect(clippy::disallowed_methods, reason = "iteration order irrelevant — checking any match")]
-                    let any_remote_matches_local = remote_targets.iter().any(|(&(bm, _), cid)| {
-                        *bm == *bookmark && Some(cid) == local
-                    });
+                    #[expect(
+                        clippy::disallowed_methods,
+                        reason = "iteration order irrelevant — checking any match"
+                    )]
+                    let any_remote_matches_local = remote_targets
+                        .iter()
+                        .any(|(&(bm, _), cid)| *bm == *bookmark && Some(cid) == local);
                     if !any_remote_matches_local && local.is_some() {
                         repo_state.pr_needs_push.insert(gh_pr.number);
                     }

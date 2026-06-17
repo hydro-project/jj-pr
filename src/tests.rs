@@ -228,7 +228,11 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
     }
 }
 
-fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>, tracked_bookmarks: Option<BTreeMap<Bookmark, BTreeSet<Remote>>>) -> InputData {
+fn fixture(
+    entries: Vec<JjLogEntry>,
+    prs: Vec<GhPr>,
+    tracked_bookmarks: Option<BTreeMap<Bookmark, BTreeSet<Remote>>>,
+) -> InputData {
     InputData {
         jj_entries: entries,
         prs,
@@ -416,7 +420,7 @@ fn needs_push_tracked_but_no_origin_in_revset() {
         ],
         prs: vec![gh_pr(1, "feat", "main")],
         default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [Remote("origin".to_owned())].into())].into()), // Tracked on origin.
+        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [Remote("origin".to_owned())].into())].into()), /* Tracked on origin. */
         existing_merge_commits: None,
     };
     insta::assert_snapshot!("needs_push_tracked_but_no_origin_in_revset", plan_sync(&f));
