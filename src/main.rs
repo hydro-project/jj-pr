@@ -266,6 +266,10 @@ fn run() -> Result<()> {
             };
             plan.head_owner = head_owner.unwrap_or_else(|| plan.upstream_owner.clone());
             plan.push_remote = push_remote;
+            // Fork workflows can't stack PRs — GitHub requires base to exist on upstream.
+            if plan.head_owner != plan.upstream_owner {
+                plan.base = input.default_branch.clone();
+            }
             eprint!("{plan}");
             if args.dry_run {
                 eprintln!("\n{}", style::warn("Dry run: no changes applied."));
