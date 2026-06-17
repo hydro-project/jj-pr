@@ -150,25 +150,35 @@ See [DESIGN.md](DESIGN.md) for the full design rationale.
 
 If you push to a personal fork instead of the upstream repo:
 
-1. Add your fork as a named remote and track your bookmarks on it:
+1. Add your fork as a named remote:
 ```sh
 jj git remote add fork https://github.com/YOUR_USERNAME/REPO.git
-jj bookmark track my-branch@fork
 ```
 
-2. That's it — `jj pr create` will automatically:
-   - Detect the fork by comparing the remote's GitHub owner against the upstream owner
-   - Push to the correct remote (the one the bookmark is tracked on)
-   - Pass `YOUR_USERNAME:branch` as the head ref so GitHub creates a cross-repo PR
+2. Configure jj to push to your fork by default:
+```sh
+jj config set --repo git.push "fork"
+```
+This ensures `jj git push` targets your fork and automatically tracks bookmarks there.
+
+3. Push your bookmark (this also tracks it on the fork remote):
+```sh
+jj git push --bookmark my-branch
+```
+
+4. Create the PR:
+```sh
+jj pr create my-branch
+```
+
+`jj pr create` will automatically:
+- Detect the fork by comparing the remote's GitHub owner against the upstream owner
+- Push to the correct remote (the one the bookmark is tracked on)
+- Pass `YOUR_USERNAME:branch` as the head ref so GitHub creates a cross-repo PR
 
 The display shows both owners:
 ```
 create PR: "my feature" (upstream-org:main ← your-username:my-branch) [draft]
-```
-
-Optionally, set `git.push` as a fallback for bookmarks that aren't yet tracked:
-```sh
-jj config set --repo git.push "fork"
 ```
 
 ## Known Limitations

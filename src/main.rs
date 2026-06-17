@@ -258,10 +258,10 @@ fn run() -> Result<()> {
                     );
                 }
                 _ => {
-                    // Untracked — fall back to push remote config.
-                    let push_remote = jj::push_remote()?;
-                    let owner = remote_owners.get(&push_remote).cloned();
-                    (owner, push_remote)
+                    anyhow::bail!(
+                        "bookmark '{}' is not tracked on any remote. Run `jj bookmark track {}@<remote>` first.",
+                        args.bookmark, args.bookmark,
+                    );
                 }
             };
             plan.head_owner = head_owner.unwrap_or_else(|| plan.upstream_owner.clone());

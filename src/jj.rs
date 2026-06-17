@@ -347,21 +347,6 @@ pub fn git_push_bookmark(bookmark: &Bookmark<str>, remote: &Remote<str>) -> Resu
     Ok(())
 }
 
-/// Get the configured push remote name. Reads `git.push` from jj config, defaults to "origin".
-pub fn push_remote() -> Result<Remote> {
-    let output = Command::new("jj")
-        .args(["config", "get", "git.push"])
-        .output()
-        .context("Failed to run `jj config get`")?;
-    if output.status.success() {
-        let remote = String::from_utf8(output.stdout)?.trim().trim_matches('"').to_owned();
-        if !remote.is_empty() {
-            return Ok(Remote(remote));
-        }
-    }
-    Ok(Remote("origin".to_owned()))
-}
-
 /// Parse the owner from a GitHub remote URL.
 /// Supports HTTPS (`https://github.com/OWNER/REPO`) and SSH (`git@github.com:OWNER/REPO`).
 fn parse_github_owner(url: &str) -> Option<Owner> {
