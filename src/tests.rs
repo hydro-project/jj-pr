@@ -102,7 +102,11 @@ fn plan_create(input: &InputData, bookmark: &str) -> String {
         None,
         None,
     ) {
-        Ok(plan) => plan.to_string(),
+        Ok(mut plan) => {
+            plan.head_owner = "test".to_owned();
+            plan.upstream_owner = "test".to_owned();
+            plan.to_string()
+        }
         Err(e) => format!("ERROR: {e}"),
     }
 }
