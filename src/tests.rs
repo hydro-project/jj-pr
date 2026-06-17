@@ -786,6 +786,63 @@ fn create_conflicted_bookmark_rejected() {
 }
 
 #[test]
+fn create_fork_workflow() {
+    // Fork workflow: bookmark tracked on "fork" remote owned by "my-fork-org".
+    // Upstream is "upstream-org". Base should be forced to default_branch.
+    use crate::types::Remote;
+
+    let f = InputData {
+        jj_entries: vec![
+            entry("c2", "ch2", &["c1"], "child commit\n", &["feat-b"], false),
+            entry("c1", "ch1", &["trunk"], "parent\n\nPR: #1\n", &["feat-a"], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![gh_pr(1, "feat-a", "main")],
+        default_branch: Bookmark("main".to_owned()),
+        tracked_bookmarks: Some(
+            [
+                (Bookmark("feat-a".to_owned()), [Remote("fork".to_owned())].into()),
+                (Bookmark("feat-b".to_owned()), [Remote("fork".to_owned())].into()),
+            ]
+            .into(),
+        ),
+        existing_merge_commits: None,
+        remote_owners: [(Remote("fork".to_owned()), Owner("my-fork-org".to_owned()))].into(),
+    };
+
+    let prs = f.prs_map();
+    let state = pr_dag::build(
+        &f.jj_entries,
+        &prs,
+        &f.default_branch,
+        f.tracked_bookmarks.as_ref(),
+        &f.remote_owners,
+    )
+    .unwrap();
+    let upstream = Owner("upstream-org".to_owned());
+    let plan = pr_dag::plan_create(
+        &state,
+        &prs,
+        &f.jj_entries,
+        &f.default_branch,
+        f.tracked_bookmarks.as_ref(),
+        &f.remote_owners,
+        Some(&upstream),
+        None,
+        "feat-b",
+        None,
+        None,
+    )
+    .unwrap();
+
+    // Base should be forced to "main" (not "feat-a") because it's a fork workflow.
+    assert_eq!(plan.base.as_str(), "main");
+    assert_eq!(plan.head_owner.as_str(), "my-fork-org");
+    assert_eq!(plan.upstream_owner.as_deref().unwrap().as_str(), "upstream-org");
+    assert_eq!(plan.push_remote.as_str(), "fork");
+}
+
+#[test]
 fn bookmark_name_collision_no_remote() {
     // User has a local bookmark "fix-typo" that coincidentally matches someone else's PR.
     // No remote tracking, no trailer. Should NOT plan a push (not our PR).

@@ -223,14 +223,18 @@ pub fn build(
             if !is_tracked {
                 continue;
             }
-            // Find the remote for this PR by matching head_repo_owner against remote_owners.
-            let pr_remote = gh_pr.head_repo_owner.as_deref().and_then(|pr_owner| {
+            // Prefer the bookmark's tracked remote directly.
+            let pr_remote = tracked_bookmarks
+                .and_then(|tb| tb.get(bookmark))
+                .and_then(|remotes| remotes.iter().next())
+                .map(|r| &**r);
+            // Fall back to matching head_repo_owner against remote_owners.
+            let pr_remote = pr_remote.or_else(|| {
+                let pr_owner = gh_pr.head_repo_owner.as_deref()?;
                 remote_owners
                     .iter()
                     .find_map(|(remote, owner)| (**owner == *pr_owner).then_some(&**remote))
             });
-            // Fall back to the bookmark's tracked remote.
-            let pr_remote = pr_remote.or_else(|| tracked_bookmarks?.get(bookmark)?.iter().next().map(|r| &**r));
 
             let local = local_targets.get(bookmark);
             match pr_remote {
@@ -1667,7 +1671,7 @@ pub fn plan_create(
     let Some(head_owner) = head_owner.or_else(|| upstream_owner.clone()) else {
         anyhow::bail!(
             "cannot determine the GitHub owner for bookmark '{}'. \
-             Ensure the remote URL is a GitHub URL, or set `upstream_owner` in the repo config.",
+             Ensure the remote URL is a GitHub URL and run `gh repo set-default`.",
             bookmark,
         );
     };
