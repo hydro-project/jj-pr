@@ -198,6 +198,7 @@ pub fn load_tracked_bookmarks() -> Result<BTreeMap<Bookmark, BTreeSet<Remote>>> 
             continue;
         }
         let Some((name, remote)) = line.split_once('\t') else {
+            tracing::warn!("unexpected line in `jj bookmark list --tracked` output: {line:?}");
             continue;
         };
         if remote == "git" {
@@ -226,7 +227,7 @@ pub fn load_remote_owners() -> Result<BTreeMap<Remote, Owner>> {
         let Some((name, url)) = line.split_once(' ') else {
             continue;
         };
-        if let Some(owner) = parse_github_owner(url) {
+        if let Some(owner) = parse_github_owner(url.trim()) {
             map.insert(Remote(name.to_owned()), owner);
         }
     }
