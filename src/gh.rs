@@ -38,17 +38,29 @@ fn gh_command() -> Result<Command> {
     Ok(cmd)
 }
 
-/// Get the owner of the upstream (base) repo as `gh` resolves it.
+/// Get the owner of the upstream (base) repo. For forks, returns the parent repo's owner.
+/// For non-fork repos, returns the repo's own owner.
 pub fn upstream_repo_owner() -> Result<Owner> {
     let output = gh_command()?
-        .args(["repo", "view", "--json", "owner", "-q", ".owner.login"])
+        .args([
+            "repo",
+            "view",
+            "--json",
+            "owner,parent",
+            "-q",
+            ".parent.owner.login // .owner.login",
+        ])
         .output()
         .context("Failed to run `gh repo view`")?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         bail!("gh repo view failed: {stderr}");
     }
-    Ok(Owner(String::from_utf8(output.stdout)?.trim().to_owned()))
+    let owner = String::from_utf8(output.stdout)?.trim().to_owned();
+    if owner.is_empty() {
+        bail!("gh repo view returned empty owner. Run `gh repo set-default` to configure.");
+    }
+    Ok(Owner(owner))
 }
 
 /// Newtype for GitHub PR numbers.

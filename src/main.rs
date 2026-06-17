@@ -38,10 +38,6 @@ pub(crate) struct InputData {
     // TODO(mingwei): upgrade fixtures to always include this field.
     #[serde(default)]
     pub(crate) remote_owners: BTreeMap<types::Remote, types::Owner>,
-    /// Owner of the upstream (base) repo as resolved by `gh`.
-    // TODO(mingwei): upgrade fixtures to always include this field.
-    #[serde(default)]
-    pub(crate) upstream_owner: Option<types::Owner>,
 }
 
 impl InputData {
@@ -152,10 +148,9 @@ fn run() -> Result<()> {
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
     let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, local_bookmarks)?;
 
-    // Step 4: Load tracked bookmarks, remote owners, and upstream owner.
+    // Step 4: Load tracked bookmarks and remote owners.
     let tracked_bookmarks = jj::load_tracked_bookmarks()?;
     let remote_owners = jj::load_remote_owners()?;
-    let upstream_owner = gh::upstream_repo_owner().ok();
 
     // Step 5: Check which merged PRs have their merge commit in the local repo.
     let merge_oids: Vec<&types::CommitId<str>> = prs
@@ -173,7 +168,6 @@ fn run() -> Result<()> {
         tracked_bookmarks: Some(tracked_bookmarks),
         existing_merge_commits: Some(existing_merge_commits),
         remote_owners,
-        upstream_owner,
     });
 
     // Handle util commands that need input data.
@@ -242,6 +236,8 @@ fn run() -> Result<()> {
         }
         Command::Create(args) => {
             let push_remote_config = jj::push_remote_config()?;
+            // Resolved separately from InputData — requires a `gh` API call (~600ms).
+            let upstream_owner = gh::upstream_repo_owner().ok();
             let plan = pr_dag::plan_create(
                 &state,
                 &prs,
@@ -249,7 +245,7 @@ fn run() -> Result<()> {
                 &input.default_branch,
                 input.tracked_bookmarks.as_ref(),
                 &input.remote_owners,
-                input.upstream_owner.as_deref(),
+                upstream_owner.as_deref(),
                 push_remote_config.as_deref(),
                 &args.bookmark,
                 args.title.as_deref(),

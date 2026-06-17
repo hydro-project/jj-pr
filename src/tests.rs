@@ -241,7 +241,6 @@ fn fixture(
         tracked_bookmarks,
         existing_merge_commits: None, // Legacy: all merge commits considered present.
         remote_owners: BTreeMap::new(),
-        upstream_owner: None,
     }
 }
 
@@ -405,7 +404,6 @@ fn no_push_when_only_git_remote() {
         tracked_bookmarks: Some(BTreeMap::new()),
         existing_merge_commits: None,   // Not tracked on origin.
         remote_owners: BTreeMap::new(), // Legacy.
-        upstream_owner: None,           // Legacy.
     };
     insta::assert_snapshot!("no_push_when_only_git_remote", plan_sync(&f));
 }
@@ -428,7 +426,6 @@ fn needs_push_tracked_but_no_origin_in_revset() {
         tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [REMOTE_ORIGIN.to_owned()].into())].into()), /* Tracked on origin. */
         existing_merge_commits: None,
         remote_owners: BTreeMap::new(), // Legacy.
-        upstream_owner: None,           // Legacy.
     };
     insta::assert_snapshot!("needs_push_tracked_but_no_origin_in_revset", plan_sync(&f));
 }
@@ -802,7 +799,6 @@ fn bookmark_name_collision_no_remote() {
         tracked_bookmarks: Some(BTreeMap::new()),
         existing_merge_commits: None,   // No bookmarks tracked.
         remote_owners: BTreeMap::new(), // Legacy.
-        upstream_owner: None,           // Legacy.
     };
     insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
 }
@@ -824,7 +820,6 @@ fn stale_trunk_skips_abandon() {
         tracked_bookmarks: None,
         existing_merge_commits: Some(std::collections::HashSet::new()), // Empty = nothing fetched.
         remote_owners: BTreeMap::new(),                                 // Legacy.
-        upstream_owner: None,                                           // Legacy.
     };
     insta::assert_snapshot!("stale_trunk_skips_abandon", plan_sync(&f));
 }
