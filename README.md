@@ -134,7 +134,7 @@ jj pr create my-feature-b        # then create a draft PR for it
 The base branch is auto-detected by walking the parent graph.
 ```sh
 Pushing my-feature-b
-Creating PR: feat: my new features (my-feature-b → main) [draft]
+Creating PR: feat: my new features (hydro-project:main ← hydro-project:my-feature-b) [draft]
 Created PR #16
 ```
 
@@ -148,16 +148,32 @@ See [DESIGN.md](DESIGN.md) for the full design rationale.
 
 ## Fork Workflows
 
-If you push to a personal fork instead of the upstream repo, configure jj's push remote:
+If you push to a personal fork instead of the upstream repo:
 
+1. Add your fork as a named remote and track your bookmarks on it:
+```sh
+jj git remote add fork https://github.com/YOUR_USERNAME/REPO.git
+jj bookmark track my-branch@fork
+```
+
+2. That's it — `jj pr create` will automatically:
+   - Detect the fork by comparing the remote's GitHub owner against the upstream owner
+   - Push to the correct remote (the one the bookmark is tracked on)
+   - Pass `YOUR_USERNAME:branch` as the head ref so GitHub creates a cross-repo PR
+
+The display shows both owners:
+```
+create PR: "my feature" (upstream-org:main ← your-username:my-branch) [draft]
+```
+
+Optionally, set `git.push` as a fallback for bookmarks that aren't yet tracked:
 ```sh
 jj config set --repo git.push "fork"
 ```
 
-jj-pr reads this setting to determine which remote to compare bookmarks against for push detection. `gh pr create`
-automatically handles cross-repo PRs when you push to a fork.
-
 ## Known Limitations
 
+- **No stacked PRs in fork workflows** — GitHub requires the base branch to exist on the upstream repo. Since intermediate branches only exist on your fork, all fork PRs target the default branch (e.g. `main`). Local DAG structure is preserved in jj but not reflected in GitHub's PR chain.
+- **One tracked remote per PR bookmark** — if a bookmark tracks multiple non-git remotes, `jj pr create` will error. Untrack one with `jj bookmark untrack`.
 - **Multiple PRs sharing the same bookmark** — if you have e.g. an open and a closed/merged PR both using the same branch name, only one will be tracked. See the `head_to_pr` TODO in `pr_dag.rs`.
 - Some other things, probably
