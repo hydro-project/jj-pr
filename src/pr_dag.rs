@@ -127,6 +127,23 @@ pub fn build(
         node_current,
     };
 
+    // Reverse lookup: owner → remote. Errors if multiple remotes share an owner.
+    let owner_to_remote: HashMap<&Owner<str>, &Remote<str>> = {
+        let mut map = HashMap::new();
+        for (remote, owner) in remote_owners.iter() {
+            if let Some(existing) = map.insert(&**owner, &**remote) {
+                anyhow::bail!(
+                    "Multiple remotes share the same owner '{}': '{}' and '{}'. \
+                     Remove one with `jj git remote remove`.",
+                    owner,
+                    existing,
+                    remote,
+                );
+            }
+        }
+        map
+    };
+
     let (cid_pr_tip, pr_local) = {
         // For each commit_id, Which PR it belongs to, but only for the tip (last commit in the PR).
         let mut cid_pr_tip: HashMap<&CommitId<str>, Vec<PrNum>> = HashMap::new();
@@ -147,16 +164,12 @@ pub fn build(
                     if !is_tracked {
                         continue;
                     }
-                    // Skip PRs from other users' forks: if head_repo_owner is set and
-                    // remote_owners is populated but doesn't contain a matching owner,
-                    // this PR belongs to someone else (e.g. their fork's "main" collides
-                    // with our local "main").
-                    if let Some(pr_owner) = pr.head_repo_owner.as_deref() {
-                        if !remote_owners.is_empty()
-                            && !remote_owners.values().any(|owner| **owner == *pr_owner)
-                        {
-                            continue;
-                        }
+                    // Skip PRs from other users' forks.
+                    if let Some(pr_owner) = pr.head_repo_owner.as_deref()
+                        && !owner_to_remote.is_empty()
+                        && !owner_to_remote.contains_key(pr_owner)
+                    {
+                        continue;
                     }
                     // This is a PR bookmark.
                     if 1 < local_bookmark.target.len() {
@@ -234,20 +247,18 @@ pub fn build(
             if !is_tracked {
                 continue;
             }
-            // Skip PRs from other users' forks (same check as cid_pr_tip above).
-            if let Some(pr_owner) = gh_pr.head_repo_owner.as_deref() {
-                if !remote_owners.is_empty()
-                    && !remote_owners.values().any(|owner| **owner == *pr_owner)
-                {
-                    continue;
-                }
+            // Skip PRs from other users' forks.
+            if let Some(pr_owner) = gh_pr.head_repo_owner.as_deref()
+                && !owner_to_remote.is_empty()
+                && !owner_to_remote.contains_key(pr_owner)
+            {
+                continue;
             }
             // Resolve the remote for this PR from head_repo_owner (authoritative, from GitHub).
-            let pr_remote = gh_pr.head_repo_owner.as_deref().and_then(|pr_owner| {
-                remote_owners
-                    .iter()
-                    .find_map(|(remote, owner)| (**owner == *pr_owner).then_some(&**remote))
-            });
+            let pr_remote = gh_pr
+                .head_repo_owner
+                .as_deref()
+                .and_then(|pr_owner| owner_to_remote.get(pr_owner).copied());
 
             let local = local_targets.get(bookmark);
             if let Some(remote) = pr_remote {
@@ -256,7 +267,7 @@ pub fn build(
                     repo_state.pr_needs_push.insert(gh_pr.number);
                 }
             } else {
-                // head_repo_owner not available or not in remote_owners (legacy fixtures).
+                // head_repo_owner not available or not in owner_to_remote (legacy fixtures).
                 // Compare against any non-git remote that has this bookmark.
                 let any_remote_matches_local = remote_targets
                     .range((bookmark, Remote::ref_cast(""))..)
