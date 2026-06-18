@@ -223,22 +223,8 @@ pub fn build(
             if !is_tracked {
                 continue;
             }
-            // Prefer the bookmark's tracked remote directly.
-            let pr_remote = tracked_bookmarks
-                .and_then(|tb| tb.get(bookmark))
-                .and_then(|remotes| {
-                    if remotes.len() > 1 {
-                        tracing::warn!(
-                            "bookmark '{}' tracks multiple remotes; using first for push detection",
-                            bookmark,
-                        );
-                    }
-                    remotes.iter().next()
-                })
-                .map(|r| &**r);
-            // Fall back to matching head_repo_owner against remote_owners.
-            let pr_remote = pr_remote.or_else(|| {
-                let pr_owner = gh_pr.head_repo_owner.as_deref()?;
+            // Resolve the remote for this PR from head_repo_owner (authoritative, from GitHub).
+            let pr_remote = gh_pr.head_repo_owner.as_deref().and_then(|pr_owner| {
                 remote_owners
                     .iter()
                     .find_map(|(remote, owner)| (**owner == *pr_owner).then_some(&**remote))
@@ -251,8 +237,8 @@ pub fn build(
                     repo_state.pr_needs_push.insert(gh_pr.number);
                 }
             } else {
-                // Legacy mode (no tracked_bookmarks): compare against any non-git remote
-                // that has this bookmark. Needs push if no remote matches local.
+                // head_repo_owner not available or not in remote_owners (legacy fixtures).
+                // Compare against any non-git remote that has this bookmark.
                 let any_remote_matches_local = remote_targets
                     .range((bookmark, Remote::ref_cast(""))..)
                     .take_while(|&((bm, _), _)| **bm == *bookmark)
