@@ -134,7 +134,7 @@ jj pr create my-feature-b        # then create a draft PR for it
 The base branch is auto-detected by walking the parent graph.
 ```sh
 Pushing my-feature-b
-Creating PR: feat: my new features (hydro-project:main ← hydro-project:my-feature-b) [draft]
+Creating PR: feat: my new features (hydro-project:main ← my-feature-b) [draft]
 Created PR #16
 ```
 
