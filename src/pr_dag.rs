@@ -245,23 +245,20 @@ pub fn build(
             });
 
             let local = local_targets.get(bookmark);
-            match pr_remote {
-                Some(remote) => {
-                    let remote_target = remote_targets.get(&(bookmark, remote));
-                    if local != remote_target {
-                        repo_state.pr_needs_push.insert(gh_pr.number);
-                    }
+            if let Some(remote) = pr_remote {
+                let remote_target = remote_targets.get(&(bookmark, remote));
+                if local != remote_target {
+                    repo_state.pr_needs_push.insert(gh_pr.number);
                 }
-                None => {
-                    // Legacy mode (no tracked_bookmarks): compare against any non-git remote
-                    // that has this bookmark. Needs push if no remote matches local.
-                    let any_remote_matches_local = remote_targets
-                        .range((bookmark, Remote::ref_cast(""))..)
-                        .take_while(|&((bm, _), _)| **bm == *bookmark)
-                        .any(|(_, cid)| Some(cid) == local);
-                    if !any_remote_matches_local && local.is_some() {
-                        repo_state.pr_needs_push.insert(gh_pr.number);
-                    }
+            } else {
+                // Legacy mode (no tracked_bookmarks): compare against any non-git remote
+                // that has this bookmark. Needs push if no remote matches local.
+                let any_remote_matches_local = remote_targets
+                    .range((bookmark, Remote::ref_cast(""))..)
+                    .take_while(|&((bm, _), _)| **bm == *bookmark)
+                    .any(|(_, cid)| Some(cid) == local);
+                if !any_remote_matches_local && local.is_some() {
+                    repo_state.pr_needs_push.insert(gh_pr.number);
                 }
             }
         }
@@ -1506,9 +1503,10 @@ impl fmt::Display for CreatePlan {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "push {}", self.bookmark)?;
         let upstream = self.upstream_owner.as_deref().map_or("?", |o| o.as_str());
-        let head = match &self.head_owner {
-            Some(owner) => format!("{}:{}", owner, self.bookmark),
-            None => self.bookmark.to_string(),
+        let head = if let Some(owner) = &self.head_owner {
+            format!("{}:{}", owner, self.bookmark)
+        } else {
+            self.bookmark.to_string()
         };
         writeln!(
             f,
@@ -1711,9 +1709,10 @@ pub fn execute_create(plan: &CreatePlan) -> Result<()> {
     jj::git_push_bookmark(&plan.bookmark, &plan.push_remote)?;
 
     let upstream = plan.upstream_owner.as_deref().map_or("?", |o| o.as_str());
-    let head = match &plan.head_owner {
-        Some(owner) => format!("{}:{}", owner, crate::style::bookmark(&plan.bookmark)),
-        None => crate::style::bookmark(&plan.bookmark),
+    let head = if let Some(owner) = &plan.head_owner {
+        format!("{}:{}", owner, crate::style::bookmark(&plan.bookmark))
+    } else {
+        crate::style::bookmark(&plan.bookmark)
     };
     eprintln!(
         "Creating PR: {} ({}:{} ← {}) [draft]",
