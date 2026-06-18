@@ -36,6 +36,7 @@ pub(crate) struct InputData {
     pub(crate) existing_merge_commits: Option<std::collections::HashSet<types::CommitId>>,
     /// Remote name → GitHub owner, for all configured git remotes.
     // TODO(mingwei): upgrade fixtures to always include this field.
+    // TODO(mingwei): convert this to `Vec<(Remote, Owner)>` as we don't expect many entries.
     #[serde(default)]
     pub(crate) remote_owners: BTreeMap<types::Remote, types::Owner>,
 }

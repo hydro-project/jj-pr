@@ -973,7 +973,8 @@ fn foreign_pr_bookmark_collision() {
 }
 
 #[test]
-fn duplicate_remote_owner_errors() {
+#[tracing_test::traced_test]
+fn duplicate_remote_owner_warns() {
     // Two remotes pointing to the same owner should produce an error.
     use crate::types::Remote;
     let f = InputData {
@@ -996,9 +997,15 @@ fn duplicate_remote_owner_errors() {
         f.tracked_bookmarks.as_ref(),
         &f.remote_owners,
     );
-    let err = result.unwrap_err();
-    assert!(
-        err.to_string().contains("Multiple remotes share the same owner"),
-        "unexpected error: {err}",
-    );
+    assert!(result.is_ok());
+
+    logs_assert(|lines| {
+        println!("{:?}", lines);
+        Ok(())
+    });
+
+    assert!(logs_contain(
+        "GitHub owner \"same-org\" has multiple remotes, using the first: [\"origin\", \"upstream\"].\n\
+            To resolve ambiguity, remove all except one with `jj git remote remove <REMOTE>`."
+    ));
 }
