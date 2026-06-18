@@ -1,7 +1,8 @@
 ---
 source: src/tests.rs
+assertion_line: 705
 expression: "plan_create(&f, \"feat-b\")"
 ---
 push feat-b
-create PR: "child" (feat-b → feat-a) [draft]
+create PR: "child" (test:feat-a ← feat-b) [draft]
 stamp trailer on 1 commit(s)

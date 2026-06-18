@@ -8,7 +8,7 @@ use std::sync::OnceLock;
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Bookmark, CommitId};
+use crate::types::{Bookmark, CommitId, Owner};
 
 /// Resolve the git directory via `jj git root` (cached, fallible).
 fn git_dir() -> Result<&'static Path> {
@@ -36,6 +36,31 @@ fn gh_command() -> Result<Command> {
     let mut cmd = Command::new("gh");
     cmd.env("GIT_DIR", git_dir()?);
     Ok(cmd)
+}
+
+/// Get the owner of the upstream (base) repo. For forks, returns the parent repo's owner.
+/// For non-fork repos, returns the repo's own owner.
+pub fn upstream_repo_owner() -> Result<Owner> {
+    let output = gh_command()?
+        .args([
+            "repo",
+            "view",
+            "--json",
+            "owner,parent",
+            "-q",
+            ".parent.owner.login // .owner.login",
+        ])
+        .output()
+        .context("Failed to run `gh repo view`")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("gh repo view failed: {stderr}");
+    }
+    let owner = String::from_utf8(output.stdout)?.trim().to_owned();
+    if owner.is_empty() {
+        bail!("gh repo view returned empty owner. Run `gh repo set-default` to configure.");
+    }
+    Ok(Owner(owner))
 }
 
 /// Newtype for GitHub PR numbers.
@@ -95,6 +120,9 @@ pub struct GhPr {
     /// The commit SHA of the merge/squash commit on the base branch (only for merged PRs).
     #[serde(default)]
     pub merge_commit_oid: Option<CommitId>,
+    /// The owner (user/org) of the head repository (fork). None if same repo.
+    #[serde(default)]
+    pub head_repo_owner: Option<Owner>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -104,7 +132,7 @@ pub struct PrStatus {
 }
 
 /// GraphQL fields for a PR node, used in query construction.
-const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision latestReviews(first:10) { nodes { state } } mergeCommit { oid } commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
+const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision latestReviews(first:10) { nodes { state } } headRepositoryOwner { login } mergeCommit { oid } commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
 
 /// Raw GraphQL response types for serde deserialization.
 #[derive(Deserialize)]
@@ -181,6 +209,7 @@ struct PrNode {
     review_decision: Option<ReviewDecision>,
     latest_reviews: Option<LatestReviews>,
     merge_commit: Option<MergeCommit>,
+    head_repository_owner: Option<HeadRepoOwner>,
     commits: CommitsConnection,
 }
 
@@ -207,6 +236,11 @@ enum ReviewState {
 #[derive(Deserialize)]
 struct MergeCommit {
     oid: CommitId,
+}
+
+#[derive(Deserialize)]
+struct HeadRepoOwner {
+    login: Owner,
 }
 
 #[derive(Deserialize)]
@@ -362,6 +396,7 @@ pub fn load_prs_and_default_branch<'a>(
             url: d.url,
             title: d.title,
             merge_commit_oid: d.merge_commit.map(|mc| mc.oid),
+            head_repo_owner: d.head_repository_owner.map(|o| o.login),
         });
     }
 
@@ -374,11 +409,17 @@ pub fn create_pr(
     title: &str,
     body: &str,
     draft: bool,
+    head_owner: Option<&Owner<str>>,
 ) -> Result<(PrNum, String)> {
-    let head = head.as_str();
+    // For cross-repo (fork) PRs, GitHub requires "OWNER:branch" as the head ref.
+    let head_ref = if let Some(owner) = head_owner {
+        format!("{}:{}", owner.as_str(), head.as_str())
+    } else {
+        head.as_str().to_owned()
+    };
     let base = base.as_str();
     let mut args = vec![
-        "pr", "create", "--head", head, "--base", base, "--title", title, "--body", body,
+        "pr", "create", "--head", &head_ref, "--base", base, "--title", title, "--body", body,
     ];
     if draft {
         args.push("--draft");

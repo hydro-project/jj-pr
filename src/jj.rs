@@ -1,11 +1,11 @@
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::process::Command;
 
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 
 use crate::gh::PrNum;
-use crate::types::{Bookmark, ChangeId, CommitId, Revset, revset_union};
+use crate::types::{Bookmark, ChangeId, CommitId, Owner, Remote, Revset, revset_union};
 
 /// Create a `jj log --no-graph` command with word-wrap disabled.
 /// This ensures structured output is not corrupted by user config.
@@ -35,7 +35,7 @@ pub struct JjBookmark {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct JjRemoteBookmark {
     pub name: Bookmark,
-    pub remote: Option<String>,
+    pub remote: Option<Remote>,
     pub target: Vec<Option<CommitId>>,
 }
 
@@ -177,11 +177,11 @@ pub fn load_entries() -> Result<Vec<JjLogEntry>> {
     load_entries_with_revset("trunk().. | trunk()")
 }
 
-/// Load the set of bookmark names tracked on a given remote.
-pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<Bookmark>> {
-    let template = format!(r#"if(remote == "{remote}", name ++ "\n")"#);
+/// Load all tracked bookmarks mapped to their tracked remotes (excluding `git`).
+pub fn load_tracked_bookmarks() -> Result<BTreeMap<Bookmark, BTreeSet<Remote>>> {
+    let template = r#"if(remote, name ++ "\t" ++ remote ++ "\n")"#;
     let output = Command::new("jj")
-        .args(["bookmark", "list", "--tracked", "-T", &template])
+        .args(["bookmark", "list", "--tracked", "-T", template])
         .output()
         .context("Failed to run `jj bookmark list --tracked`")?;
 
@@ -191,11 +191,47 @@ pub fn load_tracked_bookmarks(remote: &str) -> Result<BTreeSet<Bookmark>> {
     }
 
     let stdout = String::from_utf8(output.stdout).context("jj output not UTF-8")?;
-    Ok(stdout
-        .lines()
-        .filter(|l| !l.is_empty())
-        .map(|l| Bookmark(l.to_owned()))
-        .collect())
+    let mut map = BTreeMap::<Bookmark, BTreeSet<Remote>>::new();
+    for line in stdout.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        let Some((name, remote)) = line.split_once('\t') else {
+            tracing::warn!("unexpected line in `jj bookmark list --tracked` output: {line:?}");
+            continue;
+        };
+        if remote == "git" {
+            continue;
+        }
+        map.entry(Bookmark(name.to_owned()))
+            .or_default()
+            .insert(Remote(remote.to_owned()));
+    }
+    Ok(map)
+}
+
+/// Load a map of remote name → GitHub owner by parsing remote URLs.
+pub fn load_remote_owners() -> Result<BTreeMap<Remote, Owner>> {
+    let output = Command::new("jj")
+        .args(["git", "remote", "list"])
+        .output()
+        .context("Failed to run `jj git remote list`")?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj git remote list failed: {stderr}");
+    }
+    let stdout = String::from_utf8(output.stdout)?;
+    let mut map = BTreeMap::new();
+    for line in stdout.lines() {
+        let Some((name, url)) = line.split_once(' ') else {
+            continue;
+        };
+        if let Some(owner) = parse_github_owner(url.trim()) {
+            map.insert(Remote(name.to_owned()), owner.to_owned());
+        }
+    }
+    Ok(map)
 }
 
 pub fn load_entries_with_revset(revset: &str) -> Result<Vec<JjLogEntry>> {
@@ -298,18 +334,50 @@ pub fn describe_stdin(revision: &Revset, description: &str) -> Result<()> {
     Ok(())
 }
 
-/// Push a bookmark to the remote.
-pub fn git_push_bookmark(bookmark: &Bookmark<str>) -> Result<()> {
+/// Push a bookmark to a specific remote.
+pub fn git_push_bookmark(bookmark: &Bookmark<str>, remote: &Remote<str>) -> Result<()> {
     let output = Command::new("jj")
-        .args(["git", "push", "--bookmark", bookmark.as_str()])
+        .args([
+            "git",
+            "push",
+            "--bookmark",
+            bookmark.as_str(),
+            "--remote",
+            remote.as_str(),
+        ])
         .output()
         .context("Failed to run `jj git push`")?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("jj git push --bookmark {bookmark} failed: {stderr}");
+        bail!("jj git push --bookmark {bookmark} --remote {remote} failed: {stderr}");
     }
     Ok(())
+}
+
+/// Get the configured push remote name from `git.push` jj config.
+/// Returns `None` if not configured.
+pub fn push_remote_config() -> Result<Option<Remote>> {
+    let output = Command::new("jj")
+        .args(["config", "get", "git.push"])
+        .output()
+        .context("Failed to run `jj config get`")?;
+    if output.status.success() {
+        let remote = String::from_utf8(output.stdout)?.trim().trim_matches('"').to_owned();
+        if !remote.is_empty() {
+            return Ok(Some(Remote(remote)));
+        }
+    }
+    Ok(None)
+}
+
+/// Parse the owner from a GitHub remote URL.
+/// Supports HTTPS (`https://github.com/OWNER/REPO`) and SSH (`git@github.com:OWNER/REPO`).
+fn parse_github_owner(url: &str) -> Option<&Owner<str>> {
+    let path = url
+        .strip_prefix("https://github.com/")
+        .or_else(|| url.strip_prefix("git@github.com:"))?;
+    path.split('/').next().map(Owner::ref_cast)
 }
 
 /// Set a bookmark to point at a revision.
@@ -337,21 +405,6 @@ pub fn bookmark_delete(name: &Bookmark<str>) -> Result<()> {
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         bail!("jj bookmark delete {name} failed: {stderr}");
-    }
-    Ok(())
-}
-
-/// Track a remote bookmark.
-pub fn bookmark_track(name: &Bookmark<str>, remote: &str) -> Result<()> {
-    let refname = format!("{name}@{remote}");
-    let output = Command::new("jj")
-        .args(["bookmark", "track", &refname])
-        .output()
-        .context("Failed to run `jj bookmark track`")?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("jj bookmark track {refname} failed: {stderr}");
     }
     Ok(())
 }
@@ -463,5 +516,30 @@ mod tests {
     fn set_pr_trailer_replace_with_trailing_blank_lines() {
         let result = set_pr_trailer("fix\n\nPR: #10\n\n", PrNum::new(20).unwrap());
         assert_eq!(result, "fix\n\nPR: #20\n\n");
+    }
+
+    #[test]
+    fn parse_github_owner_https() {
+        assert_eq!(
+            parse_github_owner("https://github.com/MingweiSamuel/cargo-smart-release.git"),
+            Some(Owner::ref_cast("MingweiSamuel")),
+        );
+        assert_eq!(
+            parse_github_owner("https://github.com/hydro-project/jj-pr"),
+            Some(Owner::ref_cast("hydro-project")),
+        );
+    }
+
+    #[test]
+    fn parse_github_owner_ssh() {
+        assert_eq!(
+            parse_github_owner("git@github.com:MingweiSamuel/cargo-smart-release.git"),
+            Some(Owner::ref_cast("MingweiSamuel")),
+        );
+    }
+
+    #[test]
+    fn parse_github_owner_unknown() {
+        assert_eq!(parse_github_owner("https://gitlab.com/foo/bar"), None);
     }
 }

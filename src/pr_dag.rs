@@ -2,14 +2,13 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
 
 use anyhow::Result;
-use ref_cast::RefCast;
 use renderdag::{Ancestor, GraphRowRenderer, Renderer};
 use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap, new_key_type};
 
 use crate::gh::{GhPr, PrNum};
 use crate::graph_algorithms;
 use crate::jj::{self, JjLogEntry};
-use crate::types::{AsRevset, Bookmark, ChangeId, CommitId};
+use crate::types::{AsRevset, Bookmark, ChangeId, CommitId, Owner, REMOTE_GIT, REMOTE_ORIGIN, Remote};
 
 new_key_type! {
     pub struct NodeKey;
@@ -95,7 +94,8 @@ pub fn build(
     jj_entries: &[JjLogEntry],
     prs: &BTreeMap<PrNum, &GhPr>,
     default_branch: &Bookmark<str>,
-    tracked_bookmarks: Option<&BTreeSet<Bookmark>>,
+    tracked_bookmarks: Option<&BTreeMap<Bookmark, BTreeSet<Remote>>>,
+    remote_owners: &BTreeMap<Remote, Owner>,
 ) -> Result<RepoState> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
@@ -141,9 +141,9 @@ pub fn build(
             for local_bookmark in jj_entry.local_bookmarks.iter() {
                 let local_bookmark_name = &*local_bookmark.name;
                 if let Some(pr) = head_to_pr.get(local_bookmark_name) {
-                    // Only consider this a PR bookmark if it's tracked on the push remote.
+                    // Only consider this a PR bookmark if it's tracked on some remote.
                     // `None` means all bookmarks are considered tracked (legacy/old fixtures).
-                    let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains(local_bookmark_name));
+                    let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains_key(local_bookmark_name));
                     if !is_tracked {
                         continue;
                     }
@@ -196,32 +196,56 @@ pub fn build(
     };
 
     // Compute pr_needs_push: compare local vs remote bookmark targets for PR bookmarks.
-    // TODO(mingwei): hardcodes "origin" — breaks with fork-based workflows.
     {
         let mut local_targets: HashMap<&Bookmark<str>, &CommitId<str>> = HashMap::new();
-        let mut remote_targets: HashMap<&Bookmark<str>, &CommitId<str>> = HashMap::new();
+        // Remote targets keyed by (bookmark, remote). BTreeMap enables range queries by bookmark.
+        let mut remote_targets: BTreeMap<(&Bookmark<str>, &Remote<str>), &CommitId<str>> = BTreeMap::new();
         for jj_entry in jj_entries.iter() {
             for bm in &jj_entry.local_bookmarks {
                 local_targets.insert(&bm.name, &jj_entry.commit.commit_id);
             }
             for bm in &jj_entry.remote_bookmarks {
-                // Only consider the push remote, not @git (local tracking ref).
-                if bm.remote.as_deref() == Some("origin") {
-                    remote_targets.entry(&bm.name).or_insert(&jj_entry.commit.commit_id);
+                if let Some(remote) = bm.remote.as_deref() {
+                    // Exclude @git (local tracking ref, not a real push remote).
+                    if remote == REMOTE_GIT {
+                        continue;
+                    }
+                    remote_targets
+                        .entry((&bm.name, remote))
+                        .or_insert(&jj_entry.commit.commit_id);
                 }
             }
         }
         for gh_pr in prs.values() {
             let bookmark = &*gh_pr.head_ref_name;
-            // Only consider bookmarks we own (tracked on push remote).
-            let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains(bookmark));
+            // Only consider bookmarks we own (tracked on some remote).
+            let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains_key(bookmark));
             if !is_tracked {
                 continue;
             }
+            // Resolve the remote for this PR from head_repo_owner (authoritative, from GitHub).
+            let pr_remote = gh_pr.head_repo_owner.as_deref().and_then(|pr_owner| {
+                remote_owners
+                    .iter()
+                    .find_map(|(remote, owner)| (**owner == *pr_owner).then_some(&**remote))
+            });
+
             let local = local_targets.get(bookmark);
-            let remote = remote_targets.get(bookmark);
-            if local != remote {
-                repo_state.pr_needs_push.insert(gh_pr.number);
+            if let Some(remote) = pr_remote {
+                let remote_target = remote_targets.get(&(bookmark, remote));
+                if local != remote_target {
+                    repo_state.pr_needs_push.insert(gh_pr.number);
+                }
+            } else {
+                // head_repo_owner not available or not in remote_owners (legacy fixtures).
+                // Compare against any non-git remote that has this bookmark.
+                let any_remote_matches_local = remote_targets
+                    .range((bookmark, Remote::ref_cast(""))..)
+                    .take_while(|&((bm, _), _)| **bm == *bookmark)
+                    .any(|(_, cid)| Some(cid) == local);
+                if !any_remote_matches_local && local.is_some() {
+                    repo_state.pr_needs_push.insert(gh_pr.number);
+                }
             }
         }
     }
@@ -1453,15 +1477,27 @@ pub struct CreatePlan {
     pub body: String,
     /// Change IDs of commits that will be stamped with the PR trailer.
     pub stamp_change_ids: Vec<ChangeId>,
+    /// Owner of the repo the head branch is pushed to. `None` for same-repo PRs.
+    pub head_owner: Option<Owner>,
+    /// Owner of the upstream repo the PR targets. `None` if unresolvable.
+    pub upstream_owner: Option<Owner>,
+    /// Remote to push the bookmark to.
+    pub push_remote: Remote,
 }
 
 impl fmt::Display for CreatePlan {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "push {}", self.bookmark)?;
+        let upstream = self.upstream_owner.as_deref().map_or("?", |o| o.as_str());
+        let head = if let Some(owner) = &self.head_owner {
+            format!("{}:{}", owner, self.bookmark)
+        } else {
+            self.bookmark.to_string()
+        };
         writeln!(
             f,
-            "create PR: \"{}\" ({} → {}) [draft]",
-            self.title, self.bookmark, self.base,
+            "create PR: \"{}\" ({}:{} ← {}) [draft]",
+            self.title, upstream, self.base, head,
         )?;
         if !self.stamp_change_ids.is_empty() {
             writeln!(f, "stamp trailer on {} commit(s)", self.stamp_change_ids.len())?;
@@ -1471,11 +1507,16 @@ impl fmt::Display for CreatePlan {
 }
 
 /// Plan the creation of a new PR for an existing bookmark. Pure — no side effects.
+#[expect(clippy::too_many_arguments, reason = "will refactor into a struct later")]
 pub fn plan_create(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     default_branch: &Bookmark<str>,
+    tracked_bookmarks: Option<&BTreeMap<Bookmark, BTreeSet<Remote>>>,
+    remote_owners: &BTreeMap<Remote, Owner>,
+    upstream_owner_fn: impl FnOnce() -> Result<Owner>,
+    push_remote_config: Option<&Remote<str>>,
     bookmark: &str,
     title: Option<&str>,
     body: Option<&str>,
@@ -1515,7 +1556,7 @@ pub fn plan_create(
         );
     }
 
-    let base = find_base_branch(state, prs, jj_entries, bookmark_ref, default_branch);
+    let mut base = find_base_branch(state, prs, jj_entries, bookmark_ref, default_branch);
 
     let title = title.map(|s| s.to_owned()).unwrap_or_else(|| {
         tip_entry
@@ -1589,32 +1630,91 @@ pub fn plan_create(
         }
     }
 
+    // Resolve push remote and head owner.
+    let bookmark_remotes = tracked_bookmarks.and_then(|tb| tb.get(bookmark_ref));
+    let (head_owner, push_remote) = match (bookmark_remotes, tracked_bookmarks) {
+        (Some(remotes), _) if remotes.len() == 1 => {
+            let remote = remotes.iter().next().unwrap();
+            (remote_owners.get(remote).cloned(), remote.clone())
+        }
+        (Some(remotes), _) if remotes.len() > 1 => {
+            anyhow::bail!(
+                "bookmark '{}' tracks multiple remotes ({}). Untrack one with `jj bookmark untrack`.",
+                bookmark,
+                remotes.iter().map(|r| r.to_string()).collect::<Vec<_>>().join(", "),
+            );
+        }
+        (_, None) => {
+            // Legacy mode (no tracked_bookmarks data) — default to "origin".
+            (None, REMOTE_ORIGIN.to_owned())
+        }
+        _ => {
+            // Not yet tracked — use git.push config to determine where to push.
+            let remote = push_remote_config.with_context(|| {
+                format!(
+                    "bookmark '{}' is not tracked on any remote and `git.push` is not configured.\n\
+                     Either run `jj bookmark track {}@<remote>` or set `jj config set --repo git.push \"<remote>\"`.",
+                    bookmark, bookmark,
+                )
+            })?;
+            let owner = remote_owners.get(remote).cloned();
+            (owner, remote.to_owned())
+        }
+    };
+
+    // Determine if this is a fork workflow by comparing head_owner against upstream.
+    let mut plan_head_owner = None;
+    let upstream_owner = if let Some(ho) = head_owner {
+        let upstream_owner = upstream_owner_fn().ok();
+        if upstream_owner.as_deref().is_some_and(|u| *u != *ho) {
+            // Fork workflow — force base to default_branch.
+            base = default_branch.to_owned();
+            plan_head_owner = Some(ho);
+        }
+        upstream_owner
+    } else {
+        // Can't resolve head owner from remote — same-repo workflow assumed.
+        upstream_owner_fn().ok()
+    };
+
     Ok(CreatePlan {
         bookmark: Bookmark(bookmark.to_owned()),
         base,
         title,
         body,
         stamp_change_ids,
+        head_owner: plan_head_owner,
+        upstream_owner,
+        push_remote,
     })
 }
 
 /// Execute a planned PR creation. Performs side effects: push, create PR, stamp trailers.
 pub fn execute_create(plan: &CreatePlan) -> Result<()> {
-    // Track remote (ignore error — remote bookmark may not exist yet).
-    if let Err(e) = jj::bookmark_track(&plan.bookmark, "origin") {
-        tracing::debug!("bookmark track failed (expected if new): {e:#}");
-    }
-
     eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
-    jj::git_push_bookmark(&plan.bookmark)?;
+    jj::git_push_bookmark(&plan.bookmark, &plan.push_remote)?;
 
+    let upstream = plan.upstream_owner.as_deref().map_or("?", |o| o.as_str());
+    let head = if let Some(owner) = &plan.head_owner {
+        format!("{}:{}", owner, crate::style::bookmark(&plan.bookmark))
+    } else {
+        crate::style::bookmark(&plan.bookmark)
+    };
     eprintln!(
-        "Creating PR: {} ({} → {}) [draft]",
+        "Creating PR: {} ({}:{} ← {}) [draft]",
         plan.title,
-        crate::style::bookmark(&plan.bookmark),
+        upstream,
         crate::style::bookmark(&plan.base),
+        head,
     );
-    let (pr_number, pr_url) = gh::create_pr(&plan.bookmark, &plan.base, &plan.title, &plan.body, true)?;
+    let (pr_number, pr_url) = gh::create_pr(
+        &plan.bookmark,
+        &plan.base,
+        &plan.title,
+        &plan.body,
+        true,
+        plan.head_owner.as_deref(),
+    )?;
     eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
     if !plan.stamp_change_ids.is_empty() {

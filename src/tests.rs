@@ -4,7 +4,7 @@ use super::InputData;
 use crate::gh::{CheckStatus, GhPr, PrNum, PrStatus, ReviewDecision};
 use crate::jj::{JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
-use crate::types::{Bookmark, ChangeId, CommitId};
+use crate::types::{Bookmark, ChangeId, CommitId, Owner, REMOTE_ORIGIN, Remote};
 
 fn render_show(input: &InputData, show_all: bool, reversed: bool) -> String {
     render_show_with_statuses(input, &BTreeMap::new(), show_all, reversed)
@@ -23,6 +23,7 @@ fn render_show_with_statuses(
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        &BTreeMap::new(),
     )
     .unwrap();
     let mut buf = Vec::new();
@@ -38,6 +39,7 @@ fn render_log(input: &InputData, show_all: bool, reversed: bool) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        &BTreeMap::new(),
     )
     .unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
@@ -62,6 +64,7 @@ fn plan_sync(input: &InputData) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        &BTreeMap::new(),
     )
     .unwrap();
     match pr_dag::plan_sync(
@@ -87,13 +90,19 @@ fn plan_create(input: &InputData, bookmark: &str) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        &BTreeMap::new(),
     )
     .unwrap();
+    let upstream = Owner("test".to_owned());
     match pr_dag::plan_create(
         &state,
         &prs,
         &input.jj_entries,
         &input.default_branch,
+        input.tracked_bookmarks.as_ref(),
+        &input.remote_owners,
+        || Ok(upstream.clone()),
+        None,
         bookmark,
         None,
         None,
@@ -150,7 +159,7 @@ fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str]
 fn with_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e.remote_bookmarks.push(JjRemoteBookmark {
         name: Bookmark(name.to_owned()),
-        remote: Some("origin".to_owned()),
+        remote: Some(REMOTE_ORIGIN.to_owned()),
         target: vec![Some(e.commit.commit_id.clone())],
     });
     e
@@ -169,7 +178,7 @@ fn with_working_copy(mut e: JjLogEntry) -> JjLogEntry {
 fn with_git_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e.remote_bookmarks.push(JjRemoteBookmark {
         name: Bookmark(name.to_owned()),
-        remote: Some("git".to_owned()),
+        remote: Some(Remote("git".to_owned())),
         target: vec![Some(e.commit.commit_id.clone())],
     });
     e
@@ -186,6 +195,7 @@ fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
         merge_commit_oid: None,
+        head_repo_owner: None,
     }
 }
 
@@ -200,6 +210,7 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
         merge_commit_oid: Some(CommitId(format!("merge_commit_{number}"))),
+        head_repo_owner: None,
     }
 }
 
@@ -214,16 +225,22 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
         merge_commit_oid: None,
+        head_repo_owner: None,
     }
 }
 
-fn fixture(entries: Vec<JjLogEntry>, prs: Vec<GhPr>, tracked_bookmarks: Option<BTreeSet<Bookmark>>) -> InputData {
+fn fixture(
+    entries: Vec<JjLogEntry>,
+    prs: Vec<GhPr>,
+    tracked_bookmarks: Option<BTreeMap<Bookmark, BTreeSet<Remote>>>,
+) -> InputData {
     InputData {
         jj_entries: entries,
         prs,
         default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks,
         existing_merge_commits: None, // Legacy: all merge commits considered present.
+        remote_owners: BTreeMap::new(),
     }
 }
 
@@ -384,8 +401,9 @@ fn no_push_when_only_git_remote() {
         ],
         prs: vec![gh_pr(1, "feat", "main")],
         default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some(BTreeSet::new()),
-        existing_merge_commits: None, // Not tracked on origin.
+        tracked_bookmarks: Some(BTreeMap::new()),
+        existing_merge_commits: None,   // Not tracked on origin.
+        remote_owners: BTreeMap::new(), // Legacy.
     };
     insta::assert_snapshot!("no_push_when_only_git_remote", plan_sync(&f));
 }
@@ -405,8 +423,9 @@ fn needs_push_tracked_but_no_origin_in_revset() {
         ],
         prs: vec![gh_pr(1, "feat", "main")],
         default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some([Bookmark("feat".to_owned())].into()), // Tracked on origin.
+        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [REMOTE_ORIGIN.to_owned()].into())].into()), /* Tracked on origin. */
         existing_merge_commits: None,
+        remote_owners: BTreeMap::new(), // Legacy.
     };
     insta::assert_snapshot!("needs_push_tracked_but_no_origin_in_revset", plan_sync(&f));
 }
@@ -767,6 +786,63 @@ fn create_conflicted_bookmark_rejected() {
 }
 
 #[test]
+fn create_fork_workflow() {
+    // Fork workflow: bookmark tracked on "fork" remote owned by "my-fork-org".
+    // Upstream is "upstream-org". Base should be forced to default_branch.
+    use crate::types::Remote;
+
+    let f = InputData {
+        jj_entries: vec![
+            entry("c2", "ch2", &["c1"], "child commit\n", &["feat-b"], false),
+            entry("c1", "ch1", &["trunk"], "parent\n\nPR: #1\n", &["feat-a"], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![gh_pr(1, "feat-a", "main")],
+        default_branch: Bookmark("main".to_owned()),
+        tracked_bookmarks: Some(
+            [
+                (Bookmark("feat-a".to_owned()), [Remote("fork".to_owned())].into()),
+                (Bookmark("feat-b".to_owned()), [Remote("fork".to_owned())].into()),
+            ]
+            .into(),
+        ),
+        existing_merge_commits: None,
+        remote_owners: [(Remote("fork".to_owned()), Owner("my-fork-org".to_owned()))].into(),
+    };
+
+    let prs = f.prs_map();
+    let state = pr_dag::build(
+        &f.jj_entries,
+        &prs,
+        &f.default_branch,
+        f.tracked_bookmarks.as_ref(),
+        &f.remote_owners,
+    )
+    .unwrap();
+    let upstream = Owner("upstream-org".to_owned());
+    let plan = pr_dag::plan_create(
+        &state,
+        &prs,
+        &f.jj_entries,
+        &f.default_branch,
+        f.tracked_bookmarks.as_ref(),
+        &f.remote_owners,
+        || Ok(upstream.clone()),
+        None,
+        "feat-b",
+        None,
+        None,
+    )
+    .unwrap();
+
+    // Base should be forced to "main" (not "feat-a") because it's a fork workflow.
+    assert_eq!(plan.base.as_str(), "main");
+    assert_eq!(plan.head_owner.as_deref().unwrap().as_str(), "my-fork-org");
+    assert_eq!(plan.upstream_owner.as_deref().unwrap().as_str(), "upstream-org");
+    assert_eq!(plan.push_remote.as_str(), "fork");
+}
+
+#[test]
 fn bookmark_name_collision_no_remote() {
     // User has a local bookmark "fix-typo" that coincidentally matches someone else's PR.
     // No remote tracking, no trailer. Should NOT plan a push (not our PR).
@@ -777,8 +853,9 @@ fn bookmark_name_collision_no_remote() {
         ],
         prs: vec![gh_pr(42, "fix-typo", "main")],
         default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some(BTreeSet::new()),
-        existing_merge_commits: None, // No bookmarks tracked.
+        tracked_bookmarks: Some(BTreeMap::new()),
+        existing_merge_commits: None,   // No bookmarks tracked.
+        remote_owners: BTreeMap::new(), // Legacy.
     };
     insta::assert_snapshot!("bookmark_name_collision_no_remote", plan_sync(&f));
 }
@@ -799,6 +876,7 @@ fn stale_trunk_skips_abandon() {
         default_branch: Bookmark("main".to_owned()),
         tracked_bookmarks: None,
         existing_merge_commits: Some(std::collections::HashSet::new()), // Empty = nothing fetched.
+        remote_owners: BTreeMap::new(),                                 // Legacy.
     };
     insta::assert_snapshot!("stale_trunk_skips_abandon", plan_sync(&f));
 }

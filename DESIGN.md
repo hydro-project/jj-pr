@@ -32,7 +32,7 @@ RepoState:
   node_succs:           Map<NodeKey, [NodeKey]>  -- node -> child nodes
   topo_order:           [NodeKey]                -- topological order (parents before children)
   commit_node:          Map<CommitId, NodeKey>   -- commit -> owning node
-  pr_needs_push:        Set<PrNum>               -- PRs with local != remote bookmark
+  pr_needs_push:        Set<PrNum>               -- PRs with local != remote bookmark (per-bookmark remote)
   node_needs_sync:      Map<NodeKey, bool>       -- nodes needing sync; true = propagates
   bookmarks_blocking:   Set<String>              -- conflicted bookmarks that block sync
 ```
@@ -140,10 +140,10 @@ Blocks if `bookmarks_blocking` is non-empty. Supports `--dry-run` and `[Y/n]` co
 Creates a new draft PR for an existing bookmark:
 
 1. Verify bookmark exists and has no existing PR.
-2. Walk parent graph to determine base branch (nearest ancestor PR's bookmark, or `default_branch`).
-3. Track remote bookmark (`jj bookmark track`, hardcoded to `origin`).
-4. Push (`jj git push --bookmark`).
-5. Create draft PR (`gh pr create --draft`).
+2. Walk parent graph to determine base branch (nearest ancestor PR's bookmark, or `default_branch`). Base is forced to `default_branch` for fork workflows or if the PR has multiple parents in the DAG.
+3. Resolve push remote from the bookmark's tracked remote (falls back to `git.push` config).
+4. Push (`jj git push --bookmark <name> --remote <remote>`).
+5. Create draft PR (`gh pr create --head OWNER:branch --draft`).
 6. Stamp `PR: #N` trailers on owned commits.
 
 Title defaults to the first line of the tip commit's description. Override with `-t`.
@@ -171,9 +171,3 @@ src/
 - **Merged PRs excluded from needs_sync** — they trigger actions on descendants but are not sync targets themselves. Enforced by `assert!` in plan_sync.
 - **Closed treated as Open** — closed PRs are pushed and have bases updated, since the user may re-open them.
 - **`default_branch` from GitHub** — uses `gh repo view` to get the actual default branch name instead of hardcoding `main`.
-
-## Known Limitations
-
-- **Remote hardcoded to `origin`** — `bookmark_track` and `needs_push` assume the PR remote is `origin`. Fork-based workflows (e.g., `origin` = upstream, `fork` = user's fork) will not work correctly. Fix requires detecting which remote `gh` uses for PRs.
-- **Multiple PRs per bookmark** — if multiple PRs (e.g., Open + Closed/Merged) share the same `headRefName`, one is silently dropped during `build()`. Needs priority-based resolution.
-- **`gh pr list --limit 200`** — may miss PRs in repos with many PRs.

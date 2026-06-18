@@ -24,19 +24,59 @@ pub(crate) struct InputData {
     pub(crate) jj_entries: Vec<jj::JjLogEntry>,
     pub(crate) prs: Vec<gh::GhPr>,
     pub(crate) default_branch: types::Bookmark,
-    /// Bookmark names tracked on the push remote (origin).
+    /// Bookmark names → tracked remotes (excluding `git`).
     /// `None` means all bookmarks are considered tracked (legacy behavior).
-    #[serde(default)]
-    pub(crate) tracked_bookmarks: Option<BTreeSet<types::Bookmark>>,
+    // TODO(mingwei): upgrade old fixtures to the map format so we can remove the legacy array deserialization.
+    #[serde(default, deserialize_with = "deserialize_tracked_bookmarks")]
+    pub(crate) tracked_bookmarks: Option<BTreeMap<types::Bookmark, BTreeSet<types::Remote>>>,
     /// Merge commit OIDs that exist in the local repo (for stale trunk detection).
     /// `None` means all merge commits are considered present (legacy behavior).
+    // TODO(mingwei): upgrade fixtures to always include this field.
     #[serde(default)]
     pub(crate) existing_merge_commits: Option<std::collections::HashSet<types::CommitId>>,
+    /// Remote name → GitHub owner, for all configured git remotes.
+    // TODO(mingwei): upgrade fixtures to always include this field.
+    #[serde(default)]
+    pub(crate) remote_owners: BTreeMap<types::Remote, types::Owner>,
 }
 
 impl InputData {
     pub(crate) fn prs_map(&self) -> BTreeMap<gh::PrNum, &gh::GhPr> {
         self.prs.iter().map(|pr| (pr.number, pr)).collect()
+    }
+}
+
+/// Deserialize `tracked_bookmarks` from either the legacy array format (list of bookmark names,
+/// all assumed tracked on "origin") or the new map format (bookmark → set of remotes).
+// TODO(mingwei): remove legacy array handling once all fixtures are upgraded to map format.
+fn deserialize_tracked_bookmarks<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<BTreeMap<types::Bookmark, BTreeSet<types::Remote>>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::Error;
+
+    let value: Option<serde_json::Value> = Option::deserialize(deserializer)?;
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    match value {
+        serde_json::Value::Array(arr) => {
+            // Legacy format: array of bookmark names, all tracked on "origin".
+            let mut map = BTreeMap::new();
+            for item in arr {
+                let name: types::Bookmark = serde_json::from_value(item).map_err(D::Error::custom)?;
+                map.insert(name, [types::REMOTE_ORIGIN.to_owned()].into());
+            }
+            Ok(Some(map))
+        }
+        serde_json::Value::Object(_) => {
+            let map = serde_json::from_value(value).map_err(D::Error::custom)?;
+            Ok(Some(map))
+        }
+        serde_json::Value::Null => Ok(None),
+        _ => Err(D::Error::custom("tracked_bookmarks must be null, array, or object")),
     }
 }
 
@@ -93,7 +133,7 @@ fn run() -> Result<()> {
         return install_aliases(args.repo);
     }
 
-    // Step 1: Load jj entries (the only local I/O).
+    // Step 1: Load jj entries.
     let jj_entries = jj::load_entries()?;
 
     // Step 2: Extract PR numbers from trailers and local bookmark names.
@@ -108,8 +148,9 @@ fn run() -> Result<()> {
     // Step 3: Single GraphQL call for PR data + statuses + default branch.
     let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, local_bookmarks)?;
 
-    // Step 4: Load tracked bookmarks (fast, ~25ms).
-    let tracked_bookmarks = jj::load_tracked_bookmarks("origin")?;
+    // Step 4: Load tracked bookmarks and remote owners.
+    let tracked_bookmarks = jj::load_tracked_bookmarks()?;
+    let remote_owners = jj::load_remote_owners()?;
 
     // Step 5: Check which merged PRs have their merge commit in the local repo.
     let merge_oids: Vec<&types::CommitId<str>> = prs
@@ -126,6 +167,7 @@ fn run() -> Result<()> {
         default_branch,
         tracked_bookmarks: Some(tracked_bookmarks),
         existing_merge_commits: Some(existing_merge_commits),
+        remote_owners,
     });
 
     // Handle util commands that need input data.
@@ -144,6 +186,7 @@ fn run() -> Result<()> {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
+        &input.remote_owners,
     )?;
 
     let result = match command {
@@ -192,11 +235,16 @@ fn run() -> Result<()> {
             Ok(())
         }
         Command::Create(args) => {
+            let push_remote_config = jj::push_remote_config()?;
             let plan = pr_dag::plan_create(
                 &state,
                 &prs,
                 &input.jj_entries,
                 &input.default_branch,
+                input.tracked_bookmarks.as_ref(),
+                &input.remote_owners,
+                gh::upstream_repo_owner,
+                push_remote_config.as_deref(),
                 &args.bookmark,
                 args.title.as_deref(),
                 args.body.as_deref(),
