@@ -1006,16 +1006,15 @@ pub fn render_log(
                     } else {
                         ""
                     };
-                    let pr_str = match gh_pr {
-                        Some(pr) => {
-                            let ci_review = pr_statuses.get(pr_id).map(ci_review_indicators).unwrap_or_default();
-                            format!(
-                                "{}{sync_indicator} {}{ci_review}",
-                                crate::style::pr_num(*pr_id, Some(&pr.url)),
-                                crate::style::status(pr.state, pr.is_draft),
-                            )
-                        }
-                        None => format!("{}{sync_indicator}", crate::style::pr_num(*pr_id, None),),
+                    let pr_str = if let Some(pr) = gh_pr {
+                        let ci_review = pr_statuses.get(pr_id).map(ci_review_indicators).unwrap_or_default();
+                        format!(
+                            "{}{sync_indicator} {}{ci_review}",
+                            crate::style::pr_num(*pr_id, Some(&pr.url)),
+                            crate::style::status(pr.state, pr.is_draft),
+                        )
+                    } else {
+                        format!("{}{sync_indicator}", crate::style::pr_num(*pr_id, None),)
                     };
                     line1_parts.push(pr_str);
                 }
