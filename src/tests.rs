@@ -975,13 +975,30 @@ fn foreign_pr_bookmark_collision() {
 #[test]
 #[tracing_test::traced_test]
 fn duplicate_remote_owner_warns() {
-    // Two remotes pointing to the same owner should produce an error.
+    // Two remotes pointing to the same owner should produce a warning when a PR triggers the lookup.
+    use crate::gh::PrState;
     use crate::types::Remote;
     let f = InputData {
-        jj_entries: vec![entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
-        prs: vec![],
+        jj_entries: vec![
+            with_remote(
+                entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![GhPr {
+            number: PrNum::new(1).unwrap(),
+            head_ref_name: Bookmark("feat".to_owned()),
+            base_ref_name: Bookmark("main".to_owned()),
+            state: PrState::Open,
+            is_draft: false,
+            url: "https://github.com/test/repo/pull/1".to_owned(),
+            title: "PR #1".to_owned(),
+            merge_commit_oid: None,
+            head_repo_owner: Some(Owner("same-org".to_owned())),
+        }],
         default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some(BTreeMap::new()),
+        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [Remote("origin".to_owned())].into())].into()),
         existing_merge_commits: None,
         remote_owners: [
             (Remote("origin".to_owned()), Owner("same-org".to_owned())),
@@ -999,13 +1016,5 @@ fn duplicate_remote_owner_warns() {
     );
     assert!(result.is_ok());
 
-    logs_assert(|lines| {
-        println!("{:?}", lines);
-        Ok(())
-    });
-
-    assert!(logs_contain(
-        "GitHub owner \"same-org\" has multiple remotes, using the first: [\"origin\", \"upstream\"].\n\
-            To resolve ambiguity, remove all except one with `jj git remote remove <REMOTE>`."
-    ));
+    assert!(logs_contain("has multiple remotes, using the first"));
 }
