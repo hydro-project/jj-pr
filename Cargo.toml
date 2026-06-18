@@ -20,6 +20,11 @@ slotmap = "1"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 
+[dev-dependencies]
+flate2 = "1.1.1"
+insta = { version = "1.47.2", features = ["json", "glob"] }
+tracing-test = "0.2"
+
 [lints.rust]
 impl_trait_overcaptures = "warn"
 missing_unsafe_on_extern = "deny"
@@ -41,7 +46,3 @@ str_to_string = "warn"
 try_err = "warn"
 uninlined_format_args = "allow"
 unused_async = "warn"
-
-[dev-dependencies]
-flate2 = "1.1.1"
-insta = { version = "1.47.2", features = ["json", "glob"] }

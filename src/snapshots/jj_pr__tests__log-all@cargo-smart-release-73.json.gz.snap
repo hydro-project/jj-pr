@@ -1,0 +1,72 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, true, false)"
+input_file: src/fixtures/cargo-smart-release-73.json.gz
+---
+○  [1m[35mnvxuypzmrtoy[0m [34m5c07f746e312[0m [1m[35msandbox-1dc5e204-7988-4861-897e-b992eb896310[0m [2m(no PR)[0m
+│  [32m(empty)[0m [32m(no description set)[0m
+│ ○  [1m[35mpxkrllvwuttz[0m [34m6e609022754f[0m [1m[35msandbox-5e2ab2cd-adf7-47fe-9768-5bc367a0cde8[0m [2m(no PR)[0m
+├─╯  [32m(empty)[0m [32m(no description set)[0m
+○        [1m[35myyltymkotsxx[0m [34mb8e7469ab169[0m [1m[35mmain[0m [2m(no PR)[0m
+├─┬─┬─╮  [32m(empty)[0m merge of both `--pre-id` and `--alow-empty-release-message` changes
+│ │ │ [1m[32m@[0m  [1m[35mxonsrrswvsow[0m [34m092be5b24656[0m [1m[35mignore-yanked[0m [2m(no PR)[0m
+│ │ │ │  feat: skip yanked versions when determining latest release from crates index
+○ │ │ │  [1m[35mrqllvurqysvl[0m [34mfb8180b04fb1[0m [2m(no PR)[0m
+│ │ │ │  fix: version regression when safety-bumped pre-release package has only minor commits
+○ │ │ │  [1m[35mmnpukyysxslx[0m [34m2b3aa1e67343[0m [2m(no PR)[0m
+│ │ │ │  Clarify --pre-id interaction in CLI docs for --bump, --bump-dependencies
+○ │ │ │  [1m[35mtwvqxzsxnzlp[0m [34m63f9819a347d[0m [2m(no PR)[0m
+│ │ │ │  Propagate safety bumps for pre-release-incompatible version changes
+○ │ │ │  [1m[35mzomukournpmk[0m [34mbac51f9c08d6[0m [2m(no PR)[0m
+│ │ │ │  Fix --pre-id auto bump ignoring 0.x semver conventions
+○ │ │ │  [1m[35mzmsvprkuspou[0m [34m5bbc8846ba27[0m [2m(no PR)[0m
+├─────╯  feat: add pre-release version support with `--pre-id` modifier
+│ │ │ ○  [1m[35mwutqnwrsupmt[0m [34mf73a689576ed[0m [1m[35msandbox-c5fd1629-2a2f-4abc-97a9-5deb7dab2335[0m [2m(no PR)[0m
+│ ├───╯  [32m(empty)[0m [32m(no description set)[0m
+│ ○ │  [1m[35mssvzuxxlprwz[0m [34m7a554b92119a[0m [1m[35mfix-empty[0m [1m[36m]8;;https://github.com/GitoxideLabs/cargo-smart-release/pull/126PR #126]8;;[0m [32mReady[0m
+├─╯ │  fix: honor --allow-empty-release-message to skip changelog bail in execute mode
+│   ○  [1m[35mmnqkswxpvvlw[0m [34m5e11b89d2f74[0m [1m[35mfix-dep-bump[0m [2m(no PR)[0m
+├───╯  fix: manifest adjustment not applied to dependent crates already in traversal
+[1m[36m◆[0m  [1m[35msnpzwmuskqmv[0m [34m27bc4bbada15[0m [1m[32mtrunk()[0m
+│  [32m(empty)[0m Merge pull request #124 from GitoxideLabs/dependabot/cargo/gix-0.83.0
+│ ○  [1m[35mtoxwmwvklpqo[0m [34m3b9f588f2bb9[0m [2m(no PR)[0m
+│ │  Move pre_id logic into bump_major_minor_patch
+│ ○  [1m[35mowprlzzpvmqx[0m [34md49e7a59c627[0m [2m(no PR)[0m
+│ │  Dedupe PreRelease label/counter logic
+│ ○  [1m[35mulrlknwvoxkl[0m [34m8e21e549e34d[0m [2m(no PR)[0m
+│ │  Use if-let instead of match for simple Option handling
+│ ○  [1m[35mxtnqmttqxkqw[0m [34m9d2b4dca134f[0m [2m(no PR)[0m
+│ │  Make extract_pre_number panic on non-numeric suffix instead of silently returning 0
+│ ○  [1m[35mmwukmnvqkszy[0m [34mc5753571e800[0m [2m(no PR)[0m
+│ │  Clarify rhs_is_breaking_bump_for_lhs doc comment
+│ ○  [1m[35mrvyomszmszlt[0m [34m4cedb6b617d2[0m [2m(no PR)[0m
+│ │  Add doc comment to rhs_is_breaking_bump_for_lhs
+│ ○  [1m[35mmvqnqksskwun[0m [34m28cfac599fc9[0m [2m(no PR)[0m
+│ │  Simplify rhs_is_breaking_bump_for_lhs expression
+│ ○  [1m[35myxlkxnxuoknp[0m [34me708de72aad9[0m [1m[35mhydro/pre-release[0m [2m(no PR)[0m
+│ │  Derive Copy on BumpSpec, remove clones, clean up docs
+│ ○  [1m[35muztpmtxonqnv[0m [34m11410bed07d9[0m [2m(no PR)[0m
+│ │  Step 6: Implement auto --pre-id logic and clean up
+│ ○  [1m[35mzqzovoqlyymo[0m [34m847a2a13a3cd[0m [2m(no PR)[0m
+│ │  Step 5: Add SegmentScope::UnreleasedSinceStable
+│ ○  [1m[35mltxqqtlmyxsk[0m [34m5267ea9a08f1[0m [2m(no PR)[0m
+│ │  Step 3: Implement PreRelease variant logic
+│ ○  [1m[35mssvqspowwnsk[0m [34m2a66050e3785[0m [2m(no PR)[0m
+│ │  Step 2: Implement --pre-id as modifier on Major/Minor/Patch
+│ ○  [1m[35mqtnmklyxurow[0m [34m7ab7bca05d86[0m [2m(no PR)[0m
+│ │  Step 1: Refactor BumpSpec enum and add pre_id to Context
+│ ○  [1m[35monmywttslkrz[0m [34m485a81434092[0m [2m(no PR)[0m
+│ │  Update README to mark pre-release version support as complete
+│ ○  [1m[35mswkpyortvtoz[0m [34mac39de902f82[0m [2m(no PR)[0m
+│ │  Phase 7: Add comprehensive unit tests for pre-release support
+│ ○  [1m[35mzntwlwlwzrrl[0m [34m68eb17aac74c[0m [2m(no PR)[0m
+│ │  Phase 4: Force-update dependency version requirements for pre-release
+│ ○  [1m[35mtytnplvyxzoy[0m [34m54960e89ced1[0m [2m(no PR)[0m
+│ │  Phase 3: CLI interface for pre-release bumping
+│ ○  [1m[35mlrzllupvrupq[0m [34mc1873557c232[0m [2m(no PR)[0m
+│ │  Phase 2: Pre-release stability classification
+│ ○  [1m[35mpsrsnmnxxsnt[0m [34m72b9a5fe6977[0m [2m(no PR)[0m
+│ │  Phase 1: Core version bumping logic for pre-release support
+│ ○  [1m[35mrmmovtzutkln[0m [34m243e448b3572[0m [2m(no PR)[0m
+├─╯  Add PRERELEASE_PLAN.md documenting the plan for pre-release version support
+[2m~[0m  [2m(elided revisions)[0m

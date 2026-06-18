@@ -23,7 +23,7 @@ fn render_show_with_statuses(
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        &BTreeMap::new(),
+        &input.remote_owners,
     )
     .unwrap();
     let mut buf = Vec::new();
@@ -39,7 +39,7 @@ fn render_log(input: &InputData, show_all: bool, reversed: bool) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        &BTreeMap::new(),
+        &input.remote_owners,
     )
     .unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
@@ -64,7 +64,7 @@ fn plan_sync(input: &InputData) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        &BTreeMap::new(),
+        &input.remote_owners,
     )
     .unwrap();
     match pr_dag::plan_sync(
@@ -926,4 +926,95 @@ fn closed_pr_with_open_child_stays_visible() {
     );
     insta::assert_snapshot!("closed_pr_with_open_child_show", render_show(&f, false, false));
     insta::assert_snapshot!("closed_pr_with_open_child_log", render_log(&f, false, false));
+}
+
+#[test]
+fn foreign_pr_bookmark_collision() {
+    // Another user's PR from their fork has headRefName "main" which collides
+    // with our local "main" bookmark. Should be completely ignored.
+    use crate::gh::PrState;
+    let f = InputData {
+        jj_entries: vec![
+            with_remote(
+                entry("c1", "ch1", &["trunk"], "our work\n\nPR: #2\n", &["feat"], false),
+                "feat",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![
+            // Foreign PR: someone else pushed from their fork's "main"
+            GhPr {
+                number: PrNum::new(1).unwrap(),
+                head_ref_name: Bookmark("main".to_owned()),
+                base_ref_name: Bookmark("main".to_owned()),
+                state: PrState::Merged,
+                is_draft: false,
+                url: "https://github.com/test/repo/pull/1".to_owned(),
+                title: "Foreign PR".to_owned(),
+                merge_commit_oid: Some(CommitId("merge1".to_owned())),
+                head_repo_owner: Some(Owner("someone-else".to_owned())),
+            },
+            gh_pr(2, "feat", "main"),
+        ],
+        default_branch: Bookmark("main".to_owned()),
+        tracked_bookmarks: Some(
+            [
+                (Bookmark("main".to_owned()), [REMOTE_ORIGIN.to_owned()].into()),
+                (Bookmark("feat".to_owned()), [REMOTE_ORIGIN.to_owned()].into()),
+            ]
+            .into(),
+        ),
+        existing_merge_commits: None,
+        remote_owners: [(REMOTE_ORIGIN.to_owned(), Owner("us".to_owned()))].into(),
+    };
+    // Should only show our PR #2, not the foreign PR #1.
+    insta::assert_snapshot!("foreign_pr_collision_show", render_show(&f, true, false));
+    insta::assert_snapshot!("foreign_pr_collision_sync", plan_sync(&f));
+}
+
+#[test]
+#[tracing_test::traced_test]
+fn duplicate_remote_owner_warns() {
+    // Two remotes pointing to the same owner should produce a warning when a PR triggers the lookup.
+    use crate::gh::PrState;
+    use crate::types::Remote;
+    let f = InputData {
+        jj_entries: vec![
+            with_remote(
+                entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        prs: vec![GhPr {
+            number: PrNum::new(1).unwrap(),
+            head_ref_name: Bookmark("feat".to_owned()),
+            base_ref_name: Bookmark("main".to_owned()),
+            state: PrState::Open,
+            is_draft: false,
+            url: "https://github.com/test/repo/pull/1".to_owned(),
+            title: "PR #1".to_owned(),
+            merge_commit_oid: None,
+            head_repo_owner: Some(Owner("same-org".to_owned())),
+        }],
+        default_branch: Bookmark("main".to_owned()),
+        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [Remote("origin".to_owned())].into())].into()),
+        existing_merge_commits: None,
+        remote_owners: [
+            (Remote("origin".to_owned()), Owner("same-org".to_owned())),
+            (Remote("upstream".to_owned()), Owner("same-org".to_owned())),
+        ]
+        .into(),
+    };
+    let prs = f.prs_map();
+    let result = pr_dag::build(
+        &f.jj_entries,
+        &prs,
+        &f.default_branch,
+        f.tracked_bookmarks.as_ref(),
+        &f.remote_owners,
+    );
+    assert!(result.is_ok());
+
+    assert!(logs_contain("has multiple remotes, using the first"));
 }
