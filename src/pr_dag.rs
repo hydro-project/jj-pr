@@ -147,6 +147,17 @@ pub fn build(
                     if !is_tracked {
                         continue;
                     }
+                    // Skip PRs from other users' forks: if head_repo_owner is set and
+                    // remote_owners is populated but doesn't contain a matching owner,
+                    // this PR belongs to someone else (e.g. their fork's "main" collides
+                    // with our local "main").
+                    if let Some(pr_owner) = pr.head_repo_owner.as_deref() {
+                        if !remote_owners.is_empty()
+                            && !remote_owners.values().any(|owner| **owner == *pr_owner)
+                        {
+                            continue;
+                        }
+                    }
                     // This is a PR bookmark.
                     if 1 < local_bookmark.target.len() {
                         // Conflict! Check if this is a merged PR with a deleted remote
@@ -222,6 +233,14 @@ pub fn build(
             let is_tracked = tracked_bookmarks.is_none_or(|tb| tb.contains_key(bookmark));
             if !is_tracked {
                 continue;
+            }
+            // Skip PRs from other users' forks (same check as cid_pr_tip above).
+            if let Some(pr_owner) = gh_pr.head_repo_owner.as_deref() {
+                if !remote_owners.is_empty()
+                    && !remote_owners.values().any(|owner| **owner == *pr_owner)
+                {
+                    continue;
+                }
             }
             // Resolve the remote for this PR from head_repo_owner (authoritative, from GitHub).
             let pr_remote = gh_pr.head_repo_owner.as_deref().and_then(|pr_owner| {

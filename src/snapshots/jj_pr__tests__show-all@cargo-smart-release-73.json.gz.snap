@@ -1,0 +1,9 @@
+---
+source: src/tests.rs
+expression: "render_show(&f, true, false)"
+input_file: src/fixtures/cargo-smart-release-73.json.gz
+---
+○  [1m[36m]8;;https://github.com/GitoxideLabs/cargo-smart-release/pull/126PR #126]8;;[0m  [32mReady[0m  [1m[35mfix-empty[0m
+│  fix: honor --allow-empty-release-message to skip changelog bail in execute mode
+[1m[36m◆[0m  [1m[32mtrunk()[0m
+[2m~[0m  [2m(elided revisions)[0m

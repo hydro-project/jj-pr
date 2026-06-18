@@ -23,7 +23,7 @@ fn render_show_with_statuses(
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        &BTreeMap::new(),
+        &input.remote_owners,
     )
     .unwrap();
     let mut buf = Vec::new();
@@ -39,7 +39,7 @@ fn render_log(input: &InputData, show_all: bool, reversed: bool) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        &BTreeMap::new(),
+        &input.remote_owners,
     )
     .unwrap();
     let pr_statuses = BTreeMap::<PrNum, PrStatus>::new();
@@ -64,7 +64,7 @@ fn plan_sync(input: &InputData) -> String {
         &prs,
         &input.default_branch,
         input.tracked_bookmarks.as_ref(),
-        &BTreeMap::new(),
+        &input.remote_owners,
     )
     .unwrap();
     match pr_dag::plan_sync(
