@@ -78,10 +78,7 @@ fn styled(style: Style, text: &str) -> String {
 /// Format a PR number as a clickable hyperlink (if URL provided) with bold cyan styling.
 pub fn pr_num(number: crate::gh::PrNum, url: Option<&str>) -> String {
     let text = format!("PR #{}", number.get());
-    let linked = match url {
-        Some(u) => osc8(u, &text),
-        None => text,
-    };
+    let linked = if let Some(u) = url { osc8(u, &text) } else { text };
     styled(PR_NUM, &linked)
 }
 
