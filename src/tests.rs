@@ -843,6 +843,51 @@ fn create_fork_workflow() {
 }
 
 #[test]
+fn create_body_strips_trailers() {
+    // Verify Co-authored-by and PR trailers are removed from default body.
+    let f = fixture(
+        vec![
+            entry(
+                "c1",
+                "ch1",
+                &["trunk"],
+                "title line\n\nBody text here.\n\nCo-authored-by: Alice <a@b.com>\nPR: #99\n",
+                &["feat"],
+                false,
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![],
+        None,
+    );
+    let prs = f.prs_map();
+    let state = pr_dag::build(
+        &f.jj_entries,
+        &prs,
+        &f.default_branch,
+        f.tracked_bookmarks.as_ref(),
+        &f.remote_owners,
+    )
+    .unwrap();
+    let upstream = Owner("test".to_owned());
+    let plan = pr_dag::plan_create(
+        &state,
+        &prs,
+        &f.jj_entries,
+        &f.default_branch,
+        f.tracked_bookmarks.as_ref(),
+        &f.remote_owners,
+        || Ok(upstream.clone()),
+        None,
+        "feat",
+        None,
+        None,
+    )
+    .unwrap();
+    assert_eq!(plan.body, "Body text here.");
+}
+
+#[test]
 fn bookmark_name_collision_no_remote() {
     // User has a local bookmark "fix-typo" that coincidentally matches someone else's PR.
     // No remote tracking, no trailer. Should NOT plan a push (not our PR).
