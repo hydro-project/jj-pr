@@ -1603,6 +1603,10 @@ pub fn plan_create(
             .description
             .lines()
             .skip(1)
+            .filter(|line| {
+                let l = line.trim_start().to_ascii_lowercase();
+                !l.starts_with("co-authored-by:") && !l.starts_with("pr:")
+            })
             .collect::<Vec<_>>()
             .join("\n")
             .trim()
