@@ -1014,7 +1014,7 @@ pub fn render_log(
                             crate::style::status(pr.state, pr.is_draft),
                         )
                     } else {
-                        format!("{}{sync_indicator}", crate::style::pr_num(*pr_id, None),)
+                        format!("{}{sync_indicator}", crate::style::pr_num(*pr_id, None))
                     };
                     line1_parts.push(pr_str);
                 }
