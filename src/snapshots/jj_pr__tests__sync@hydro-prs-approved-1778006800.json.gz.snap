@@ -4,3 +4,7 @@ expression: plan_sync(&f)
 input_file: src/fixtures/hydro-prs-approved-1778006800.json.gz
 ---
 push: #2841 (mingwei/delete-delaytype), #2746 (mingwei/sqs-rebase)
+update #2829 (mingwei/singleton-refs-dfir) title -> "Move DFIR singleton handling from RefCell to plain local variables"
+update #2835 (mingwei/delete-state-api) title -> "refactor(dfir_lang): Remove the now-unused state API (add_state, state_ref_unchecked, set_state_lifespan_hook)"
+update #2836 (mingwei/delete-owo-dots) title -> "refactor(dfir_lang): remove `..` from OperatorWriteOutput destructures in delegating operators"
+update #2812 (mingwei/delete-subgraph-id) title -> "cleanup: remove SubgraphId, SubgraphTag, LoopId, LoopTag, simplify StateLifespan"
