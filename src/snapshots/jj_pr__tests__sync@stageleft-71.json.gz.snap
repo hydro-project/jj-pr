@@ -3,4 +3,5 @@ source: src/tests.rs
 expression: plan_sync(&f)
 input_file: src/fixtures/stageleft-71.json.gz
 ---
-
+update #74 (sandbox-5d382e2d-58bd-43a1-84d8-d42e347b80b5) title -> "feat(stageleft): fix q! span attribution via hidden macro_rules! export"
+update #76 (mingwei/fnmut) title -> "feat: add FnMut support to stageleft splice methods and type hints"

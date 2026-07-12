@@ -2,4 +2,4 @@
 source: src/tests.rs
 expression: plan_sync(&f)
 ---
-
+update #1 (feat) title -> "feat"

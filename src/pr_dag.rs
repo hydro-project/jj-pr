@@ -1193,6 +1193,13 @@ pub enum SyncAction {
         bookmark: Bookmark,
         new_base: Bookmark,
     },
+    /// Update a PR's title and body on GitHub (single-revision PRs only).
+    UpdateDescription {
+        pr: PrNum,
+        bookmark: Bookmark,
+        new_title: String,
+        new_body: String,
+    },
 }
 
 impl fmt::Display for SyncAction {
@@ -1220,6 +1227,14 @@ impl fmt::Display for SyncAction {
             SyncAction::UpdateBase { pr, bookmark, new_base } => {
                 write!(f, "update {pr} ({bookmark}) base -> {new_base}")
             }
+            SyncAction::UpdateDescription {
+                pr,
+                bookmark,
+                new_title,
+                ..
+            } => {
+                write!(f, "update {pr} ({bookmark}) title -> \"{new_title}\"")
+            }
         }
     }
 }
@@ -1229,6 +1244,26 @@ impl fmt::Display for SyncAction {
 pub struct SyncPlan {
     pub actions: Vec<SyncAction>,
     pub warnings: Vec<String>,
+}
+
+/// Derive a PR title and body from a commit description.
+///
+/// The title is the first line of the description.
+/// The body is all subsequent lines, excluding trailing `PR:` and `Co-authored-by:` trailers.
+pub fn title_body_from_description(description: &str) -> (String, String) {
+    let title = description.lines().next().unwrap_or("untitled").to_owned();
+    let body = description
+        .lines()
+        .skip(1)
+        .filter(|line| {
+            let l = line.trim_start().to_ascii_lowercase();
+            !l.starts_with("co-authored-by:") && !l.starts_with("pr:")
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim()
+        .to_owned();
+    (title, body)
 }
 
 /// Plan sync actions. Returns Err if blocking issues exist.
@@ -1424,6 +1459,36 @@ pub fn plan_sync(
         }
     }
 
+    // 6. Update PR title/body for single-revision open PRs whose description changed.
+    for &nk in state.topo_order.iter() {
+        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
+            continue;
+        };
+        let Some(gh_pr) = prs.get(pr_num) else { continue };
+        if gh_pr.state != gh::PrState::Open {
+            continue;
+        }
+        // Collect commits in this node.
+        let node_entries: Vec<&JjLogEntry> = jj_entries
+            .iter()
+            .filter(|e| state.commit_node.get(&*e.commit.commit_id) == Some(&nk))
+            .collect();
+        // Only auto-update if exactly one revision.
+        if node_entries.len() != 1 {
+            continue;
+        }
+        let entry = node_entries[0];
+        let (expected_title, expected_body) = title_body_from_description(&entry.commit.description);
+        if gh_pr.title != expected_title || gh_pr.body != expected_body {
+            actions.push(SyncAction::UpdateDescription {
+                pr: *pr_num,
+                bookmark: gh_pr.head_ref_name.clone(),
+                new_title: expected_title,
+                new_body: expected_body,
+            });
+        }
+    }
+
     Ok(SyncPlan { actions, warnings })
 }
 
@@ -1507,6 +1572,20 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     crate::style::bookmark(new_base),
                 );
                 gh::edit_base(pr.get(), new_base)?;
+            }
+            SyncAction::UpdateDescription {
+                pr,
+                bookmark,
+                new_title,
+                new_body,
+            } => {
+                eprintln!(
+                    "Updating {} ({}) title -> \"{}\"",
+                    crate::style::pr_num(*pr, None),
+                    crate::style::bookmark(bookmark),
+                    new_title,
+                );
+                gh::edit_title_body(pr.get(), new_title, new_body)?;
             }
         }
     }
@@ -1671,30 +1750,9 @@ pub fn plan_create(
 
     let mut base = find_base_branch(state, prs, jj_entries, bookmark_ref, default_branch);
 
-    let title = title.map(|s| s.to_owned()).unwrap_or_else(|| {
-        tip_entry
-            .commit
-            .description
-            .lines()
-            .next()
-            .unwrap_or("untitled")
-            .to_owned()
-    });
-    let body = body.map(|s| s.to_owned()).unwrap_or_else(|| {
-        tip_entry
-            .commit
-            .description
-            .lines()
-            .skip(1)
-            .filter(|line| {
-                let l = line.trim_start().to_ascii_lowercase();
-                !l.starts_with("co-authored-by:") && !l.starts_with("pr:")
-            })
-            .collect::<Vec<_>>()
-            .join("\n")
-            .trim()
-            .to_owned()
-    });
+    let (default_title, default_body) = title_body_from_description(&tip_entry.commit.description);
+    let title = title.map(|s| s.to_owned()).unwrap_or(default_title);
+    let body = body.map(|s| s.to_owned()).unwrap_or(default_body);
 
     // Walk backwards from tip to find commits that need stamping.
     // We can't use `state.commit_node` alone here because `state` was built before this PR existed — the node

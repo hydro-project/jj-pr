@@ -5,3 +5,4 @@ input_file: src/fixtures/remade-pr-both-branches-exist.json.gz
 ---
 stamp #2812 trailer on luuklzktmzky
 push: #2812 (mingwei/delete-subgraph-id)
+update #2844 (mingwei/push-fold) title -> "feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators"

@@ -5,3 +5,4 @@ input_file: src/fixtures/jj-pr-conflict-1778014006.json.gz
 ---
 skip push #36 (handle-forks) — has content conflicts
 push: #45 (red-x)
+update #45 (red-x) title -> "feat: use red ✗ for conflicted branches in show/log views"

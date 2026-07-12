@@ -4,3 +4,4 @@ expression: plan_sync(&f)
 input_file: src/fixtures/cargo-smart-release-73.json.gz
 ---
 stamp #126 trailer on ssvzuxxlprwz
+update #126 (fix-empty) title -> "fix: honor --allow-empty-release-message to skip changelog bail in execute mode"
