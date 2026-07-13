@@ -117,8 +117,6 @@ pub struct GhPr {
     pub is_draft: bool,
     pub url: String,
     pub title: String,
-    #[serde(default)]
-    pub body: String,
     /// The commit SHA of the merge/squash commit on the base branch (only for merged PRs).
     #[serde(default)]
     pub merge_commit_oid: Option<CommitId>,
@@ -134,7 +132,7 @@ pub struct PrStatus {
 }
 
 /// GraphQL fields for a PR node, used in query construction.
-const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title body reviewDecision latestReviews(first:10) { nodes { state } } headRepositoryOwner { login } mergeCommit { oid } commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
+const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision latestReviews(first:10) { nodes { state } } headRepositoryOwner { login } mergeCommit { oid } commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
 
 /// Raw GraphQL response types for serde deserialization.
 #[derive(Deserialize)]
@@ -208,7 +206,6 @@ struct PrNode {
     is_draft: bool,
     url: String,
     title: String,
-    body: String,
     review_decision: Option<ReviewDecision>,
     latest_reviews: Option<LatestReviews>,
     merge_commit: Option<MergeCommit>,
@@ -398,7 +395,6 @@ pub fn load_prs_and_default_branch<'a>(
             is_draft: d.is_draft,
             url: d.url,
             title: d.title,
-            body: d.body,
             merge_commit_oid: d.merge_commit.map(|mc| mc.oid),
             head_repo_owner: d.head_repository_owner.map(|o| o.login),
         });

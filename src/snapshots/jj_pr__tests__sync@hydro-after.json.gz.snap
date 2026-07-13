@@ -1,8 +1,8 @@
 ---
 source: src/tests.rs
+assertion_line: 129
 expression: plan_sync(&f)
 input_file: src/fixtures/hydro-after.json.gz
 ---
 push: #2798 (mingwei/delete-intermediate-subgraph), #2801 (mingwei/delete-state-api-usage), #2811 (mingwei/delete-schedule-subgraph-args), #2810 (mingwei/delete-metrics-slotvec), #2812 (mingwei/delete-subgraph-id)
-update #2812 (mingwei/delete-subgraph-id) title -> "cleanup: remove SubgraphId, SubgraphTag, LoopId, LoopTag, simplify StateLifespan"
-update #2804 (mingwei/fix-inline-tasks) title -> "fix(dfir_rs): defer `_counter` task spawning via `Context::request_task` buffer"
+  update #2812 title -> "cleanup: remove SubgraphId, SubgraphTag, LoopId, LoopTag, simplify StateLifespan"

@@ -222,7 +222,6 @@ fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: true,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
-        body: String::new(),
         merge_commit_oid: None,
         head_repo_owner: None,
     }
@@ -238,7 +237,6 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
-        body: String::new(),
         merge_commit_oid: Some(CommitId(format!("merge_commit_{number}"))),
         head_repo_owner: None,
     }
@@ -254,7 +252,6 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
-        body: String::new(),
         merge_commit_oid: None,
         head_repo_owner: None,
     }
@@ -1052,7 +1049,6 @@ fn foreign_pr_bookmark_collision() {
                 is_draft: false,
                 url: "https://github.com/test/repo/pull/1".to_owned(),
                 title: "Foreign PR".to_owned(),
-                body: String::new(),
                 merge_commit_oid: Some(CommitId("merge1".to_owned())),
                 head_repo_owner: Some(Owner("someone-else".to_owned())),
             },
@@ -1096,7 +1092,6 @@ fn duplicate_remote_owner_warns() {
             is_draft: false,
             url: "https://github.com/test/repo/pull/1".to_owned(),
             title: "PR #1".to_owned(),
-            body: String::new(),
             merge_commit_oid: None,
             head_repo_owner: Some(Owner("same-org".to_owned())),
         }],
@@ -1169,59 +1164,47 @@ fn log_wraps_long_description() {
 // --- Auto-update description tests ---
 
 #[test]
-fn sync_updates_description_single_commit() {
-    // Single-commit PR whose title differs from the commit description.
-    let mut pr = gh_pr(1, "feat", "main");
-    pr.title = "old title".to_owned();
-    pr.body = "old body".to_owned();
+fn sync_updates_description_single_commit_on_push() {
+    // Single-commit PR that needs pushing — description update should be included with push.
     let f = fixture(
         vec![
-            with_remote(
-                entry(
-                    "c1",
-                    "ch1",
-                    &["trunk"],
-                    "new title\n\nnew body\n\nPR: #1\n",
-                    &["feat"],
-                    false,
-                ),
-                "feat",
+            // Local is at c2 (new commit), remote is at c1 -> needs push.
+            entry(
+                "c2",
+                "ch2",
+                &["trunk"],
+                "new title\n\nnew body\n\nPR: #1\n",
+                &["feat"],
+                false,
             ),
+            with_remote(entry("c1", "ch1", &["trunk"], "old\n\nPR: #1\n", &[], false), "feat"),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
-        vec![pr],
+        vec![gh_pr(1, "feat", "main")],
         None,
     );
-    insta::assert_snapshot!("sync_updates_description_single_commit", plan_sync(&f));
+    insta::assert_snapshot!("sync_updates_description_single_commit_on_push", plan_sync(&f));
 }
 
 #[test]
-fn sync_no_update_description_multi_commit() {
-    // Multi-commit PR should NOT auto-update its description.
-    let mut pr = gh_pr(1, "feat", "main");
-    pr.title = "old title".to_owned();
-    pr.body = "".to_owned();
+fn sync_no_description_update_multi_commit_on_push() {
+    // Multi-commit PR that needs pushing — should NOT get a description update.
     let f = fixture(
         vec![
-            with_remote(
-                entry("c2", "ch2", &["c1"], "second commit\n\nPR: #1\n", &["feat"], false),
-                "feat",
-            ),
-            entry("c1", "ch1", &["trunk"], "first commit\n\nPR: #1\n", &[], false),
+            entry("c3", "ch3", &["c2"], "third\n\nPR: #1\n", &["feat"], false),
+            with_remote(entry("c2", "ch2", &["c1"], "second\n\nPR: #1\n", &[], false), "feat"),
+            entry("c1", "ch1", &["trunk"], "first\n\nPR: #1\n", &[], false),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
-        vec![pr],
+        vec![gh_pr(1, "feat", "main")],
         None,
     );
-    insta::assert_snapshot!("sync_no_update_description_multi_commit", plan_sync(&f));
+    insta::assert_snapshot!("sync_no_description_update_multi_commit_on_push", plan_sync(&f));
 }
 
 #[test]
-fn sync_no_update_description_already_matches() {
-    // Single-commit PR whose title and body already match — no action needed.
-    let mut pr = gh_pr(1, "feat", "main");
-    pr.title = "feat".to_owned();
-    pr.body = "".to_owned();
+fn sync_no_description_update_when_not_pushing() {
+    // Single-commit PR that is already in sync (no push needed) — no description update.
     let f = fixture(
         vec![
             with_remote(
@@ -1230,8 +1213,8 @@ fn sync_no_update_description_already_matches() {
             ),
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
-        vec![pr],
+        vec![gh_pr(1, "feat", "main")],
         None,
     );
-    insta::assert_snapshot!("sync_no_update_description_already_matches", plan_sync(&f));
+    insta::assert_snapshot!("sync_no_description_update_when_not_pushing", plan_sync(&f));
 }

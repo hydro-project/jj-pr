@@ -1,8 +1,8 @@
 ---
 source: src/tests.rs
+assertion_line: 129
 expression: plan_sync(&f)
 input_file: src/fixtures/remade-pr-old-branch-deleted.json.gz
 ---
 stamp #2812 trailer on luuklzktmzky
 push: #2812 (mingwei/delete-subgraph-id)
-update #2844 (mingwei/push-fold) title -> "feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators"

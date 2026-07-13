@@ -1,8 +1,8 @@
 ---
 source: src/tests.rs
+assertion_line: 451
 expression: plan_sync(&f)
 ---
 push: #2 (feat-b)
+  update #2 title -> "b"
 update #2 (feat-b) base -> feat-a
-update #1 (feat-a) title -> "a"
-update #2 (feat-b) title -> "b"
