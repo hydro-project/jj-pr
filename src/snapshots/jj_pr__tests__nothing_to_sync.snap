@@ -1,5 +1,6 @@
 ---
 source: src/tests.rs
+assertion_line: 488
 expression: plan_sync(&f)
 ---
-update #1 (feat) title -> "feat"
+

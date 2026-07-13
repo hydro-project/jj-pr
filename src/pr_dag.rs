@@ -1167,20 +1167,19 @@ pub enum SyncAction {
         bookmark: Bookmark,
         bookmark_exists: bool,
     },
-    /// Push bookmarks that differ from remote.
-    Push { bookmarks: Vec<(PrNum, Bookmark)> },
+    /// Push bookmarks that differ from remote, and update PR descriptions for
+    /// single-revision PRs being pushed.
+    Push {
+        bookmarks: Vec<(PrNum, Bookmark)>,
+        /// PRs whose title/body should be updated to match the commit description.
+        /// Only populated for single-revision open PRs.
+        description_updates: Vec<(PrNum, String, String)>,
+    },
     /// Update a PR's base branch on GitHub.
     UpdateBase {
         pr: PrNum,
         bookmark: Bookmark,
         new_base: Bookmark,
-    },
-    /// Update a PR's title and body on GitHub (single-revision PRs only).
-    UpdateDescription {
-        pr: PrNum,
-        bookmark: Bookmark,
-        new_title: String,
-        new_body: String,
     },
 }
 
@@ -1202,20 +1201,19 @@ impl fmt::Display for SyncAction {
                     write!(f, "abandon merged {pr} ({bookmark} already deleted)")
                 }
             }
-            SyncAction::Push { bookmarks } => {
+            SyncAction::Push {
+                bookmarks,
+                description_updates,
+            } => {
                 let details: Vec<_> = bookmarks.iter().map(|(pr, bm)| format!("{pr} ({bm})")).collect();
-                write!(f, "push: {}", details.join(", "))
+                write!(f, "push: {}", details.join(", "))?;
+                for (pr, title, _body) in description_updates {
+                    write!(f, "\n  update {pr} title -> \"{title}\"")?;
+                }
+                Ok(())
             }
             SyncAction::UpdateBase { pr, bookmark, new_base } => {
                 write!(f, "update {pr} ({bookmark}) base -> {new_base}")
-            }
-            SyncAction::UpdateDescription {
-                pr,
-                bookmark,
-                new_title,
-                ..
-            } => {
-                write!(f, "update {pr} ({bookmark}) title -> \"{new_title}\"")
             }
         }
     }
@@ -1232,7 +1230,7 @@ pub struct SyncPlan {
 ///
 /// The title is the first line of the description.
 /// The body is all subsequent lines, excluding trailing `PR:` and `Co-authored-by:` trailers.
-pub fn title_body_from_description(description: &str) -> (String, String) {
+fn title_body_from_description(description: &str) -> (String, String) {
     let title = description.lines().next().unwrap_or("untitled").to_owned();
     let body = description
         .lines()
@@ -1335,10 +1333,12 @@ pub fn plan_sync(
     }
 
     // 4. Push — collect all PR bookmarks that need pushing.
+    // Also collect description updates for single-revision open PRs being pushed.
     // Skip nodes that are conflicted or have a conflicted ancestor (can't push children
     // of a conflicted intermediate).
     {
         let mut push_bookmarks = Vec::new();
+        let mut description_updates = Vec::new();
         let mut blocked_by_conflict: HashSet<NodeKey> = HashSet::new();
         for &nk in state.topo_order.iter() {
             let conflicted_self = state.node_conflicted.contains_key(nk);
@@ -1381,10 +1381,27 @@ pub fn plan_sync(
                 continue;
             }
             push_bookmarks.push((*pr_num, gh_pr.head_ref_name.clone()));
+
+            // For single-revision open PRs, also update the PR title/body.
+            if gh_pr.state == gh::PrState::Open {
+                let node_commit_count = jj_entries
+                    .iter()
+                    .filter(|e| state.commit_node.get(&*e.commit.commit_id) == Some(&nk))
+                    .count();
+                if node_commit_count == 1 {
+                    let entry = jj_entries
+                        .iter()
+                        .find(|e| state.commit_node.get(&*e.commit.commit_id) == Some(&nk))
+                        .unwrap();
+                    let (title, body) = title_body_from_description(&entry.commit.description);
+                    description_updates.push((*pr_num, title, body));
+                }
+            }
         }
         if !push_bookmarks.is_empty() {
             actions.push(SyncAction::Push {
                 bookmarks: push_bookmarks,
+                description_updates,
             });
         }
     }
@@ -1412,36 +1429,6 @@ pub fn plan_sync(
                 pr: *pr_num,
                 bookmark: gh_pr.head_ref_name.clone(),
                 new_base: expected,
-            });
-        }
-    }
-
-    // 6. Update PR title/body for single-revision open PRs whose description changed.
-    for &nk in state.topo_order.iter() {
-        let Some(Node::Pr(pr_num)) = state.nodes.get(nk) else {
-            continue;
-        };
-        let Some(gh_pr) = prs.get(pr_num) else { continue };
-        if gh_pr.state != gh::PrState::Open {
-            continue;
-        }
-        // Collect commits in this node.
-        let node_entries: Vec<&JjLogEntry> = jj_entries
-            .iter()
-            .filter(|e| state.commit_node.get(&*e.commit.commit_id) == Some(&nk))
-            .collect();
-        // Only auto-update if exactly one revision.
-        if node_entries.len() != 1 {
-            continue;
-        }
-        let entry = node_entries[0];
-        let (expected_title, expected_body) = title_body_from_description(&entry.commit.description);
-        if gh_pr.title != expected_title || gh_pr.body != expected_body {
-            actions.push(SyncAction::UpdateDescription {
-                pr: *pr_num,
-                bookmark: gh_pr.head_ref_name.clone(),
-                new_title: expected_title,
-                new_body: expected_body,
             });
         }
     }
@@ -1508,7 +1495,10 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 jj::rebase(&format!("roots({revset})"), "trunk()")?;
                 jj::abandon(&revset)?;
             }
-            SyncAction::Push { bookmarks } => {
+            SyncAction::Push {
+                bookmarks,
+                description_updates,
+            } => {
                 eprintln!(
                     "Pushing {} bookmark(s): {}",
                     bookmarks.len(),
@@ -1520,6 +1510,10 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 );
                 let refs: Vec<&Bookmark<str>> = bookmarks.iter().map(|(_, s)| &**s).collect();
                 jj::git_push_bookmarks(&refs)?;
+                for (pr, title, body) in description_updates {
+                    eprintln!("Updating {} title -> \"{}\"", crate::style::pr_num(*pr, None), title,);
+                    gh::edit_title_body(pr.get(), title, body)?;
+                }
             }
             SyncAction::UpdateBase { pr, bookmark, new_base } => {
                 eprintln!(
@@ -1529,20 +1523,6 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                     crate::style::bookmark(new_base),
                 );
                 gh::edit_base(pr.get(), new_base)?;
-            }
-            SyncAction::UpdateDescription {
-                pr,
-                bookmark,
-                new_title,
-                new_body,
-            } => {
-                eprintln!(
-                    "Updating {} ({}) title -> \"{}\"",
-                    crate::style::pr_num(*pr, None),
-                    crate::style::bookmark(bookmark),
-                    new_title,
-                );
-                gh::edit_title_body(pr.get(), new_title, new_body)?;
             }
         }
     }

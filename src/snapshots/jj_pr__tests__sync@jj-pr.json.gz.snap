@@ -1,9 +1,10 @@
 ---
 source: src/tests.rs
+assertion_line: 129
 expression: plan_sync(&f)
 input_file: src/fixtures/jj-pr.json.gz
 ---
 stamp #4 trailer on pvmxnwquyyoq
 abandon merged #3 (delete mingwei/pull-parent-pr-out-of-child)
 push: #7 (mingwei/pull-parent-pr-out-of-child), #5 (mingwei/clickable-pr), #4 (mingwei/confirm)
-update #5 (mingwei/clickable-pr) title -> "Make PR # references into clickable URL links in create output"
+  update #5 title -> "Make PR # references into clickable URL links in create output"

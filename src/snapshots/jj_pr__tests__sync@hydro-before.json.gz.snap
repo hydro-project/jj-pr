@@ -1,5 +1,6 @@
 ---
 source: src/tests.rs
+assertion_line: 129
 expression: plan_sync(&f)
 input_file: src/fixtures/hydro-before.json.gz
 ---
@@ -14,8 +15,7 @@ stamp #2801 trailer on lqxnymrprnpl
 stamp #2801 trailer on nmqrowzwxvpn
 stamp #2798 trailer on xqxnxvxoyltz
 push: #2801 (mingwei/delete-state-api-usage), #2810 (mingwei/delete-metrics-slotvec), #2811 (mingwei/delete-schedule-subgraph-args), #2812 (mingwei/delete-subgraph-id)
+  update #2812 title -> "cleanup: remove SubgraphId, SubgraphTag, LoopId, LoopTag, simplify StateLifespan"
 update #2801 (mingwei/delete-state-api-usage) base -> mingwei/delete-intermediate-subgraph
 update #2810 (mingwei/delete-metrics-slotvec) base -> mingwei/delete-state-api-usage
 update #2811 (mingwei/delete-schedule-subgraph-args) base -> mingwei/delete-state-api-usage
-update #2812 (mingwei/delete-subgraph-id) title -> "cleanup: remove SubgraphId, SubgraphTag, LoopId, LoopTag, simplify StateLifespan"
-update #2804 (mingwei/fix-inline-tasks) title -> "fix(dfir_rs): defer `_counter` task spawning via `Context::request_task` buffer"
