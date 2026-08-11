@@ -7,7 +7,7 @@ use crate::pr_dag;
 use crate::types::{Bookmark, ChangeId, CommitId, Owner, REMOTE_ORIGIN, Remote};
 
 fn render_show(input: &InputData, show_all: bool, reversed: bool) -> String {
-    render_show_with_statuses(input, &BTreeMap::new(), show_all, reversed)
+    render_show_wrapped(input, &BTreeMap::new(), show_all, reversed, None)
 }
 
 fn render_show_with_statuses(
@@ -15,6 +15,16 @@ fn render_show_with_statuses(
     pr_statuses: &BTreeMap<PrNum, PrStatus>,
     show_all: bool,
     reversed: bool,
+) -> String {
+    render_show_wrapped(input, pr_statuses, show_all, reversed, None)
+}
+
+fn render_show_wrapped(
+    input: &InputData,
+    pr_statuses: &BTreeMap<PrNum, PrStatus>,
+    show_all: bool,
+    reversed: bool,
+    wrap_width: Option<usize>,
 ) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
@@ -27,11 +37,26 @@ fn render_show_with_statuses(
     )
     .unwrap();
     let mut buf = Vec::new();
-    pr_dag::render_show(&state, &prs, pr_statuses, show_all, reversed, &mut buf).unwrap();
+    pr_dag::render_show(
+        &state,
+        &prs,
+        pr_statuses,
+        pr_dag::RenderOptions {
+            show_all,
+            reversed,
+            wrap_width,
+        },
+        &mut buf,
+    )
+    .unwrap();
     String::from_utf8(buf).unwrap()
 }
 
 fn render_log(input: &InputData, show_all: bool, reversed: bool) -> String {
+    render_log_wrapped(input, show_all, reversed, None)
+}
+
+fn render_log_wrapped(input: &InputData, show_all: bool, reversed: bool, wrap_width: Option<usize>) -> String {
     crate::style::set_force_color(true);
     let prs = input.prs_map();
     let state = pr_dag::build(
@@ -49,8 +74,11 @@ fn render_log(input: &InputData, show_all: bool, reversed: bool) -> String {
         &prs,
         &pr_statuses,
         &input.jj_entries,
-        show_all,
-        reversed,
+        pr_dag::RenderOptions {
+            show_all,
+            reversed,
+            wrap_width,
+        },
         &mut buf,
     )
     .unwrap();
@@ -1062,4 +1090,48 @@ fn duplicate_remote_owner_warns() {
     assert!(result.is_ok());
 
     assert!(logs_contain("has multiple remotes, using the first"));
+}
+
+// --- Word wrapping ---
+
+fn long_title_fixture() -> InputData {
+    let mut pr = gh_pr(1, "feat", "main");
+    pr.title = "This is an extremely long pull request title that will definitely exceed the width of a normal \
+                terminal window"
+        .to_owned();
+    fixture(
+        vec![
+            with_remote(
+                entry(
+                    "c2",
+                    "ch2",
+                    &["c1"],
+                    "a somewhat long first line of the commit description that also needs wrapping\n\nPR: #1\n",
+                    &["feat"],
+                    false,
+                ),
+                "feat",
+            ),
+            entry("c1", "ch1", &["c2_parent"], "first\n\nPR: #1\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![pr],
+        None,
+    )
+}
+
+#[test]
+fn show_wraps_long_pr_title() {
+    let f = long_title_fixture();
+    insta::assert_snapshot!(render_show_wrapped(&f, &BTreeMap::new(), false, false, Some(60)));
+    // Without a terminal width, output is not wrapped.
+    insta::assert_snapshot!(render_show_wrapped(&f, &BTreeMap::new(), false, false, None));
+    // Too narrow to wrap sensibly: fall back to no wrapping.
+    insta::assert_snapshot!(render_show_wrapped(&f, &BTreeMap::new(), false, false, Some(15)));
+}
+
+#[test]
+fn log_wraps_long_description() {
+    let f = long_title_fixture();
+    insta::assert_snapshot!(render_log_wrapped(&f, false, false, Some(60)));
 }
