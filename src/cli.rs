@@ -51,9 +51,15 @@ pub struct LogArgs {
 
 #[derive(clap::Args, Clone)]
 pub struct SyncArgs {
-    /// Show what would be done without doing it
+    /// Show what would be done without doing it.
+    /// Note: the automatic `jj git fetch` still runs (use `--no-fetch` to skip).
     #[arg(long)]
     pub dry_run: bool,
+
+    /// Skip the automatic `jj git fetch` before planning.
+    /// The sync plan will be computed against possibly-stale remote refs.
+    #[arg(long)]
+    pub no_fetch: bool,
 }
 
 #[derive(clap::Args, Clone)]

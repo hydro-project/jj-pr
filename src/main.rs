@@ -135,10 +135,27 @@ fn run() -> Result<()> {
         return install_aliases(args.repo);
     }
 
-    // Step 1: Load jj entries.
+    // Step 1: Load remote owners (local-only, cheap), then fetch from all GitHub
+    // remotes before loading any other state, so the sync plan is computed against
+    // fresh remote refs instead of a stale local mirror. Skipped with `--no-fetch`.
+    let remote_owners = jj::load_remote_owners()?;
+    if let Command::Sync(args) = &command
+        && !args.no_fetch
+    {
+        let remotes: Vec<&types::Remote<str>> = remote_owners.keys().map(|r| &**r).collect();
+        if remotes.is_empty() {
+            eprintln!("Fetching (default remote, no GitHub remotes recognized)...");
+        } else {
+            let names: Vec<_> = remotes.iter().map(|r| r.as_str()).collect();
+            eprintln!("Fetching from {}...", names.join(", "));
+        }
+        jj::git_fetch(&remotes)?;
+    }
+
+    // Step 2: Load jj entries.
     let jj_entries = jj::load_entries()?;
 
-    // Step 2: Extract PR numbers from trailers and local bookmark names.
+    // Step 3: Extract PR numbers from trailers and local bookmark names.
     // We query both because trailers and bookmarks may reference different PRs
     // (e.g. stale trailers from a closed PR, bookmark pointing to a new PR).
     let pr_nums = pr_dag::extract_pr_nums(&jj_entries);
@@ -147,14 +164,13 @@ fn run() -> Result<()> {
         .flat_map(|e| e.local_bookmarks.iter().map(|bm| &*bm.name))
         .collect::<BTreeSet<_>>();
 
-    // Step 3: Single GraphQL call for PR data + statuses + default branch.
+    // Step 4: Single GraphQL call for PR data + statuses + default branch.
     let (prs, pr_statuses, default_branch) = gh::load_prs_and_default_branch(&pr_nums, local_bookmarks)?;
 
-    // Step 4: Load tracked bookmarks and remote owners.
+    // Step 5: Load tracked bookmarks.
     let tracked_bookmarks = jj::load_tracked_bookmarks()?;
-    let remote_owners = jj::load_remote_owners()?;
 
-    // Step 5: Check which merged PRs have their merge commit in the local repo.
+    // Step 6: Check which merged PRs have their merge commit in the local repo.
     let merge_oids: Vec<&types::CommitId<str>> = prs
         .iter()
         .filter(|pr| pr.state == gh::PrState::Merged)
