@@ -8,6 +8,7 @@ mod style;
 mod tests;
 pub(crate) mod types;
 mod ui;
+mod wrap;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;
@@ -195,8 +196,11 @@ fn run() -> Result<()> {
             &state,
             &prs,
             &pr_statuses,
-            args.all,
-            args.reversed,
+            pr_dag::RenderOptions {
+                show_all: args.all,
+                reversed: args.reversed,
+                wrap_width: wrap::terminal_width(),
+            },
             &mut std::io::stdout(),
         ),
         Command::Log(args) => pr_dag::render_log(
@@ -204,8 +208,11 @@ fn run() -> Result<()> {
             &prs,
             &pr_statuses,
             &input.jj_entries,
-            args.all,
-            args.reversed,
+            pr_dag::RenderOptions {
+                show_all: args.all,
+                reversed: args.reversed,
+                wrap_width: wrap::terminal_width(),
+            },
             &mut std::io::stdout(),
         ),
         Command::Sync(args) => {

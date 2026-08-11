@@ -773,15 +773,50 @@ fn ci_review_indicators(status: &gh::PrStatus) -> String {
     format!(" {}", parts.join(" "))
 }
 
+/// Don't wrap messages to fewer columns than this, even in very narrow
+/// terminals; overflowing is better than unreadable one-word-per-line output.
+const MIN_WRAP_WIDTH: usize = 20;
+
+/// Word-wrap a row's message so it fits within `wrap_width` terminal columns,
+/// accounting for the graph gutter width reported by the renderer for this
+/// row. The renderer prefixes every message line with the gutter, so wrapped
+/// continuation lines stay aligned inside the graph.
+fn wrap_row_message(message: String, wrap_width: Option<usize>, graph_width: u64) -> String {
+    let Some(term_width) = wrap_width else {
+        return message;
+    };
+    let available = term_width.saturating_sub(graph_width as usize);
+    if available < MIN_WRAP_WIDTH {
+        return message;
+    }
+    crate::wrap::wrap_message(&message, available)
+}
+
+/// Options controlling graph rendering.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct RenderOptions {
+    /// Include nodes that would otherwise be hidden (e.g. merged/closed PRs).
+    pub show_all: bool,
+    /// Render oldest-first instead of newest-first.
+    pub reversed: bool,
+    /// Terminal width to word-wrap row messages to. `None` disables wrapping
+    /// (e.g. when output is not a terminal).
+    pub wrap_width: Option<usize>,
+}
+
 /// Render the PR DAG as a graph.
 pub fn render_show(
     state: &RepoState,
     prs: &BTreeMap<PrNum, &GhPr>,
     pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
-    show_all: bool,
-    reversed: bool,
+    options: RenderOptions,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
+    let RenderOptions {
+        show_all,
+        reversed,
+        wrap_width,
+    } = options;
     let mut renderer = GraphRowRenderer::new()
         .output()
         .with_min_row_height(1)
@@ -892,6 +927,7 @@ pub fn render_show(
             }
         };
 
+        let message = wrap_row_message(message, wrap_width, renderer.width(Some(&node_key), Some(&parents)));
         let row = renderer.next_row(node_key, parents, glyph, message);
         write!(out, "{row}")?;
     }
@@ -904,10 +940,14 @@ pub fn render_log(
     prs: &BTreeMap<PrNum, &GhPr>,
     pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
     jj_entries: &[JjLogEntry],
-    show_all: bool,
-    reversed: bool,
+    options: RenderOptions,
     out: &mut impl std::io::Write,
 ) -> Result<()> {
+    let RenderOptions {
+        show_all,
+        reversed,
+        wrap_width,
+    } = options;
     // Compute the set of entries that will actually be rendered (for edge filtering).
     let visible_entries: BTreeSet<&CommitId<str>> = jj_entries
         .iter()
@@ -1093,6 +1133,7 @@ pub fn render_log(
                 .collect()
         };
 
+        let message = wrap_row_message(message, wrap_width, renderer.width(Some(&Some(cid)), Some(&edges)));
         let row = renderer.next_row(Some(cid), edges, glyph, message);
         write!(out, "{row}")?;
     }
