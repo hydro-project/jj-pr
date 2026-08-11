@@ -457,6 +457,29 @@ pub fn git_push_bookmarks(bookmarks: &[&Bookmark<str>]) -> Result<()> {
     Ok(())
 }
 
+/// Fetch from the given remotes in a single `jj git fetch` call.
+/// If `remotes` is empty, runs a plain `jj git fetch`, which honors the user's
+/// `git.fetch` config (defaulting to "origin").
+pub fn git_fetch(remotes: &[&Remote<str>]) -> Result<()> {
+    let mut args = vec!["git".to_owned(), "fetch".to_owned()];
+    for remote in remotes {
+        args.push("--remote".to_owned());
+        // `--remote` takes a string pattern (glob syntax by default);
+        // use `exact:` so remote names are never interpreted as globs.
+        args.push(format!("exact:{remote}"));
+    }
+    let output = Command::new("jj")
+        .args(&args)
+        .output()
+        .context("Failed to run `jj git fetch`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj git fetch failed: {stderr}");
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

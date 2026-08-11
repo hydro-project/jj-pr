@@ -39,7 +39,8 @@ cargo install jj-cli --bin jj --locked
 jj git fetch
 ```
 
-Note: `jj-pr` does not fetch for you — fetch first to update the local repo to the latest remote state.
+Note: `jj pr sync` fetches from all GitHub remotes automatically before planning (skip with `--no-fetch`).
+Other commands (`show`, `log`, `create`) do not fetch — fetch first to view the latest remote state.
 
 ### 2. View the PR DAG
 
@@ -110,9 +111,10 @@ Fix ambiguities by restructuring with `jj` (e.g., `jj rebase` to stack one PR on
 jj pr sync
 ```
 
-This stamps missing trailers, rebases children of merged PRs onto `trunk()`, abandons merged commits, pushes affected
-bookmarks, and updates GitHub base branches. Bookmarks with content-conflicted commits are skipped automatically.
-You'll be prompted before any changes are applied.
+This first fetches from all GitHub remotes (skip with `--no-fetch`), then stamps missing trailers, rebases children of
+merged PRs onto `trunk()`, abandons merged commits, pushes affected bookmarks, and updates GitHub base branches.
+Bookmarks with content-conflicted commits are skipped automatically. You'll be prompted before any changes are applied
+(the fetch runs before the prompt, but is undoable with `jj op undo` like any other jj operation).
 
 ```apl
   stamp #15 trailer on knynvqkoypsy

@@ -125,7 +125,10 @@ Renders individual jj commits with their PR associations. Shows change ID, commi
 
 ### `jj-pr sync`
 
-Reconciles local + remote state. Actions in order:
+Reconciles local + remote state. Before planning, fetches from all GitHub remotes (those in `remote_owners`) in a
+single `jj git fetch --remote ...` call, so the plan is computed against fresh remote refs rather than a stale local
+mirror. If no GitHub remotes are recognized, falls back to a plain `jj git fetch` (honoring the `git.fetch` config).
+Skippable with `--no-fetch`. Actions in order:
 
 1. **Stamp missing trailers** — for commits owned by a PR node whose description lacks the correct `PR: #N` trailer. Uses `change_id` (stable across rewrites) for `jj describe`.
 2. **Rebase children of merged PRs** — `jj rebase -s <bookmark>+ -d trunk()` for each merged PR with children.
@@ -134,6 +137,8 @@ Reconciles local + remote state. Actions in order:
 5. **Update GitHub base branches** — `gh pr edit --base` for PRs whose base doesn't match the DAG.
 
 Blocks if `bookmarks_blocking` is non-empty. Supports `--dry-run` and `[Y/n]` confirmation (skippable with `-y`).
+Note: the automatic fetch runs before planning, i.e. before the confirmation prompt and even under `--dry-run`
+(otherwise the dry-run plan would differ from the real one); it is undoable via the op log.
 
 ### `jj-pr create <bookmark>`
 
