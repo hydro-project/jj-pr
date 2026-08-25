@@ -416,6 +416,31 @@ fn needs_push() {
 }
 
 #[test]
+fn stale_trailer_at_branch_tip() {
+    // Regression test (see hydro-pr-sync-not-pushing fixture): a commit is the tip of
+    // PR #2's branch (feat-b) but carries a stale `PR: #1` trailer left over from when it
+    // was part of PR #1's stack. PR #1 is open with its own local branch elsewhere
+    // (a descendant). The bookmark boundary must win: the commit belongs to PR #2,
+    // sync should re-stamp the trailer and push feat-b.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("a1", "cha1", &["b1"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            // Tip of feat-b (PR #2), but stale trailer says PR #1. Remote is behind (at b0).
+            entry("b1", "chb1", &["b0"], "b more\n\nPR: #1\n", &["feat-b"], false),
+            with_remote(entry("b0", "chb0", &["trunk"], "b\n\nPR: #2\n", &[], false), "feat-b"),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat-a", "feat-b"), gh_pr(2, "feat-b", "main")],
+        None,
+    );
+    insta::assert_snapshot!("stale_trailer_at_branch_tip_show", render_show(&f, true, false));
+    insta::assert_snapshot!("stale_trailer_at_branch_tip_sync", plan_sync(&f));
+}
+
+#[test]
 fn no_push_when_only_git_remote() {
     // Bookmark has @git but no @origin — not tracked on origin, should NOT push.
     let f = InputData {
