@@ -1,0 +1,9 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/hydro-pr-sync-not-pushing.json.gz
+---
+skip push #3070 (mingwei/hydro-loopgen) — has content conflicts
+skip push #2903 (mingwei/paxos-ref) — has content conflicts
+stamp #3153 trailer on xzyskkyprqln
+push: #3153 (mingwei/atomic-notick)

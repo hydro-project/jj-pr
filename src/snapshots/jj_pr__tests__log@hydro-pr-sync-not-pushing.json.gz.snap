@@ -1,0 +1,124 @@
+---
+source: src/tests.rs
+expression: "render_log(&f, false, false)"
+input_file: src/fixtures/hydro-pr-sync-not-pushing.json.gz
+---
+[31m✗[0m  [1m[35mnyrvrktsymsy[0m [34mc9db0aa26c6d[0m [1m[35mmingwei/hydro-loopgen[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m* [32mReady[0m
+│  fix(hydro_lang): retain latest value when snapshotting an unbounded singleton into a tick loop
+[31m✗[0m  [1m[35mpxnvmtpzznyx[0m [34m6d39010c64ee[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m* [32mReady[0m
+│  no batch lazy
+[31m✗[0m  [1m[35mmxvuwoqurytu[0m [34m139fabfa9f39[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m* [32mReady[0m
+│  CLEAN: feat(hydro_lang): emit production ticks as gated DFIR loops, fix #2902
+[31m✗[0m      [1m[35mmmuvxpylquun[0m [34m66009451bafc[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m* [32mReady[0m
+├─┬─╮  [32m(empty)[0m (merge)
+│ │ ○  [1m[35mxprywxzxnklm[0m [34md2f0f7c548ad[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m* [32mReady[0m
+│ │ │  PR: #3070
+│ │ ○    [1m[35mynrmokvxlulr[0m [34ma83fd9b6868f[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m* [32mReady[0m
+│ │ ├─╮  WIP make tick(none, atomic)
+│ │ │ [1m[32m@[0m  [1m[35mxzyskkyprqln[0m [34m0d44eb5359db[0m [1m[35mmingwei/atomic-notick[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3153PR #3153]8;;[0m* [32mReady[0m
+│ │ │ │  Use Location::tick() in live collections' atomic() methods
+│ │ ○ │  [1m[35mnyllrzqsxsrw[0m [34ma0bdd24a03bd[0m [1m[35msandbox-52d8da39-4bad-4bd9-8161-093c68779c14[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3154PR #3154]8;;[0m [32mReady[0m
+│ │ │ │  rename `Tick::outer()` to `parent_location()`
+│ │ ○ │  [1m[35mwyntllqmykxk[0m [34mfb0c8f1524ec[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3154PR #3154]8;;[0m [32mReady[0m
+│ │ │ │  fix(hydro_lang): assert tick location matches in atomic batch/snapshot methods
+│ │ │ ○  [1m[35mokntupootzxn[0m [34mef6b8e68251e[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3153PR #3153]8;;[0m* [32mReady[0m
+│ │ ├─╯  fix(hydro_lang)!: require top-level locations for `.atomic()` on live collections
+○ │ │  [1m[35mpvrpptqmklpy[0m [34m5b567bd80036[0m [1m[35mmingwei/initnone[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3146PR #3146]8;;[0m [33mDraft[0m
+│ │ │  feat(hydro_lang): retype `Singleton::latest()` to `Optional<InitNone>` and add simulator support
+│ ○ │  [1m[35mvvryzplmvszw[0m [34m5e8b97876393[0m [1m[35mmingwei/batcheager[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3147PR #3147]8;;[0m [32mReady[0m
+│ ├─╯  feat(dfir_lang): add `batch_eager()` loop-ingress operator, always fires the loop
+○ │  [1m[35moqzxksyrszux[0m [34m288253224143[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3146PR #3146]8;;[0m [33mDraft[0m
+│ │  feat(hydro_lang): add sim OptionalHook for InitNone optionals (step 1)
+○ │  [1m[35mzywnzrmosxuk[0m [34m8c9b5a55387b[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3146PR #3146]8;;[0m [33mDraft[0m
+│ │  feat(hydro_lang): surface InitNone from unbounded stream aggregations
+○ │  [1m[35mzxuznnyqktkq[0m [34mac77b3b664e5[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3146PR #3146]8;;[0m [33mDraft[0m
+├─╯  feat(hydro_lang): add InitNone boundedness variant for Optional
+[1m[36m◆[0m  [1m[35mvursqzwytyul[0m [34m883a5e0fed85[0m [1m[35mmain[0m [1m[32mtrunk()[0m
+│  fix(hydro_lang): make each top-level sim hook its own observation (#3149)
+│ [33m⚠[0m  [1m[35mlovkvzkrlytq[0m [34m3ebcf809119d[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m[33m][0m
+│ │  cleanup for review
+│ [33m⚠[0m  [1m[35mwvqqxotornmn[0m [34m926a59a622a5[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m[33m][0m
+│ │  fix(hydro_lang): emit same-tick atomic `YieldConcat` as identity inside the loop
+│ [33m⚠[0m  [1m[35mtzwrwztxkwqr[0m [34m37d672dbf845[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m[33m][0m
+│ │  eliminate re-entrant tests
+│ [33m⚠[0m  [1m[35mtorynnolutlt[0m [34m99650beaabe0[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m[33m][0m
+│ │  fix(hydro_lang): un-window ReduceKeyedWatermark watermark when it exits a tick loop
+│ [33m⚠[0m  [1m[35mrvukyolkkzun[0m [34m2c480528c881[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m[33m][0m
+│ │  fix fold, reduce codegen for atomic_fold_replays_each_tick
+│ [33m⚠[0m  [1m[35myttxtwqystxy[0m [34me3c67401e3bb[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m[33m][0m
+│ │  fix bounded vs unbounded singleton codegen
+│ [33m⚠[0m  [1m[35mzvmnklrzvopn[0m [34m1d78940cd91e[0m [33mambiguous[0m [33m[[0mtrailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m[33m][0m
+├─╯  feat(hydro_lang): emit production ticks as gated DFIR loops (#2902 phase 1)
+│ ○  [1m[35mklxsolxqlzww[0m [34m064980113d9b[0m [1m[35mmingwei/dfir-docs-1[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3091PR #3091]8;;[0m [32mReady[0m
+│ │  Apply suggestions from code review
+│ ○  [1m[35mxknvkxwkvoxk[0m [34ma3e337f92348[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3091PR #3091]8;;[0m [32mReady[0m
+│ │  docs: fix DFIR mermaid graphs, begin updating for inline DFIR
+│ ○  [1m[35mynrkqkuxxwyv[0m [34md910879083a5[0m [1m[35mmingwei/dfir-runtime[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3092PR #3092]8;;[0m [32mReady[0m
+├─╯  refactor(dfir_rs): rename `scheduled` to `runtime`
+│ ○  [1m[35mksqskktkykot[0m [34m10d75e62e5f4[0m [1m[35mmingwei/sqs-rebase[0m [1m[35msandbox-a79265a8-b26f-4a26-8dac-35f2423eb0d6[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  Bump aws-config minimum version to 1.8.16 to avoid ring dependency
+│ ○  [1m[35mtutxupkkrxrl[0m [34mc5e9551d3d1e[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+│ │  Move hydro_test/src/aws module to new hydro_aws crate
+│ ○  [1m[35mnklzvyknlusq[0m [34m2626667b9a5e[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m [32mReady[0m
+├─╯  add aws, sqs hydro_test
+│ ○  [1m[35mqzptwprvtmzo[0m [34m0d4d8e0ae790[0m [1m[35mmingwei/paxos-ref-2[0m [1m[35msandbox-4dc8bfaf-915c-4d6b-9ab4-c0d66ad6f60a[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2983PR #2983]8;;[0m [32mReady[0m
+│ │  refactor(hydro_test): also convert acceptor_p1 cross_singletons to by_ref()
+│ ○  [1m[35msotpskxylmwp[0m [34m0fb409f65356[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2983PR #2983]8;;[0m [32mReady[0m
+├─╯  refactor(hydro_test): migrate paxos cross_singleton to by_ref() singleton mechanism
+│ [31m✗[0m  [1m[35movltwsqmwzlr[0m [34m3dd3ced24778[0m [1m[35mmingwei/paxos-ref[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2903PR #2903]8;;[0m* [31mClosed[0m
+├─╯  refactor(hydro_test): migrate paxos cross_singleton to by_ref() singleton mechanism [ci-bench]
+│ [33m⚠[0m  [1m[35mlxnskovwwmww[0m [34m4d148f29990b[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  LATTICE_REDUCE
+│ [33m⚠[0m  [1m[35mssxznknyqlwr[0m [34mcb844d671007[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  FOLD
+│ [33m⚠[0m  [1m[35mwltzkrkkwzsl[0m [34m026cfd0618a3[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  FOLD_NO_REPLAY
+│ [33m⚠[0m  [1m[35mqyxrtkzvknuo[0m [34m67978525c179[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Fix push::FoldKeyed to support distinct accumulator and value types
+│ [33m⚠[0m  [1m[35momoqvzuywzqy[0m [34m15c2400e78c7[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Add import ??
+│ [33m⚠[0m  [1m[35mtspvwvroppkz[0m [34mcafedde5588a[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  fix push foldekeyed to have accum type
+│ [33m⚠[0m  [1m[35muuvlxzxvlvsy[0m [34mc308772daa13[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Consolidate Fold/Reduce into Accumulate; fix ReduceState borrowed semantics
+│ [33m⚠[0m  [1m[35mkpsmuusryqyy[0m [34m488d5b927997[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Update snapshot tests affected by sort/sort_by_key stratum barrier removal
+│ [33m⚠[0m  [1m[35mrqtosspszsnm[0m [34m5d6d82d7106b[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Add unit tests for FoldKeyed/ReduceKeyed; optimize flush to avoid clones
+│ [33m⚠[0m  [1m[35myxzpxqyrrvlw[0m [34m46c9fdbc7a71[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Remove stratum barrier from sort_by_key; add push codegen
+│ [33m⚠[0m  [1m[35mxkuzsvxypvlv[0m [34m31fa16b1e095[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Remove stratum barrier from sort; panic on fold_keyed 'mutable push path
+│ [33m⚠[0m  [1m[35mpzowyqsuzwnn[0m [34mfa6b3d67ef6a[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Fix review comments: defer flush state reset and gate SortState Default impl
+│ [33m⚠[0m  [1m[35mzvnpwvyvzunk[0m [34m7166bac54b63[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  cleanup persist_mut_keyed
+│ [33m⚠[0m  [1m[35mtsoutuqvnsmx[0m [34m75d2ff1ad7ae[0m [1m[35msandbox-fb2e97fd-91cb-4477-a560-a5731ecebe29[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Fix precheck.bash --dfir clippy and compile errors from rebasing
+│ [33m⚠[0m  [1m[35mmlpnpmytkllz[0m [34mb57bbbc80c46[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Remove Stratum from persist_mut and persist_mut_keyed
+│ [33m⚠[0m  [1m[35mwsvorvvkqpus[0m [34med1765f503ee[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Keep persist_mut and persist_mut_keyed with Stratum (need emit-on-flush)
+│ [33m⚠[0m  [1m[35mwqrurskqwpty[0m [34m8a395dcc6017[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Fix persist_mut push-side borrow conflict; remove Stratum
+│ [33m⚠[0m  [1m[35mrkpvnlqktpkp[0m [34m56fd96c18848[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Investigate persist_mut push-side borrow conflict
+│ [33m⚠[0m  [1m[35mnkvnkwksstry[0m [34mbbcba7f06cec[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Add push-side codegen for reduce_keyed; persist_mut stays pull-only
+│ [33m⚠[0m  [1m[35mylyxylnpuwmp[0m [34md197651197ad[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Add push-side codegen for reduce_keyed
+│ [33m⚠[0m  [1m[35mlkpqzyknsysm[0m [34mfd7e2d56a8fb[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Add push-side codegen for fold_keyed, fix FoldKeyed type generics
+│ [33m⚠[0m  [1m[35mvxwrpsrpnxnv[0m [34mca7fc7cc9e03[0m [1m[35mmingwei/push-codegen[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  accumulate size_hint
+│ [33m⚠[0m  [1m[35muzxvymzkwsoo[0m [34m8d5a5cc3a17d[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  combine regular and borrow fold
+│ [33m⚠[0m  [1m[35mkvonvxptywnv[0m [34m579a5a956019[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Add push-side codegen for sort and reduce operators
+│ [33m⚠[0m  [1m[35moyqwypsoqono[0m [34m792bf58d8e82[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  Add push-side fold codegen and restore Stratum for persist_mut
+│ [33m⚠[0m  [1m[35monkpmnltlskr[0m [34me7d17175715c[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+│ │  cleanup Fold
+│ [33m⚠[0m  [1m[35moyymkmznptow[0m [34mad2bb3182d28[0m [1m[35msandbox-ff4ea805-edb6-4a68-a9c0-062239670ae2[0m [33mambiguous[0m [33m[[0m[1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m; trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m[33m][0m
+├─╯  feat(dfir_pipes): add push-side `Fold`, `Reduce`, and `Sort` operators
+[2m~[0m  [2m(elided revisions)[0m

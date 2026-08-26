@@ -1,0 +1,32 @@
+---
+source: src/tests.rs
+expression: "render_show(&f, false, false)"
+input_file: src/fixtures/hydro-pr-sync-not-pushing.json.gz
+---
+[33m⚠[0m  [33mambiguous[0m branches: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2909PR #2909]8;;[0m, [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2958PR #2958]8;;[0m
+│  [2m(edit commit description to fix PR: trailer)[0m
+│ [31m✗[0m  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2903PR #2903]8;;[0m*  [31mClosed[0m  [1m[35mmingwei/paxos-ref[0m
+├─╯  refactor(hydro_test): migrate paxos cross_singleton to by_ref() singleton mechanism [ci-bench]
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2983PR #2983]8;;[0m  [32mReady[0m  [1m[35mmingwei/paxos-ref-2[0m
+├─╯  refactor(hydro_test): migrate paxos cross_singleton to by_ref() singleton mechanism [ci-bench]
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/2746PR #2746]8;;[0m  [32mReady[0m  [1m[35mmingwei/sqs-rebase[0m
+├─╯  feat(hydro_aws): add AWS crate, SQS integration
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3091PR #3091]8;;[0m  [32mReady[0m  [1m[35mmingwei/dfir-docs-1[0m
+│ │  docs: fix DFIR mermaid graphs, begin updating for inline DFIR
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3092PR #3092]8;;[0m  [32mReady[0m  [1m[35mmingwei/dfir-runtime[0m
+├─╯  refactor(dfir_rs)!: rename `scheduled` to `runtime`
+│ [33m⚠[0m  [33mambiguous[0m trailers: [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m
+├─╯  [2m(edit commit description to fix PR: trailer)[0m
+│ [31m✗[0m        [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3070PR #3070]8;;[0m*  [32mReady[0m  [1m[35mmingwei/hydro-loopgen[0m
+│ ├─┬─┬─╮  feat(hydro_lang): emit production ticks as gated DFIR loops, fix #2902
+│ │ │ │ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3154PR #3154]8;;[0m  [32mReady[0m  [1m[35msandbox-52d8da39-4bad-4bd9-8161-093c68779c14[0m
+│ │ │ │ │  fix(hydro_lang): assert tick `parent_location()` matches in atomic batch/snapshot methods
+│ │ │ [1m[32m@[0m │  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3153PR #3153]8;;[0m*  [32mReady[0m  [1m[35mmingwei/atomic-notick[0m
+│ │ │ ├─╯  fix(hydro_lang)!: require top-level locations for `.atomic()` on live collections
+│ │ ○ │  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3147PR #3147]8;;[0m  [32mReady[0m  [1m[35mmingwei/batcheager[0m
+│ │ ├─╯  feat(dfir_lang): add `batch_eager()` loop-ingress operator, always fires the loop
+│ ○ │  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3146PR #3146]8;;[0m  [33mDraft[0m  [1m[35mmingwei/initnone[0m
+│ ├─╯  feat(hydro_lang): add `InitNone` `Optional` boundedness, with simulator support
+│ [1m[36m◆[0m  [1m[32mtrunk()[0m
+├─╯
+[2m~[0m  [2m(elided revisions)[0m

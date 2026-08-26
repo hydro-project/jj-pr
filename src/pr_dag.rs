@@ -572,6 +572,24 @@ fn decide(
                 break 'a (node, node_key);
             }
 
+            // Ignore stale trailers: this commit is the tip of exactly one PR branch, but the
+            // trailer names a *different* PR whose own branch exists locally at a *different*
+            // commit. Bookmark boundaries are authoritative for PR membership, so the trailer
+            // must be stale (e.g. the commit was stamped while part of the other PR's stack,
+            // then a new bookmark/PR was created at it). StampTrailer will fix it during sync.
+            if let &[tip_pr_num] = tip_pr_nums
+                && tip_pr_num != trailer_pr_num
+                && pr_local.contains(&trailer_pr_num)
+            {
+                tracing::debug!(
+                    %tip_pr_num,
+                    %trailer_pr_num,
+                    "Ignoring stale trailer: commit is the tip of a different PR's branch, \
+                    and the trailer PR's branch exists locally elsewhere",
+                );
+                break 'a (node, node_key);
+            }
+
             // Special case: if the `trailer_pr_num` is set but the PR is not tracked locally, try to treat this as the tip
             // of a merged PR with a deleted branch (needs abandoning).
             if !pr_local.contains(&trailer_pr_num)
@@ -1346,6 +1364,31 @@ pub fn plan_sync(
                 continue;
             }
             push_bookmarks.push((*pr_num, gh_pr.head_ref_name.clone()));
+        }
+        // Warn about PR bookmarks that need pushing but whose *tip commit* landed in an
+        // ambiguous node (e.g. conflicting `PR:` trailer) — those never form a `Node::Pr`,
+        // so they are silently absent from `node_needs_sync`. Surface them instead of
+        // skipping quietly.
+        let local_bookmark_targets: HashMap<&Bookmark<str>, &CommitId<str>> = jj_entries
+            .iter()
+            .flat_map(|e| e.local_bookmarks.iter().map(|bm| (&*bm.name, &*e.commit.commit_id)))
+            .collect();
+        for gh_pr in prs.values() {
+            if !state.pr_needs_push.contains(&gh_pr.number) {
+                continue;
+            }
+            let Some(&tip_cid) = local_bookmark_targets.get(&*gh_pr.head_ref_name) else {
+                continue;
+            };
+            let Some(&nk) = state.commit_node.get(tip_cid) else {
+                continue;
+            };
+            if matches!(state.nodes.get(nk), Some(Node::Ambiguous { .. })) {
+                warnings.push(format!(
+                    "skip push {} ({}) — ambiguous PR assignment (run `jj pr show` for details)",
+                    gh_pr.number, gh_pr.head_ref_name,
+                ));
+            }
         }
         if !push_bookmarks.is_empty() {
             actions.push(SyncAction::Push {
