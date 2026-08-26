@@ -424,6 +424,21 @@ pub fn rebase(sources: &str, dest: &str) -> Result<()> {
     Ok(())
 }
 
+/// Remove redundant parent edges (parents that are ancestors of other parents)
+/// from revisions matching a revset. Content is unchanged; only edges are removed.
+pub fn simplify_parents(revset: &Revset) -> Result<()> {
+    let output = Command::new("jj")
+        .args(["simplify-parents", "-r", revset.as_str()])
+        .output()
+        .context("Failed to run `jj simplify-parents`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("jj simplify-parents -r {revset} failed: {stderr}");
+    }
+    Ok(())
+}
+
 /// Abandon revisions matching a revset.
 pub fn abandon(revset: &Revset) -> Result<()> {
     let output = Command::new("jj")
