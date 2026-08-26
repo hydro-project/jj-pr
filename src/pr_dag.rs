@@ -1385,7 +1385,7 @@ pub fn plan_sync(
             };
             if matches!(state.nodes.get(nk), Some(Node::Ambiguous { .. })) {
                 warnings.push(format!(
-                    "skip push {} ({}) — ambiguous PR assignment (edit commit description to fix PR: trailer)",
+                    "skip push {} ({}) — ambiguous PR assignment (run `jj pr show` for details)",
                     gh_pr.number, gh_pr.head_ref_name,
                 ));
             }
