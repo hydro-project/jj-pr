@@ -400,6 +400,36 @@ fn merged_parent() {
     insta::assert_snapshot!("merged_parent_sync", plan_sync(&f));
 }
 
+/// Diamond where one leg merged: PR #3 depends on merged PR #1 and open PR #2.
+/// Abandoning #1 reparents c1 to trunk; if its other parent (b1) also descends
+/// from trunk, the trunk edge would be redundant, leaving c1 a merge commit
+/// forever. The plan records c1 for parent simplification after the abandon.
+#[test]
+fn diamond_merged_parent() {
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c1", "chc1", &["a1", "b1"], "c\n\nPR: #3\n", &["feat-c"], false),
+                "feat-c",
+            ),
+            with_remote(
+                entry("b1", "chb1", &["trunk"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![
+            gh_pr_merged(1, "feat-a", "main"),
+            gh_pr(2, "feat-b", "main"),
+            gh_pr(3, "feat-c", "feat-a"),
+        ],
+        None,
+    );
+    insta::assert_snapshot!("diamond_merged_parent_show", render_show(&f, true, false));
+    insta::assert_snapshot!("diamond_merged_parent_sync", plan_sync(&f));
+}
+
 #[test]
 fn needs_push() {
     let f = fixture(

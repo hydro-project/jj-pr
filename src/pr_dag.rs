@@ -1181,6 +1181,11 @@ pub enum SyncAction {
     AbandonMerged {
         /// Change IDs of all commits in this PR (stable across rewrites).
         change_ids: Vec<ChangeId>,
+        /// Change IDs of direct children of this PR's commits that live in
+        /// other nodes. After abandoning, these get reparented to trunk; any
+        /// parent edges made redundant by that (trunk already an ancestor via
+        /// another parent) are simplified away.
+        child_change_ids: Vec<ChangeId>,
         pr: PrNum,
         bookmark: Bookmark,
         bookmark_exists: bool,
@@ -1205,13 +1210,19 @@ impl fmt::Display for SyncAction {
                 pr,
                 bookmark,
                 bookmark_exists,
+                child_change_ids,
                 ..
             } => {
                 if *bookmark_exists {
-                    write!(f, "abandon merged {pr} (delete {bookmark})")
+                    write!(f, "abandon merged {pr} (delete {bookmark})")?;
                 } else {
-                    write!(f, "abandon merged {pr} ({bookmark} already deleted)")
+                    write!(f, "abandon merged {pr} ({bookmark} already deleted)")?;
                 }
+                if !child_change_ids.is_empty() {
+                    let ids: Vec<_> = child_change_ids.iter().map(|c| format!("{c:.12}")).collect();
+                    write!(f, ", simplify parents of {}", ids.join(", "))?;
+                }
+                Ok(())
             }
             SyncAction::Push { bookmarks } => {
                 let details: Vec<_> = bookmarks.iter().map(|(pr, bm)| format!("{pr} ({bm})")).collect();
@@ -1309,8 +1320,30 @@ pub fn plan_sync(
             continue;
         }
         let change_ids: Vec<ChangeId> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
+        // Direct children of this PR's commits that belong to other nodes and have
+        // multiple parents. `jj abandon` will reparent them to trunk; record
+        // them so parent edges made redundant by that can be simplified
+        // afterwards. Single-parent children can never end up with redundant
+        // edges (abandon only remaps edges, never adds them), so skip those.
+        let child_change_ids: Vec<ChangeId> = jj_entries
+            .iter()
+            // Can only have redundant parents if there are at least two.
+            .filter(|e| e.commit.parents.len() >= 2)
+            // Exclude commits in this (merged) node itself.
+            .filter(|e| state.commit_node.get(&*e.commit.commit_id) != Some(&nk))
+            // Direct children: at least one parent belongs to this node.
+            // Membership is by commit id (parents are commit ids), via `commit_node`.
+            .filter(|e| {
+                e.commit
+                    .parents
+                    .iter()
+                    .any(|p| state.commit_node.get(&**p) == Some(&nk))
+            })
+            .map(|e| e.commit.change_id.clone())
+            .collect();
         actions.push(SyncAction::AbandonMerged {
             change_ids,
+            child_change_ids,
             pr: *pr_num,
             bookmark: gh_pr.head_ref_name.clone(),
             bookmark_exists: local_bookmark_names.contains(&*gh_pr.head_ref_name),
@@ -1444,6 +1477,7 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
             }
             SyncAction::AbandonMerged {
                 change_ids,
+                child_change_ids,
                 pr,
                 bookmark,
                 bookmark_exists,
@@ -1485,6 +1519,16 @@ pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
                 let revset = crate::types::revset_union(change_ids.iter());
                 jj::rebase(&format!("roots({revset})"), "trunk()")?;
                 jj::abandon(&revset)?;
+                // `jj abandon` reparented the children to trunk. If a child has
+                // another parent that already descends from trunk (e.g. a sibling
+                // PR in a diamond that was rebased onto the current trunk tip),
+                // the trunk edge is now redundant — the child would stay a merge
+                // commit forever. Drop redundant ancestor edges. This is a
+                // content no-op: `jj simplify-parents` only removes a parent
+                // edge when that parent is an ancestor of another parent.
+                if !child_change_ids.is_empty() {
+                    jj::simplify_parents(&crate::types::revset_union(child_change_ids.iter()))?;
+                }
             }
             SyncAction::Push { bookmarks } => {
                 eprintln!(
