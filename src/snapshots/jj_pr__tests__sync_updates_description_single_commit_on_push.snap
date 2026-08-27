@@ -1,0 +1,7 @@
+---
+source: src/tests.rs
+assertion_line: 1085
+expression: plan_sync(&f)
+---
+push: #1 (feat)
+  update #1 title -> "new title"

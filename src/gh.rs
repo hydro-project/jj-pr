@@ -481,3 +481,17 @@ pub fn set_ready(pr_number: u64, ready: bool) -> Result<()> {
     }
     Ok(())
 }
+
+pub fn edit_title_body(pr_number: u64, title: &str, body: &str) -> Result<()> {
+    let num = pr_number.to_string();
+    let output = gh_command()?
+        .args(["pr", "edit", &num, "--title", title, "--body", body])
+        .output()
+        .context("Failed to run `gh pr edit`")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("gh pr edit {pr_number} --title/--body failed: {stderr}");
+    }
+    Ok(())
+}

@@ -1160,3 +1160,61 @@ fn log_wraps_long_description() {
     let f = long_title_fixture();
     insta::assert_snapshot!(render_log_wrapped(&f, false, false, Some(60)));
 }
+
+// --- Auto-update description tests ---
+
+#[test]
+fn sync_updates_description_single_commit_on_push() {
+    // Single-commit PR that needs pushing — description update should be included with push.
+    let f = fixture(
+        vec![
+            // Local is at c2 (new commit), remote is at c1 -> needs push.
+            entry(
+                "c2",
+                "ch2",
+                &["trunk"],
+                "new title\n\nnew body\n\nPR: #1\n",
+                &["feat"],
+                false,
+            ),
+            with_remote(entry("c1", "ch1", &["trunk"], "old\n\nPR: #1\n", &[], false), "feat"),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+        None,
+    );
+    insta::assert_snapshot!("sync_updates_description_single_commit_on_push", plan_sync(&f));
+}
+
+#[test]
+fn sync_no_description_update_multi_commit_on_push() {
+    // Multi-commit PR that needs pushing — should NOT get a description update.
+    let f = fixture(
+        vec![
+            entry("c3", "ch3", &["c2"], "third\n\nPR: #1\n", &["feat"], false),
+            with_remote(entry("c2", "ch2", &["c1"], "second\n\nPR: #1\n", &[], false), "feat"),
+            entry("c1", "ch1", &["trunk"], "first\n\nPR: #1\n", &[], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+        None,
+    );
+    insta::assert_snapshot!("sync_no_description_update_multi_commit_on_push", plan_sync(&f));
+}
+
+#[test]
+fn sync_no_description_update_when_not_pushing() {
+    // Single-commit PR that is already in sync (no push needed) — no description update.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c1", "ch1", &["trunk"], "feat\n\nPR: #1\n", &["feat"], false),
+                "feat",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![gh_pr(1, "feat", "main")],
+        None,
+    );
+    insta::assert_snapshot!("sync_no_description_update_when_not_pushing", plan_sync(&f));
+}

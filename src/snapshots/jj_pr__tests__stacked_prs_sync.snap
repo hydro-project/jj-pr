@@ -1,5 +1,6 @@
 ---
 source: src/tests.rs
+assertion_line: 311
 expression: plan_sync(&f)
 ---
 
