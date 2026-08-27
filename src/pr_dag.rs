@@ -1320,8 +1320,8 @@ pub fn plan_sync(
             continue;
         }
         let change_ids: Vec<ChangeId> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
-        // Direct children of this PR's commits that belong to other nodes and
-        // are have multiple parents. `jj abandon` will reparent them to trunk; record
+        // Direct children of this PR's commits that belong to other nodes and have
+        // multiple parents. `jj abandon` will reparent them to trunk; record
         // them so parent edges made redundant by that can be simplified
         // afterwards. Single-parent children can never end up with redundant
         // edges (abandon only remaps edges, never adds them), so skip those.
