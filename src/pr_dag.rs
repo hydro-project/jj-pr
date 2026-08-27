@@ -1321,16 +1321,24 @@ pub fn plan_sync(
         }
         let change_ids: Vec<ChangeId> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
         // Direct children of this PR's commits that belong to other nodes and
-        // are merge commits. `jj abandon` will reparent them to trunk; record
+        // are have multiple parents. `jj abandon` will reparent them to trunk; record
         // them so parent edges made redundant by that can be simplified
         // afterwards. Single-parent children can never end up with redundant
         // edges (abandon only remaps edges, never adds them), so skip those.
-        let node_cids: HashSet<&CommitId<str>> = node_entries.iter().map(|e| &*e.commit.commit_id).collect();
         let child_change_ids: Vec<ChangeId> = jj_entries
             .iter()
-            .filter(|e| e.commit.parents.len() > 1)
-            .filter(|e| !node_cids.contains(&*e.commit.commit_id))
-            .filter(|e| e.commit.parents.iter().any(|p| node_cids.contains(&**p)))
+            // Can only have redundant parents if there are at least two.
+            .filter(|e| e.commit.parents.len() >= 2)
+            // Exclude commits in this (merged) node itself.
+            .filter(|e| state.commit_node.get(&*e.commit.commit_id) != Some(&nk))
+            // Direct children: at least one parent belongs to this node.
+            // Membership is by commit id (parents are commit ids), via `commit_node`.
+            .filter(|e| {
+                e.commit
+                    .parents
+                    .iter()
+                    .any(|p| state.commit_node.get(&**p) == Some(&nk))
+            })
             .map(|e| e.commit.change_id.clone())
             .collect();
         actions.push(SyncAction::AbandonMerged {
