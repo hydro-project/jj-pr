@@ -377,7 +377,7 @@ fn parse_github_owner(url: &str) -> Option<&Owner<str>> {
     let path = url
         .strip_prefix("https://github.com/")
         .or_else(|| url.strip_prefix("git@github.com:"))?;
-    path.split('/').next().map(Owner::ref_cast)
+    path.split('/').next().map(Owner::from_str)
 }
 
 /// Set a bookmark to point at a revision.
@@ -560,11 +560,11 @@ mod tests {
     fn parse_github_owner_https() {
         assert_eq!(
             parse_github_owner("https://github.com/MingweiSamuel/cargo-smart-release.git"),
-            Some(Owner::ref_cast("MingweiSamuel")),
+            Some(Owner::from_str("MingweiSamuel")),
         );
         assert_eq!(
             parse_github_owner("https://github.com/hydro-project/jj-pr"),
-            Some(Owner::ref_cast("hydro-project")),
+            Some(Owner::from_str("hydro-project")),
         );
     }
 
@@ -572,7 +572,7 @@ mod tests {
     fn parse_github_owner_ssh() {
         assert_eq!(
             parse_github_owner("git@github.com:MingweiSamuel/cargo-smart-release.git"),
-            Some(Owner::ref_cast("MingweiSamuel")),
+            Some(Owner::from_str("MingweiSamuel")),
         );
     }
 

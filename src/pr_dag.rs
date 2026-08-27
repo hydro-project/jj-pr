@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::ops::Deref;
 
@@ -15,8 +16,8 @@ new_key_type! {
 }
 
 /// The unified view of the repo state.
-#[derive(Debug)]
-pub struct RepoState {
+#[derive(Debug, Default)]
+pub struct RepoState<'a> {
     /// All the nodes in the repo state.
     pub nodes: SlotMap<NodeKey, Node>,
     /// The node key for `root()` (synthetic boundary below trunk).
@@ -30,7 +31,7 @@ pub struct RepoState {
     pub topo_order: Vec<NodeKey>,
 
     /// Graph-computed: commit_id -> owning node.
-    pub commit_node: HashMap<CommitId, NodeKey>,
+    pub commit_node: HashMap<&'a CommitId<str>, NodeKey>,
     /// PRs whose local bookmark points to a different commit than the remote bookmark.
     pub pr_needs_push: HashSet<PrNum>,
     /// Nodes that have any pending sync action (push, rebase, base update), including
@@ -39,7 +40,7 @@ pub struct RepoState {
     pub node_needs_sync: SparseSecondaryMap<NodeKey, bool>,
 
     /// Bookmarks with conflicting targets that block sync (user must resolve with `jj bookmark`).
-    pub bookmarks_blocking: BTreeSet<Bookmark>,
+    pub bookmarks_blocking: BTreeSet<&'a Bookmark<str>>,
 
     /// Nodes containing at least one commit with content conflicts.
     pub node_conflicted: SparseSecondaryMap<NodeKey, ()>,
@@ -90,41 +91,23 @@ impl Node {
 /// Build the repo state from raw jj and GitHub data.
 ///
 /// `jj_entries` must be in reverse topological order (children to parents to `trunk()`).
-pub fn build(
-    jj_entries: &[JjLogEntry],
+pub fn build<'a>(
+    jj_entries: &'a [JjLogEntry],
     prs: &BTreeMap<PrNum, &GhPr>,
     default_branch: &Bookmark<str>,
     tracked_bookmarks: Option<&BTreeMap<Bookmark, BTreeSet<Remote>>>,
     remote_owners: &BTreeMap<Remote, Owner>,
-) -> Result<RepoState> {
+) -> Result<RepoState<'a>> {
     let mut nodes = SlotMap::with_key();
     let root_node = nodes.insert(Node::Root);
     let mut node_preds = SecondaryMap::new();
     node_preds.insert(root_node, Vec::new()); // `root()` has no parent nodes.
 
-    let (
-        node_succs,
-        commit_node,
-        pr_needs_push,
-        node_needs_sync,
-        bookmarks_blocking,
-        node_conflicted,
-        node_current,
-        node_hidden,
-    ) = Default::default();
     let mut repo_state = RepoState {
         nodes,
         root_node,
         node_preds,
-        node_succs,
-        topo_order: Vec::new(),
-        commit_node,
-        pr_needs_push,
-        node_needs_sync,
-        bookmarks_blocking,
-        node_conflicted,
-        node_hidden,
-        node_current,
+        ..Default::default()
     };
 
     // Reverse lookup: owner → remote. Multiple remotes may have the same owner, although this is discouraged.
@@ -192,10 +175,12 @@ pub fn build(
                             pr_local.insert(pr.number);
                         } else if is_local_side {
                             // Only block on the local side to avoid duplicate insertions.
-                            repo_state.bookmarks_blocking.insert(local_bookmark_name.to_owned());
+                            repo_state.bookmarks_blocking.insert(local_bookmark_name);
                             pr_local.insert(pr.number);
                         }
-                    } else if local_bookmark.target.as_slice() == [Some(jj_entry.commit.commit_id.clone())] {
+                    } else if let [Some(cid)] = local_bookmark.target.as_slice()
+                        && *cid == jj_entry.commit.commit_id
+                    {
                         // Note `local_bookmark.target == vec![Some(jj_entry.commit.commit_id)]`
                         // in the non-conflicted case.
                         cid_pr_tip
@@ -270,7 +255,7 @@ pub fn build(
                 // head_repo_owner not available or not in owner_to_remotes (legacy fixtures).
                 // Compare against any non-git remote that has this bookmark.
                 let any_remote_matches_local = remote_targets
-                    .range((bookmark, Remote::ref_cast(""))..)
+                    .range((bookmark, Remote::from_str(""))..)
                     .take_while(|&((bm, _), _)| **bm == *bookmark)
                     .any(|(_, cid)| Some(cid) == local);
                 if !any_remote_matches_local && local.is_some() {
@@ -381,7 +366,7 @@ pub fn build(
                         node_key
                     }
                 };
-                repo_state.commit_node.insert(cid.to_owned(), node_key);
+                repo_state.commit_node.insert(cid, node_key);
                 if jj_entry.conflict {
                     repo_state.node_conflicted.insert(node_key, ());
                 }
@@ -415,7 +400,7 @@ pub fn build(
                 .commit
                 .parents
                 .iter()
-                .map(|cid| repo_state.commit_node.get(cid).unwrap_or(&repo_state.root_node))
+                .map(|cid| repo_state.commit_node.get(&**cid).unwrap_or(&repo_state.root_node))
                 .copied()
                 .collect::<BTreeSet<_>>();
 
@@ -467,7 +452,7 @@ pub fn build(
                     // Base mismatch (only for open PRs — can't change base of closed PRs).
                     let base_update = gh_pr.state == gh::PrState::Open && {
                         let expected = repo_state.expected_base(nk, prs, default_branch);
-                        gh_pr.base_ref_name != expected
+                        gh_pr.base_ref_name != *expected
                     };
                     (push_or_rebase, base_update)
                 }
@@ -729,13 +714,18 @@ fn decide_combine_child_nodes(child_nodes: SparseSecondaryMap<NodeKey, &Node>) -
 
 // --- Sync status helpers ---
 
-impl RepoState {
+impl RepoState<'_> {
     /// Returns the expected GitHub base branch name for a node, derived from the DAG.
     /// If the parent is another open PR, returns its head_ref_name.
     /// Otherwise returns the default branch name (trunk).
-    pub fn expected_base(&self, nk: NodeKey, prs: &BTreeMap<PrNum, &GhPr>, default_branch: &Bookmark<str>) -> Bookmark {
+    pub fn expected_base<'a>(
+        &self,
+        nk: NodeKey,
+        prs: &'a BTreeMap<PrNum, &GhPr>,
+        default_branch: &'a Bookmark<str>,
+    ) -> &'a Bookmark<str> {
         let Some(preds) = self.node_preds.get(nk) else {
-            return default_branch.to_owned();
+            return default_branch;
         };
         // If there's exactly one parent that is an open PR, use its branch.
         let parent_prs: Vec<_> = preds
@@ -751,9 +741,9 @@ impl RepoState {
             })
             .collect();
         if let [single] = parent_prs.as_slice() {
-            (*single).clone()
+            single
         } else {
-            default_branch.to_owned()
+            default_branch
         }
     }
 
@@ -824,7 +814,7 @@ pub struct RenderOptions {
 
 /// Render the PR DAG as a graph.
 pub fn render_show(
-    state: &RepoState,
+    state: &RepoState<'_>,
     prs: &BTreeMap<PrNum, &GhPr>,
     pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
     options: RenderOptions,
@@ -954,7 +944,7 @@ pub fn render_show(
 }
 
 pub fn render_log(
-    state: &RepoState,
+    state: &RepoState<'_>,
     prs: &BTreeMap<PrNum, &GhPr>,
     pr_statuses: &BTreeMap<PrNum, gh::PrStatus>,
     jj_entries: &[JjLogEntry],
@@ -1172,35 +1162,35 @@ use std::fmt;
 use crate::gh;
 
 #[derive(Debug)]
-pub enum SyncAction {
+pub enum SyncAction<'a> {
     /// Stamp a missing `PR: #N` trailer on a commit.
-    StampTrailer { change_id: ChangeId, pr: PrNum },
+    StampTrailer { change_id: &'a ChangeId<str>, pr: PrNum },
     /// Abandon commits of a merged PR and delete its bookmark if present.
     /// First rebases the merged commits onto trunk so that abandoning them
     /// reparents children to trunk while preserving other parent edges.
     AbandonMerged {
         /// Change IDs of all commits in this PR (stable across rewrites).
-        change_ids: Vec<ChangeId>,
+        change_ids: Vec<&'a ChangeId<str>>,
         /// Change IDs of direct children of this PR's commits that live in
         /// other nodes. After abandoning, these get reparented to trunk; any
         /// parent edges made redundant by that (trunk already an ancestor via
         /// another parent) are simplified away.
-        child_change_ids: Vec<ChangeId>,
+        child_change_ids: Vec<&'a ChangeId<str>>,
         pr: PrNum,
-        bookmark: Bookmark,
+        bookmark: &'a Bookmark<str>,
         bookmark_exists: bool,
     },
     /// Push bookmarks that differ from remote.
-    Push { bookmarks: Vec<(PrNum, Bookmark)> },
+    Push { bookmarks: Vec<(PrNum, &'a Bookmark<str>)> },
     /// Update a PR's base branch on GitHub.
     UpdateBase {
         pr: PrNum,
-        bookmark: Bookmark,
-        new_base: Bookmark,
+        bookmark: &'a Bookmark<str>,
+        new_base: &'a Bookmark<str>,
     },
 }
 
-impl fmt::Display for SyncAction {
+impl fmt::Display for SyncAction<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SyncAction::StampTrailer { change_id, pr } => {
@@ -1237,21 +1227,21 @@ impl fmt::Display for SyncAction {
 
 /// The result of planning a sync: actions to execute and warnings to display.
 #[derive(Debug)]
-pub struct SyncPlan {
-    pub actions: Vec<SyncAction>,
+pub struct SyncPlan<'a> {
+    pub actions: Vec<SyncAction<'a>>,
     pub warnings: Vec<String>,
 }
 
 /// Plan sync actions. Returns Err if blocking issues exist.
-pub fn plan_sync(
-    state: &RepoState,
-    prs: &BTreeMap<PrNum, &GhPr>,
-    jj_entries: &[JjLogEntry],
-    default_branch: &Bookmark<str>,
+pub fn plan_sync<'a>(
+    state: &RepoState<'_>,
+    prs: &'a BTreeMap<PrNum, &GhPr>,
+    jj_entries: &'a [JjLogEntry],
+    default_branch: &'a Bookmark<str>,
     // Merge commit OIDs that exist in the local repo (for stale trunk detection).
     // `None` means all merge commits are considered present (legacy behavior).
     existing_merge_commits: Option<&HashSet<CommitId>>,
-) -> Result<SyncPlan> {
+) -> Result<SyncPlan<'a>> {
     // Block on unresolvable conflicted bookmarks.
     if !state.bookmarks_blocking.is_empty() {
         let names: Vec<_> = state.bookmarks_blocking.iter().map(|s| s.to_string()).collect();
@@ -1282,7 +1272,7 @@ pub fn plan_sync(
         let existing_trailer = jj::parse_pr_trailer(&jj_entry.commit.description);
         if existing_trailer != Some(*pr_num) {
             actions.push(SyncAction::StampTrailer {
-                change_id: jj_entry.commit.change_id.clone(),
+                change_id: &jj_entry.commit.change_id,
                 pr: *pr_num,
             });
         }
@@ -1319,13 +1309,13 @@ pub fn plan_sync(
         if node_entries.is_empty() {
             continue;
         }
-        let change_ids: Vec<ChangeId> = node_entries.iter().map(|e| e.commit.change_id.clone()).collect();
+        let change_ids = node_entries.iter().map(|e| &*e.commit.change_id).collect::<Vec<_>>();
         // Direct children of this PR's commits that belong to other nodes and have
         // multiple parents. `jj abandon` will reparent them to trunk; record
         // them so parent edges made redundant by that can be simplified
         // afterwards. Single-parent children can never end up with redundant
         // edges (abandon only remaps edges, never adds them), so skip those.
-        let child_change_ids: Vec<ChangeId> = jj_entries
+        let child_change_ids = jj_entries
             .iter()
             // Can only have redundant parents if there are at least two.
             .filter(|e| e.commit.parents.len() >= 2)
@@ -1339,13 +1329,13 @@ pub fn plan_sync(
                     .iter()
                     .any(|p| state.commit_node.get(&**p) == Some(&nk))
             })
-            .map(|e| e.commit.change_id.clone())
-            .collect();
+            .map(|e| &*e.commit.change_id)
+            .collect::<Vec<_>>();
         actions.push(SyncAction::AbandonMerged {
             change_ids,
             child_change_ids,
             pr: *pr_num,
-            bookmark: gh_pr.head_ref_name.clone(),
+            bookmark: &gh_pr.head_ref_name,
             bookmark_exists: local_bookmark_names.contains(&*gh_pr.head_ref_name),
         });
     }
@@ -1396,7 +1386,7 @@ pub fn plan_sync(
                 ));
                 continue;
             }
-            push_bookmarks.push((*pr_num, gh_pr.head_ref_name.clone()));
+            push_bookmarks.push((*pr_num, &*gh_pr.head_ref_name));
         }
         // Warn about PR bookmarks that need pushing but whose *tip commit* landed in an
         // ambiguous node (e.g. conflicting `PR:` trailer) — those never form a `Node::Pr`,
@@ -1448,10 +1438,10 @@ pub fn plan_sync(
             continue;
         }
         let expected = state.expected_base(nk, prs, default_branch);
-        if gh_pr.base_ref_name != expected {
+        if gh_pr.base_ref_name != *expected {
             actions.push(SyncAction::UpdateBase {
                 pr: *pr_num,
-                bookmark: gh_pr.head_ref_name.clone(),
+                bookmark: &gh_pr.head_ref_name,
                 new_base: expected,
             });
         }
@@ -1461,7 +1451,7 @@ pub fn plan_sync(
 }
 
 /// Execute planned sync actions.
-pub fn execute_sync(actions: &[SyncAction]) -> Result<()> {
+pub fn execute_sync(actions: &[SyncAction<'_>]) -> Result<()> {
     for action in actions {
         match action {
             SyncAction::StampTrailer { change_id, pr } => {
@@ -1563,13 +1553,13 @@ use anyhow::Context;
 
 /// Find the base branch for a bookmark by walking the parent graph.
 /// Returns the head_ref_name of the nearest ancestor PR, or `default_branch` if none.
-fn find_base_branch(
-    state: &RepoState,
-    prs: &BTreeMap<PrNum, &GhPr>,
+fn find_base_branch<'a>(
+    state: &'a RepoState<'_>,
+    prs: &'a BTreeMap<PrNum, &GhPr>,
     jj_entries: &[JjLogEntry],
     bookmark: &Bookmark<str>,
-    default_branch: &Bookmark<str>,
-) -> Bookmark {
+    default_branch: &'a Bookmark<str>,
+) -> &'a Bookmark<str> {
     // Find the tip commit for this bookmark.
     let tip_cid = jj_entries.iter().find_map(|e| {
         e.local_bookmarks
@@ -1578,7 +1568,7 @@ fn find_base_branch(
             .then_some(&*e.commit.commit_id)
     });
     let Some(tip_cid) = tip_cid else {
-        return default_branch.to_owned();
+        return default_branch;
     };
 
     // Build a parent lookup from jj_entries.
@@ -1607,10 +1597,10 @@ fn find_base_branch(
                     && let Some(gh_pr) = prs.get(pr_num)
                     && gh_pr.state != gh::PrState::Merged
                 {
-                    return gh_pr.head_ref_name.clone();
+                    return &gh_pr.head_ref_name;
                 }
                 // Hit trunk/root/ambiguous — use default.
-                return default_branch.to_owned();
+                return default_branch;
             }
         }
         if let Some(parents) = parent_map.get(cid) {
@@ -1619,30 +1609,30 @@ fn find_base_branch(
             }
         } else {
             // Parent not in entries — beyond revset, treat as trunk.
-            return default_branch.to_owned();
+            return default_branch;
         }
     }
-    default_branch.to_owned()
+    default_branch
 }
 
 /// The planned actions for creating a new PR.
 #[derive(Debug)]
-pub struct CreatePlan {
-    pub bookmark: Bookmark,
-    pub base: Bookmark,
-    pub title: String,
-    pub body: String,
+pub struct CreatePlan<'a> {
+    pub bookmark: &'a Bookmark<str>,
+    pub base: &'a Bookmark<str>,
+    pub title: &'a str,
+    pub body: Cow<'a, str>,
     /// Change IDs of commits that will be stamped with the PR trailer.
-    pub stamp_change_ids: Vec<ChangeId>,
+    pub stamp_change_ids: Vec<&'a ChangeId<str>>,
     /// Owner of the repo the head branch is pushed to. `None` for same-repo PRs.
-    pub head_owner: Option<Owner>,
+    pub head_owner: Option<&'a Owner<str>>,
     /// Owner of the upstream repo the PR targets. `None` if unresolvable.
     pub upstream_owner: Option<Owner>,
     /// Remote to push the bookmark to.
-    pub push_remote: Remote,
+    pub push_remote: &'a Remote<str>,
 }
 
-impl fmt::Display for CreatePlan {
+impl fmt::Display for CreatePlan<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "push {}", self.bookmark)?;
         let upstream = self.upstream_owner.as_deref().map_or("?", |o| o.as_str());
@@ -1665,25 +1655,25 @@ impl fmt::Display for CreatePlan {
 
 /// Plan the creation of a new PR for an existing bookmark. Pure — no side effects.
 #[expect(clippy::too_many_arguments, reason = "will refactor into a struct later")]
-pub fn plan_create(
-    state: &RepoState,
-    prs: &BTreeMap<PrNum, &GhPr>,
-    jj_entries: &[JjLogEntry],
-    default_branch: &Bookmark<str>,
-    tracked_bookmarks: Option<&BTreeMap<Bookmark, BTreeSet<Remote>>>,
-    remote_owners: &BTreeMap<Remote, Owner>,
+pub fn plan_create<'a>(
+    state: &'a RepoState<'_>,
+    prs: &'a BTreeMap<PrNum, &GhPr>,
+    jj_entries: &'a [JjLogEntry],
+    default_branch: &'a Bookmark<str>,
+    tracked_bookmarks: Option<&'a BTreeMap<Bookmark, BTreeSet<Remote>>>,
+    remote_owners: &'a BTreeMap<Remote, Owner>,
     upstream_owner_fn: impl FnOnce() -> Result<Owner>,
-    push_remote_config: Option<&Remote<str>>,
-    bookmark: &str,
-    title: Option<&str>,
-    body: Option<&str>,
-) -> Result<CreatePlan> {
-    let bookmark_ref = Bookmark::ref_cast(bookmark);
+    push_remote_config: Option<&'a Remote<str>>,
+    bookmark: &'a str,
+    title: Option<&'a str>,
+    body: Option<&'a str>,
+) -> Result<CreatePlan<'a>> {
+    let bookmark = Bookmark::from_str(bookmark);
 
     // Verify bookmark exists.
     let tip_entry = jj_entries
         .iter()
-        .find(|e| e.local_bookmarks.iter().any(|bm| *bm.name == *bookmark_ref))
+        .find(|e| e.local_bookmarks.iter().any(|bm| bm.name == *bookmark))
         .with_context(|| {
             format!(
                 "bookmark '{}' not found — create it with `jj bookmark create {}`",
@@ -1695,7 +1685,7 @@ pub fn plan_create(
     let bm = tip_entry
         .local_bookmarks
         .iter()
-        .find(|bm| *bm.name == *bookmark_ref)
+        .find(|bm| bm.name == *bookmark)
         .expect("bookmark must exist — already verified above");
     anyhow::ensure!(
         bm.target.len() == 1,
@@ -1705,7 +1695,7 @@ pub fn plan_create(
     );
 
     // Verify no PR already exists for this bookmark.
-    if let Some(existing) = prs.values().find(|pr| *pr.head_ref_name == *bookmark_ref) {
+    if let Some(existing) = prs.values().find(|pr| pr.head_ref_name == *bookmark) {
         anyhow::bail!(
             "bookmark '{}' already has {} — use `jj-pr sync` to update it",
             bookmark,
@@ -1713,31 +1703,25 @@ pub fn plan_create(
         );
     }
 
-    let mut base = find_base_branch(state, prs, jj_entries, bookmark_ref, default_branch);
+    let mut base = find_base_branch(state, prs, jj_entries, bookmark, default_branch);
 
-    let title = title.map(|s| s.to_owned()).unwrap_or_else(|| {
-        tip_entry
-            .commit
-            .description
-            .lines()
-            .next()
-            .unwrap_or("untitled")
-            .to_owned()
-    });
-    let body = body.map(|s| s.to_owned()).unwrap_or_else(|| {
-        tip_entry
-            .commit
-            .description
-            .lines()
-            .skip(1)
-            .filter(|line| {
-                let l = line.trim_start().to_ascii_lowercase();
-                !l.starts_with("co-authored-by:") && !l.starts_with("pr:")
-            })
-            .collect::<Vec<_>>()
-            .join("\n")
-            .trim()
-            .to_owned()
+    let title = title.unwrap_or_else(|| tip_entry.commit.description.lines().next().unwrap_or("untitled"));
+    let body = body.map(Cow::Borrowed).unwrap_or_else(|| {
+        Cow::Owned(
+            tip_entry
+                .commit
+                .description
+                .lines()
+                .skip(1)
+                .filter(|line| {
+                    let l = line.trim_start().to_ascii_lowercase();
+                    !l.starts_with("co-authored-by:") && !l.starts_with("pr:")
+                })
+                .collect::<Vec<_>>()
+                .join("\n")
+                .trim()
+                .to_owned(),
+        )
     });
 
     // Walk backwards from tip to find commits that need stamping.
@@ -1785,18 +1769,18 @@ pub fn plan_create(
         if existing.is_some() && existing != claim_from_pr {
             continue; // Has a trailer for a different PR — don't overwrite.
         }
-        stamp_change_ids.push(entry.commit.change_id.clone());
+        stamp_change_ids.push(&*entry.commit.change_id);
         for parent in &entry.commit.parents {
             queue.push_back(&**parent);
         }
     }
 
     // Resolve push remote and head owner.
-    let bookmark_remotes = tracked_bookmarks.and_then(|tb| tb.get(bookmark_ref));
+    let bookmark_remotes = tracked_bookmarks.and_then(|tb| tb.get(bookmark));
     let (head_owner, push_remote) = match (bookmark_remotes, tracked_bookmarks) {
         (Some(remotes), _) if remotes.len() == 1 => {
-            let remote = remotes.iter().next().unwrap();
-            (remote_owners.get(remote).cloned(), remote.clone())
+            let remote = &**remotes.iter().next().unwrap();
+            (remote_owners.get(remote).map(|ho| &**ho), remote)
         }
         (Some(remotes), _) if remotes.len() > 1 => {
             anyhow::bail!(
@@ -1807,7 +1791,7 @@ pub fn plan_create(
         }
         (_, None) => {
             // Legacy mode (no tracked_bookmarks data) — default to "origin".
-            (None, REMOTE_ORIGIN.to_owned())
+            (None, REMOTE_ORIGIN)
         }
         _ => {
             // Not yet tracked — use git.push config to determine where to push.
@@ -1818,28 +1802,28 @@ pub fn plan_create(
                     bookmark, bookmark,
                 )
             })?;
-            let owner = remote_owners.get(remote).cloned();
-            (owner, remote.to_owned())
+            let owner = remote_owners.get(remote).map(|o| &**o);
+            (owner, remote)
         }
     };
 
     // Determine if this is a fork workflow by comparing head_owner against upstream.
     let mut plan_head_owner = None;
-    let upstream_owner = if let Some(ho) = head_owner {
-        let upstream_owner = upstream_owner_fn().ok();
-        if upstream_owner.as_deref().is_some_and(|u| *u != *ho) {
+    let upstream_owner = if let Some(head_owner) = head_owner {
+        let upstream_owner = (upstream_owner_fn)().ok();
+        if upstream_owner.as_deref().is_some_and(|u| *u != *head_owner) {
             // Fork workflow — force base to default_branch.
-            base = default_branch.to_owned();
-            plan_head_owner = Some(ho);
+            base = default_branch;
+            plan_head_owner = Some(head_owner);
         }
         upstream_owner
     } else {
         // Can't resolve head owner from remote — same-repo workflow assumed.
-        upstream_owner_fn().ok()
+        (upstream_owner_fn)().ok()
     };
 
     Ok(CreatePlan {
-        bookmark: Bookmark(bookmark.to_owned()),
+        bookmark,
         base,
         title,
         body,
@@ -1851,31 +1835,24 @@ pub fn plan_create(
 }
 
 /// Execute a planned PR creation. Performs side effects: push, create PR, stamp trailers.
-pub fn execute_create(plan: &CreatePlan) -> Result<()> {
-    eprintln!("Pushing {}", crate::style::bookmark(&plan.bookmark));
-    jj::git_push_bookmark(&plan.bookmark, &plan.push_remote)?;
+pub fn execute_create(plan: &CreatePlan<'_>) -> Result<()> {
+    eprintln!("Pushing {}", crate::style::bookmark(plan.bookmark));
+    jj::git_push_bookmark(plan.bookmark, plan.push_remote)?;
 
     let upstream = plan.upstream_owner.as_deref().map_or("?", |o| o.as_str());
     let head = if let Some(owner) = &plan.head_owner {
-        format!("{}:{}", owner, crate::style::bookmark(&plan.bookmark))
+        format!("{}:{}", owner, crate::style::bookmark(plan.bookmark))
     } else {
-        crate::style::bookmark(&plan.bookmark)
+        crate::style::bookmark(plan.bookmark)
     };
     eprintln!(
         "Creating PR: {} ({}:{} ← {}) [draft]",
         plan.title,
         upstream,
-        crate::style::bookmark(&plan.base),
+        crate::style::bookmark(plan.base),
         head,
     );
-    let (pr_number, pr_url) = gh::create_pr(
-        &plan.bookmark,
-        &plan.base,
-        &plan.title,
-        &plan.body,
-        true,
-        plan.head_owner.as_deref(),
-    )?;
+    let (pr_number, pr_url) = gh::create_pr(plan.bookmark, plan.base, plan.title, &plan.body, true, plan.head_owner)?;
     eprintln!("Created {}", crate::style::pr_num(pr_number, Some(&pr_url)));
 
     if !plan.stamp_change_ids.is_empty() {
