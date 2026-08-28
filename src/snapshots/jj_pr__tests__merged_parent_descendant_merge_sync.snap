@@ -4,5 +4,5 @@ expression: plan_sync(&f)
 ---
 abandon merged #1 (delete feat-a)
 simplify redundant parent edges of merge commits (if any)
-push: #3 (feat-c)
-update #3 (feat-c) base -> feat-b
+push: #2 (feat-c), #3 (feat-e)
+update #2 (feat-c) base -> main

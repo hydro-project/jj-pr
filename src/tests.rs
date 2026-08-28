@@ -403,7 +403,7 @@ fn merged_parent() {
 /// Diamond where one leg merged: PR #3 depends on merged PR #1 and open PR #2.
 /// Abandoning #1 reparents c1 to trunk; if its other parent (b1) also descends
 /// from trunk, the trunk edge would be redundant, leaving c1 a merge commit
-/// forever. The plan records c1 for parent simplification after the abandon.
+/// forever. The plan includes a simplify-parents sweep after the abandon.
 #[test]
 fn diamond_merged_parent() {
     let f = fixture(
@@ -428,6 +428,36 @@ fn diamond_merged_parent() {
     );
     insta::assert_snapshot!("diamond_merged_parent_show", render_show(&f, true, false));
     insta::assert_snapshot!("diamond_merged_parent_sync", plan_sync(&f));
+}
+
+/// A merged PR with a *descendant* (not direct child) merge commit: e1 merges
+/// c1 (stacked on merged a1) with an older trunk commit (not in the log
+/// window). Abandoning #1 reparents c1 to the trunk tip, which makes e1's
+/// old-trunk edge redundant — the simplify-parents sweep covers it even
+/// though it is a grandchild of the merged commits.
+#[test]
+fn merged_parent_descendant_merge() {
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("e1", "che1", &["c1", "oldtrunk"], "e\n\nPR: #3\n", &["feat-e"], false),
+                "feat-e",
+            ),
+            with_remote(
+                entry("c1", "chc1", &["a1"], "c\n\nPR: #2\n", &["feat-c"], false),
+                "feat-c",
+            ),
+            entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![
+            gh_pr_merged(1, "feat-a", "main"),
+            gh_pr(2, "feat-c", "feat-a"),
+            gh_pr(3, "feat-e", "feat-c"),
+        ],
+        None,
+    );
+    insta::assert_snapshot!("merged_parent_descendant_merge_sync", plan_sync(&f));
 }
 
 #[test]

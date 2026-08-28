@@ -425,16 +425,18 @@ pub fn rebase(sources: &str, dest: &str) -> Result<()> {
 }
 
 /// Remove redundant parent edges (parents that are ancestors of other parents)
-/// from revisions matching a revset. Content is unchanged; only edges are removed.
-pub fn simplify_parents(revset: &Revset) -> Result<()> {
+/// from all mutable merge commits above trunk. Content is unchanged; only
+/// edges are removed.
+pub fn simplify_parents_above_trunk() -> Result<()> {
+    const REVSET: &str = "trunk().. & mutable() & merges()";
     let output = Command::new("jj")
-        .args(["simplify-parents", "-r", revset.as_str()])
+        .args(["simplify-parents", "-r", REVSET])
         .output()
         .context("Failed to run `jj simplify-parents`")?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("jj simplify-parents -r {revset} failed: {stderr}");
+        bail!("jj simplify-parents -r {REVSET} failed: {stderr}");
     }
     Ok(())
 }
