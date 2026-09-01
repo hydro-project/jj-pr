@@ -154,7 +154,9 @@ struct GraphQlData {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RepositoryData {
-    default_branch_ref: DefaultBranchRef,
+    /// `null` when the repository is empty (nothing pushed yet): the default
+    /// branch only comes into existence with the first push.
+    default_branch_ref: Option<DefaultBranchRef>,
     /// All `prN` and `brN` aliased fields, collected into a flat list of PrNodes.
     #[serde(flatten, deserialize_with = "deserialize_pr_nodes")]
     pr_nodes: Vec<PrNode>,
@@ -347,7 +349,16 @@ pub fn load_prs_and_default_branch<'a>(
         .repository
         .context("GraphQL response missing `repository` (not found or insufficient permissions)")?;
 
-    let default_branch = repo_data.default_branch_ref.name;
+    let default_branch = repo_data
+        .default_branch_ref
+        .context(
+            "The GitHub repository has no default branch yet (it appears to be empty). \
+             GitHub can't host pull requests until a base branch exists. \
+             Push your trunk first, e.g.:\n\n    \
+             jj bookmark set main -r trunk()\n    \
+             jj git push --allow-new -b main",
+        )?
+        .name;
 
     let mut prs = BTreeMap::<PrNum, GhPr>::new();
     let mut statuses = BTreeMap::new();
@@ -480,4 +491,28 @@ pub fn set_ready(pr_number: u64, ready: bool) -> Result<()> {
         bail!("gh pr ready failed: {stderr}");
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// An empty GitHub repository (nothing pushed yet) returns `defaultBranchRef: null`.
+    /// This must parse (and later produce an actionable error) rather than fail deserialization.
+    #[test]
+    fn parse_empty_repo_response() {
+        let resp: GraphQlResponse =
+            serde_json::from_str(r#"{"data":{"repository":{"defaultBranchRef":null}}}"#).unwrap();
+        let repo = resp.data.unwrap().repository.unwrap();
+        assert!(repo.default_branch_ref.is_none());
+        assert!(repo.pr_nodes.is_empty());
+    }
+
+    #[test]
+    fn parse_default_branch_response() {
+        let resp: GraphQlResponse =
+            serde_json::from_str(r#"{"data":{"repository":{"defaultBranchRef":{"name":"main"}}}}"#).unwrap();
+        let repo = resp.data.unwrap().repository.unwrap();
+        assert_eq!(repo.default_branch_ref.unwrap().name.as_str(), "main");
+    }
 }
