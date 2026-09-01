@@ -255,7 +255,7 @@ pub fn build<'a>(
                 // head_repo_owner not available or not in owner_to_remotes (legacy fixtures).
                 // Compare against any non-git remote that has this bookmark.
                 let any_remote_matches_local = remote_targets
-                    .range((bookmark, Remote::from_str(""))..)
+                    .range((bookmark, Remote::from_ref(""))..)
                     .take_while(|&((bm, _), _)| **bm == *bookmark)
                     .any(|(_, cid)| Some(cid) == local);
                 if !any_remote_matches_local && local.is_some() {
@@ -1672,7 +1672,7 @@ pub fn plan_create<'a>(
     title: Option<&'a str>,
     body: Option<&'a str>,
 ) -> Result<CreatePlan<'a>> {
-    let bookmark = Bookmark::from_str(bookmark);
+    let bookmark = Bookmark::from_ref(bookmark);
 
     // Verify bookmark exists.
     let tip_entry = jj_entries
