@@ -355,7 +355,7 @@ pub fn load_prs_and_default_branch<'a>(
             "The GitHub repository has no default branch yet (it appears to be empty). \
              GitHub can't host pull requests until a base branch exists. \
              Push your trunk first, e.g.:\n\n    \
-             jj bookmark set main -r <trunk>\n    \
+             jj bookmark set main -r trunk()\n    \
              jj git push --allow-new -b main",
         )?
         .name;
