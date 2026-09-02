@@ -121,7 +121,7 @@ fn plan_create(input: &InputData, bookmark: &str) -> String {
         &BTreeMap::new(),
     )
     .unwrap();
-    let upstream = Owner("test".to_owned());
+    let upstream = Owner::from("test");
     match pr_dag::plan_create(
         &state,
         &prs,
@@ -163,16 +163,16 @@ fn fixture_files() {
 fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str], is_trunk_tip: bool) -> JjLogEntry {
     JjLogEntry {
         commit: JjCommit {
-            commit_id: CommitId(cid.to_owned()),
-            change_id: ChangeId(chid.to_owned()),
-            parents: parents.iter().map(|s| CommitId(s.to_string())).collect(),
+            commit_id: CommitId::from(cid),
+            change_id: ChangeId::from(chid),
+            parents: parents.iter().copied().map(CommitId::from).collect(),
             description: desc.to_owned(),
         },
         local_bookmarks: bookmarks
             .iter()
-            .map(|name| JjBookmark {
-                name: Bookmark(name.to_string()),
-                target: vec![Some(CommitId(cid.to_owned()))],
+            .map(|&name| JjBookmark {
+                name: Bookmark::from(name),
+                target: vec![Some(CommitId::from(cid))],
             })
             .collect(),
         remote_bookmarks: vec![],
@@ -186,7 +186,7 @@ fn entry(cid: &str, chid: &str, parents: &[&str], desc: &str, bookmarks: &[&str]
 
 fn with_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e.remote_bookmarks.push(JjRemoteBookmark {
-        name: Bookmark(name.to_owned()),
+        name: Bookmark::from(name),
         remote: Some(REMOTE_ORIGIN.to_owned()),
         target: vec![Some(e.commit.commit_id.clone())],
     });
@@ -205,8 +205,8 @@ fn with_working_copy(mut e: JjLogEntry) -> JjLogEntry {
 
 fn with_git_remote(mut e: JjLogEntry, name: &str) -> JjLogEntry {
     e.remote_bookmarks.push(JjRemoteBookmark {
-        name: Bookmark(name.to_owned()),
-        remote: Some(Remote("git".to_owned())),
+        name: Bookmark::from(name),
+        remote: Some(Remote::from("git")),
         target: vec![Some(e.commit.commit_id.clone())],
     });
     e
@@ -216,8 +216,8 @@ fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
     use crate::gh::PrState;
     GhPr {
         number: PrNum::new(number).unwrap(),
-        head_ref_name: Bookmark(head.to_owned()),
-        base_ref_name: Bookmark(base.to_owned()),
+        head_ref_name: Bookmark::from(head),
+        base_ref_name: Bookmark::from(base),
         state: PrState::Open,
         is_draft: true,
         url: format!("https://github.com/test/repo/pull/{number}"),
@@ -231,13 +231,13 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
     use crate::gh::PrState;
     GhPr {
         number: PrNum::new(number).unwrap(),
-        head_ref_name: Bookmark(head.to_owned()),
-        base_ref_name: Bookmark(base.to_owned()),
+        head_ref_name: Bookmark::from(head),
+        base_ref_name: Bookmark::from(base),
         state: PrState::Merged,
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
         title: format!("PR #{number}"),
-        merge_commit_oid: Some(CommitId(format!("merge_commit_{number}"))),
+        merge_commit_oid: Some(CommitId::from(format!("merge_commit_{number}"))),
         head_repo_owner: None,
     }
 }
@@ -246,8 +246,8 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
     use crate::gh::PrState;
     GhPr {
         number: PrNum::new(number).unwrap(),
-        head_ref_name: Bookmark(head.to_owned()),
-        base_ref_name: Bookmark(base.to_owned()),
+        head_ref_name: Bookmark::from(head),
+        base_ref_name: Bookmark::from(base),
         state: PrState::Closed,
         is_draft: false,
         url: format!("https://github.com/test/repo/pull/{number}"),
@@ -265,7 +265,7 @@ fn fixture(
     InputData {
         jj_entries: entries,
         prs,
-        default_branch: Bookmark("main".to_owned()),
+        default_branch: Bookmark::from("main"),
         tracked_bookmarks,
         existing_merge_commits: None, // Legacy: all merge commits considered present.
         remote_owners: BTreeMap::new(),
@@ -513,7 +513,7 @@ fn no_push_when_only_git_remote() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(1, "feat", "main")],
-        default_branch: Bookmark("main".to_owned()),
+        default_branch: Bookmark::from("main"),
         tracked_bookmarks: Some(BTreeMap::new()),
         existing_merge_commits: None,   // Not tracked on origin.
         remote_owners: BTreeMap::new(), // Legacy.
@@ -535,8 +535,8 @@ fn needs_push_tracked_but_no_origin_in_revset() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(1, "feat", "main")],
-        default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [REMOTE_ORIGIN.to_owned()].into())].into()), /* Tracked on origin. */
+        default_branch: Bookmark::from("main"),
+        tracked_bookmarks: Some([(Bookmark::from("feat"), [REMOTE_ORIGIN.to_owned()].into())].into()), /* Tracked on origin. */
         existing_merge_commits: None,
         remote_owners: BTreeMap::new(), // Legacy.
     };
@@ -659,11 +659,7 @@ fn conflicted_bookmark_merged_pr_with_null() {
         false,
     );
     // Set up conflicted target: [local_commit, base_commit, null]
-    tip.local_bookmarks[0].target = vec![
-        Some(CommitId("local".to_owned())),
-        Some(CommitId("base".to_owned())),
-        None,
-    ];
+    tip.local_bookmarks[0].target = vec![Some(CommitId::from("local")), Some(CommitId::from("base")), None];
     let f = fixture(
         vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
         vec![gh_pr_merged(1, "feat", "main")],
@@ -684,11 +680,7 @@ fn conflicted_bookmark_open_pr_blocks_sync() {
         &["feat"],
         false,
     );
-    tip.local_bookmarks[0].target = vec![
-        Some(CommitId("local".to_owned())),
-        Some(CommitId("base".to_owned())),
-        None,
-    ];
+    tip.local_bookmarks[0].target = vec![Some(CommitId::from("local")), Some(CommitId::from("base")), None];
     let f = fixture(
         vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
         vec![gh_pr(1, "feat", "main")],
@@ -734,9 +726,9 @@ fn conflicted_bookmark_no_null_blocks_sync() {
         false,
     );
     tip.local_bookmarks[0].target = vec![
-        Some(CommitId("local".to_owned())),
-        Some(CommitId("base".to_owned())),
-        Some(CommitId("remote".to_owned())),
+        Some(CommitId::from("local")),
+        Some(CommitId::from("base")),
+        Some(CommitId::from("remote")),
     ];
     let f = fixture(
         vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
@@ -886,9 +878,9 @@ fn create_conflicted_bookmark_rejected() {
     // Conflicted bookmark should be rejected by plan_create.
     let mut tip = entry("c1", "ch1", &["trunk"], "feat\n", &["feat"], false);
     tip.local_bookmarks[0].target = vec![
-        Some(CommitId("c1".to_owned())),
-        Some(CommitId("other".to_owned())),
-        Some(CommitId("remote".to_owned())),
+        Some(CommitId::from("c1")),
+        Some(CommitId::from("other")),
+        Some(CommitId::from("remote")),
     ];
     let f = fixture(
         vec![tip, entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true)],
@@ -911,16 +903,16 @@ fn create_fork_workflow() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(1, "feat-a", "main")],
-        default_branch: Bookmark("main".to_owned()),
+        default_branch: Bookmark::from("main"),
         tracked_bookmarks: Some(
             [
-                (Bookmark("feat-a".to_owned()), [Remote("fork".to_owned())].into()),
-                (Bookmark("feat-b".to_owned()), [Remote("fork".to_owned())].into()),
+                (Bookmark::from("feat-a"), [Remote::from("fork")].into()),
+                (Bookmark::from("feat-b"), [Remote::from("fork")].into()),
             ]
             .into(),
         ),
         existing_merge_commits: None,
-        remote_owners: [(Remote("fork".to_owned()), Owner("my-fork-org".to_owned()))].into(),
+        remote_owners: [(Remote::from("fork"), Owner::from("my-fork-org"))].into(),
     };
 
     let prs = f.prs_map();
@@ -932,7 +924,7 @@ fn create_fork_workflow() {
         &f.remote_owners,
     )
     .unwrap();
-    let upstream = Owner("upstream-org".to_owned());
+    let upstream = Owner::from("upstream-org");
     let plan = pr_dag::plan_create(
         &state,
         &prs,
@@ -982,7 +974,7 @@ fn create_body_strips_trailers() {
         &f.remote_owners,
     )
     .unwrap();
-    let upstream = Owner("test".to_owned());
+    let upstream = Owner::from("test");
     let plan = pr_dag::plan_create(
         &state,
         &prs,
@@ -1010,7 +1002,7 @@ fn bookmark_name_collision_no_remote() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr(42, "fix-typo", "main")],
-        default_branch: Bookmark("main".to_owned()),
+        default_branch: Bookmark::from("main"),
         tracked_bookmarks: Some(BTreeMap::new()),
         existing_merge_commits: None,   // No bookmarks tracked.
         remote_owners: BTreeMap::new(), // Legacy.
@@ -1031,7 +1023,7 @@ fn stale_trunk_skips_abandon() {
             entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
         ],
         prs: vec![gh_pr_merged(1, "feat", "main")],
-        default_branch: Bookmark("main".to_owned()),
+        default_branch: Bookmark::from("main"),
         tracked_bookmarks: None,
         existing_merge_commits: Some(std::collections::HashSet::new()), // Empty = nothing fetched.
         remote_owners: BTreeMap::new(),                                 // Legacy.
@@ -1103,27 +1095,27 @@ fn foreign_pr_bookmark_collision() {
             // Foreign PR: someone else pushed from their fork's "main"
             GhPr {
                 number: PrNum::new(1).unwrap(),
-                head_ref_name: Bookmark("main".to_owned()),
-                base_ref_name: Bookmark("main".to_owned()),
+                head_ref_name: Bookmark::from("main"),
+                base_ref_name: Bookmark::from("main"),
                 state: PrState::Merged,
                 is_draft: false,
                 url: "https://github.com/test/repo/pull/1".to_owned(),
                 title: "Foreign PR".to_owned(),
-                merge_commit_oid: Some(CommitId("merge1".to_owned())),
-                head_repo_owner: Some(Owner("someone-else".to_owned())),
+                merge_commit_oid: Some(CommitId::from("merge1")),
+                head_repo_owner: Some(Owner::from("someone-else")),
             },
             gh_pr(2, "feat", "main"),
         ],
-        default_branch: Bookmark("main".to_owned()),
+        default_branch: Bookmark::from("main"),
         tracked_bookmarks: Some(
             [
-                (Bookmark("main".to_owned()), [REMOTE_ORIGIN.to_owned()].into()),
-                (Bookmark("feat".to_owned()), [REMOTE_ORIGIN.to_owned()].into()),
+                (Bookmark::from("main"), [REMOTE_ORIGIN.to_owned()].into()),
+                (Bookmark::from("feat"), [REMOTE_ORIGIN.to_owned()].into()),
             ]
             .into(),
         ),
         existing_merge_commits: None,
-        remote_owners: [(REMOTE_ORIGIN.to_owned(), Owner("us".to_owned()))].into(),
+        remote_owners: [(REMOTE_ORIGIN.to_owned(), Owner::from("us"))].into(),
     };
     // Should only show our PR #2, not the foreign PR #1.
     insta::assert_snapshot!("foreign_pr_collision_show", render_show(&f, true, false));
@@ -1146,21 +1138,21 @@ fn duplicate_remote_owner_warns() {
         ],
         prs: vec![GhPr {
             number: PrNum::new(1).unwrap(),
-            head_ref_name: Bookmark("feat".to_owned()),
-            base_ref_name: Bookmark("main".to_owned()),
+            head_ref_name: Bookmark::from("feat"),
+            base_ref_name: Bookmark::from("main"),
             state: PrState::Open,
             is_draft: false,
             url: "https://github.com/test/repo/pull/1".to_owned(),
             title: "PR #1".to_owned(),
             merge_commit_oid: None,
-            head_repo_owner: Some(Owner("same-org".to_owned())),
+            head_repo_owner: Some(Owner::from("same-org")),
         }],
-        default_branch: Bookmark("main".to_owned()),
-        tracked_bookmarks: Some([(Bookmark("feat".to_owned()), [Remote("origin".to_owned())].into())].into()),
+        default_branch: Bookmark::from("main"),
+        tracked_bookmarks: Some([(Bookmark::from("feat"), [Remote::from("origin")].into())].into()),
         existing_merge_commits: None,
         remote_owners: [
-            (Remote("origin".to_owned()), Owner("same-org".to_owned())),
-            (Remote("upstream".to_owned()), Owner("same-org".to_owned())),
+            (Remote::from("origin"), Owner::from("same-org")),
+            (Remote::from("upstream"), Owner::from("same-org")),
         ]
         .into(),
     };

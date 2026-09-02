@@ -60,7 +60,7 @@ pub fn upstream_repo_owner() -> Result<Owner> {
     if owner.is_empty() {
         bail!("gh repo view returned empty owner. Run `gh repo set-default` to configure.");
     }
-    Ok(Owner(owner))
+    Ok(Owner::from(owner))
 }
 
 /// Newtype for GitHub PR numbers.

@@ -204,9 +204,9 @@ pub fn load_tracked_bookmarks() -> Result<BTreeMap<Bookmark, BTreeSet<Remote>>> 
         if remote == "git" {
             continue;
         }
-        map.entry(Bookmark(name.to_owned()))
+        map.entry(Bookmark::from(name))
             .or_default()
-            .insert(Remote(remote.to_owned()));
+            .insert(Remote::from(remote));
     }
     Ok(map)
 }
@@ -228,7 +228,7 @@ pub fn load_remote_owners() -> Result<BTreeMap<Remote, Owner>> {
             continue;
         };
         if let Some(owner) = parse_github_owner(url.trim()) {
-            map.insert(Remote(name.to_owned()), owner.to_owned());
+            map.insert(Remote::from(name), owner.to_owned());
         }
     }
     Ok(map)
@@ -287,11 +287,7 @@ pub fn check_commits_exist(oids: &[&CommitId<str>]) -> Result<HashSet<CommitId>>
     }
 
     let stdout = String::from_utf8(output.stdout)?;
-    Ok(stdout
-        .lines()
-        .filter(|l| !l.is_empty())
-        .map(|l| CommitId(l.to_owned()))
-        .collect())
+    Ok(stdout.lines().filter(|l| !l.is_empty()).map(CommitId::from).collect())
 }
 
 /// Read the description of a revision.
@@ -365,7 +361,7 @@ pub fn push_remote_config() -> Result<Option<Remote>> {
     if output.status.success() {
         let remote = String::from_utf8(output.stdout)?.trim().trim_matches('"').to_owned();
         if !remote.is_empty() {
-            return Ok(Some(Remote(remote)));
+            return Ok(Some(Remote::from(remote)));
         }
     }
     Ok(None)
@@ -377,7 +373,7 @@ fn parse_github_owner(url: &str) -> Option<&Owner<str>> {
     let path = url
         .strip_prefix("https://github.com/")
         .or_else(|| url.strip_prefix("git@github.com:"))?;
-    path.split('/').next().map(Owner::from_str)
+    path.split('/').next().map(Owner::from_ref)
 }
 
 /// Set a bookmark to point at a revision.
@@ -562,11 +558,11 @@ mod tests {
     fn parse_github_owner_https() {
         assert_eq!(
             parse_github_owner("https://github.com/MingweiSamuel/cargo-smart-release.git"),
-            Some(Owner::from_str("MingweiSamuel")),
+            Some(Owner::from_ref("MingweiSamuel")),
         );
         assert_eq!(
             parse_github_owner("https://github.com/hydro-project/jj-pr"),
-            Some(Owner::from_str("hydro-project")),
+            Some(Owner::from_ref("hydro-project")),
         );
     }
 
@@ -574,7 +570,7 @@ mod tests {
     fn parse_github_owner_ssh() {
         assert_eq!(
             parse_github_owner("git@github.com:MingweiSamuel/cargo-smart-release.git"),
-            Some(Owner::from_str("MingweiSamuel")),
+            Some(Owner::from_ref("MingweiSamuel")),
         );
     }
 
