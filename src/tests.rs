@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::InputData;
-use crate::gh::{CheckStatus, GhPr, PrNum, PrStatus, ReviewDecision};
+use crate::gh::{CheckStatus, GhPr, MergeQueueEntry, MergeQueueEntryState, PrNum, PrStatus, ReviewDecision};
 use crate::jj::{JjBookmark, JjCommit, JjLogEntry, JjRemoteBookmark};
 use crate::pr_dag;
 use crate::types::{Bookmark, ChangeId, CommitId, Owner, REMOTE_ORIGIN, Remote};
@@ -224,6 +224,7 @@ fn gh_pr(number: u64, head: &str, base: &str) -> GhPr {
         title: format!("PR #{number}"),
         merge_commit_oid: None,
         head_repo_owner: None,
+        merge_queue: None,
     }
 }
 
@@ -239,6 +240,7 @@ fn gh_pr_merged(number: u64, head: &str, base: &str) -> GhPr {
         title: format!("PR #{number}"),
         merge_commit_oid: Some(CommitId::from(format!("merge_commit_{number}"))),
         head_repo_owner: None,
+        merge_queue: None,
     }
 }
 
@@ -254,6 +256,7 @@ fn gh_pr_closed(number: u64, head: &str, base: &str) -> GhPr {
         title: format!("PR #{number}"),
         merge_commit_oid: None,
         head_repo_owner: None,
+        merge_queue: None,
     }
 }
 
@@ -777,6 +780,136 @@ fn ci_review_status_indicators() {
     );
 }
 
+// --- Merge queue ---
+
+fn gh_pr_queued(number: u64, head: &str, base: &str, state: MergeQueueEntryState, position: u64) -> GhPr {
+    GhPr {
+        is_draft: false,
+        merge_queue: Some(MergeQueueEntry { state, position }),
+        ..gh_pr(number, head, base)
+    }
+}
+
+#[test]
+fn merge_queue_show() {
+    // Four independent PRs in each queue entry state, so the labels/colors can be eyeballed.
+    use MergeQueueEntryState::*;
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("d1", "chd1", &["trunk"], "d\n\nPR: #4\n", &["feat-d"], false),
+                "feat-d",
+            ),
+            with_remote(
+                entry("c1", "chc1", &["trunk"], "c\n\nPR: #3\n", &["feat-c"], false),
+                "feat-c",
+            ),
+            with_remote(
+                entry("b1", "chb1", &["trunk"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![
+            gh_pr_queued(1, "feat-a", "main", Queued, 3),
+            gh_pr_queued(2, "feat-b", "main", AwaitingChecks, 2),
+            gh_pr_queued(3, "feat-c", "main", Mergeable, 1),
+            gh_pr_queued(4, "feat-d", "main", Unmergeable, 4),
+        ],
+        None,
+    );
+    insta::assert_snapshot!("merge_queue_show", render_show(&f, true, false));
+    insta::assert_snapshot!("merge_queue_log", render_log(&f, true, false));
+    // Nothing diverged, nothing to do.
+    insta::assert_snapshot!("merge_queue_sync_noop", plan_sync(&f));
+}
+
+#[test]
+fn merge_queue_frozen_parent_does_not_cascade() {
+    // Queued PR #1 has a local commit (a2) not on the remote. Normally `needs_push` would
+    // cascade to child #2. Since #1 is frozen (pushing would dequeue it), #2 — which is
+    // itself in sync with its remote — must NOT be pushed, and #1's push is skipped with a warning.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("b1", "chb1", &["a2"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            entry("a2", "cha2", &["a1"], "a fixup\n\nPR: #1\n", &["feat-a"], false),
+            with_remote(entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &[], false), "feat-a"),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![
+            gh_pr_queued(1, "feat-a", "main", MergeQueueEntryState::AwaitingChecks, 1),
+            gh_pr(2, "feat-b", "feat-a"),
+        ],
+        None,
+    );
+    insta::assert_snapshot!("merge_queue_frozen_parent_show", render_show(&f, true, false));
+    insta::assert_snapshot!("merge_queue_frozen_parent_sync", plan_sync(&f));
+}
+
+#[test]
+fn merge_queue_child_syncs_for_own_reasons() {
+    // Queued PR #1 has a base mismatch (GitHub says `other`, DAG says `main`) — skipped
+    // with a warning. Child #2 has its own unpushed commit (b2) and a stale trailer: those
+    // still go through (stamp + push), because #2's needs are its own.
+    let f = fixture(
+        vec![
+            entry("b2", "chb2", &["b1"], "b more\n", &["feat-b"], false),
+            with_remote(entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &[], false), "feat-b"),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![
+            gh_pr_queued(1, "feat-a", "other", MergeQueueEntryState::Queued, 2),
+            gh_pr(2, "feat-b", "feat-a"),
+        ],
+        None,
+    );
+    insta::assert_snapshot!("merge_queue_child_own_reasons_show", render_show(&f, true, false));
+    insta::assert_snapshot!("merge_queue_child_own_reasons_sync", plan_sync(&f));
+}
+
+#[test]
+fn merge_queue_merged_grandparent_still_cascades() {
+    // Merged PR #1 <- queued PR #2 <- open PR #3. The merged parent triggers a rebase of
+    // #2 and everything above it onto trunk; that rebase physically moves #3 too, so #3
+    // must still be flagged (and pushed) even though #2 is frozen.
+    let f = fixture(
+        vec![
+            with_remote(
+                entry("c1", "chc1", &["b1"], "c\n\nPR: #3\n", &["feat-c"], false),
+                "feat-c",
+            ),
+            with_remote(
+                entry("b1", "chb1", &["a1"], "b\n\nPR: #2\n", &["feat-b"], false),
+                "feat-b",
+            ),
+            with_remote(
+                entry("a1", "cha1", &["trunk"], "a\n\nPR: #1\n", &["feat-a"], false),
+                "feat-a",
+            ),
+            entry("trunk", "chtrunk", &[], "trunk\n", &["main"], true),
+        ],
+        vec![
+            gh_pr_merged(1, "feat-a", "main"),
+            gh_pr_queued(2, "feat-b", "main", MergeQueueEntryState::AwaitingChecks, 1),
+            gh_pr(3, "feat-c", "feat-b"),
+        ],
+        None,
+    );
+    insta::assert_snapshot!("merge_queue_merged_grandparent_show", render_show(&f, true, false));
+    insta::assert_snapshot!("merge_queue_merged_grandparent_sync", plan_sync(&f));
+}
+
 #[test]
 fn create_new_pr() {
     // Bookmark "feat" with two unstamped commits, no existing PR.
@@ -1103,6 +1236,7 @@ fn foreign_pr_bookmark_collision() {
                 title: "Foreign PR".to_owned(),
                 merge_commit_oid: Some(CommitId::from("merge1")),
                 head_repo_owner: Some(Owner::from("someone-else")),
+                merge_queue: None,
             },
             gh_pr(2, "feat", "main"),
         ],
@@ -1146,6 +1280,7 @@ fn duplicate_remote_owner_warns() {
             title: "PR #1".to_owned(),
             merge_commit_oid: None,
             head_repo_owner: Some(Owner::from("same-org")),
+            merge_queue: None,
         }],
         default_branch: Bookmark::from("main"),
         tracked_bookmarks: Some([(Bookmark::from("feat"), [Remote::from("origin")].into())].into()),

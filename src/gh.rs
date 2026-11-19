@@ -107,6 +107,36 @@ pub enum CheckStatus {
     Pending,
 }
 
+/// State of a PR's entry in the merge queue.
+/// Mirrors GitHub's GraphQL `MergeQueueEntryState`.
+///
+/// All of these are *in-queue* states: the entry exists only while the PR is in the queue
+/// and GitHub returns `null` (→ `GhPr::merge_queue == None`) once it leaves, whether by
+/// merging, being dequeued (e.g. a push or retarget), or being ejected after `Unmergeable`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum MergeQueueEntryState {
+    /// Entry is in the queue, waiting for its turn.
+    Queued,
+    /// Entry's CI checks are running.
+    AwaitingChecks,
+    /// Entry is locked (actively being merged).
+    Locked,
+    /// Entry passed checks and is ready to merge.
+    Mergeable,
+    /// Entry failed checks or is otherwise unmergeable — it will be removed from the queue.
+    Unmergeable,
+}
+
+/// A PR's position and status in the merge queue.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+pub struct MergeQueueEntry {
+    pub state: MergeQueueEntryState,
+    /// 1-based position in the queue. Populated for every `state` (observed `AwaitingChecks`
+    /// entries at positions 1 and 2 in a two-entry queue), not just `Queued`.
+    pub position: u64,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GhPr {
@@ -123,6 +153,17 @@ pub struct GhPr {
     /// The owner (user/org) of the head repository (fork). None if same repo.
     #[serde(default)]
     pub head_repo_owner: Option<Owner>,
+    /// The PR's merge queue entry, if it has been added to a merge queue.
+    /// `Some` implies the PR is open and will (hopefully) be merged soon.
+    #[serde(default)]
+    pub merge_queue: Option<MergeQueueEntry>,
+}
+
+impl GhPr {
+    /// Whether this PR is currently in a merge queue.
+    pub fn is_queued(&self) -> bool {
+        self.merge_queue.is_some()
+    }
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -132,7 +173,7 @@ pub struct PrStatus {
 }
 
 /// GraphQL fields for a PR node, used in query construction.
-const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision latestReviews(first:10) { nodes { state } } headRepositoryOwner { login } mergeCommit { oid } commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
+const PR_NODE_FIELDS: &str = "number headRefName baseRefName state isDraft url title reviewDecision latestReviews(first:10) { nodes { state } } headRepositoryOwner { login } mergeCommit { oid } mergeQueueEntry { state position } commits(last:1) { nodes { commit { statusCheckRollup { state } } } }";
 
 /// Raw GraphQL response types for serde deserialization.
 #[derive(Deserialize)]
@@ -212,6 +253,7 @@ struct PrNode {
     latest_reviews: Option<LatestReviews>,
     merge_commit: Option<MergeCommit>,
     head_repository_owner: Option<HeadRepoOwner>,
+    merge_queue_entry: Option<MergeQueueEntry>,
     commits: CommitsConnection,
 }
 
@@ -408,6 +450,7 @@ pub fn load_prs_and_default_branch<'a>(
             title: d.title,
             merge_commit_oid: d.merge_commit.map(|mc| mc.oid),
             head_repo_owner: d.head_repository_owner.map(|o| o.login),
+            merge_queue: d.merge_queue_entry,
         });
     }
 
@@ -514,5 +557,37 @@ mod tests {
             serde_json::from_str(r#"{"data":{"repository":{"defaultBranchRef":{"name":"main"}}}}"#).unwrap();
         let repo = resp.data.unwrap().repository.unwrap();
         assert_eq!(repo.default_branch_ref.unwrap().name.as_str(), "main");
+    }
+
+    /// A PR sitting in the merge queue (captured from hydro-project/hydro#3324).
+    /// Note `reviewDecision` is `null` despite an approving review.
+    #[test]
+    fn parse_merge_queue_entry() {
+        let resp: GraphQlResponse = serde_json::from_str(
+            r#"{"data":{"repository":{"defaultBranchRef":{"name":"main"},"pr3324":{"number":3324,"headRefName":"mingwei/some-branch","baseRefName":"main","state":"OPEN","isDraft":false,"url":"https://github.com/hydro-project/hydro/pull/3324","title":"feat: thing","reviewDecision":null,"latestReviews":{"nodes":[{"state":"APPROVED"}]},"headRepositoryOwner":{"login":"hydro-project"},"mergeCommit":null,"mergeQueueEntry":{"state":"AWAITING_CHECKS","position":2},"commits":{"nodes":[{"commit":{"statusCheckRollup":{"state":"SUCCESS"}}}]}}}}}"#,
+        )
+        .unwrap();
+        let repo = resp.data.unwrap().repository.unwrap();
+        let [node] = repo.pr_nodes.as_slice() else {
+            panic!("expected exactly one PR node");
+        };
+        assert_eq!(
+            node.merge_queue_entry,
+            Some(MergeQueueEntry {
+                state: MergeQueueEntryState::AwaitingChecks,
+                position: 2,
+            })
+        );
+    }
+
+    /// Old fixtures predate `merge_queue` and must still deserialize.
+    #[test]
+    fn gh_pr_merge_queue_defaults_to_none() {
+        let pr: GhPr = serde_json::from_str(
+            r#"{"number":1,"headRefName":"feat","baseRefName":"main","state":"OPEN","isDraft":false,"url":"u","title":"t"}"#,
+        )
+        .unwrap();
+        assert_eq!(pr.merge_queue, None);
+        assert!(!pr.is_queued());
     }
 }

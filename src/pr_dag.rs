@@ -439,14 +439,20 @@ pub fn build<'a>(
 
         // Forward pass (parents before children) to propagate node_needs_sync.
         for &nk in repo_state.topo_order.iter() {
-            let (needs_push_or_rebase, needs_base_update) = if let Some(Node::Pr(pr_num)) = repo_state.nodes.get(nk) {
+            // `needs_push`: local bookmark diverged from remote.
+            // `needs_rebase`: a parent PR was merged, so this node (and all descendants)
+            // will be rebased onto trunk.
+            // `needs_base_update`: GitHub base branch doesn't match the DAG.
+            // `is_queued`: PR is in GitHub's merge queue (frozen — see below).
+            let (needs_push, needs_rebase, needs_base_update, is_queued) = if let Some(Node::Pr(pr_num)) =
+                repo_state.nodes.get(nk)
+            {
                 let gh_pr = prs.get(pr_num).expect("bug: PR node without GH PR data");
                 if gh_pr.state == gh::PrState::Merged {
-                    (false, false)
+                    (false, false, false, false)
                 } else {
-                    let push_or_rebase =
-                        repo_state.pr_needs_push.contains(pr_num)
-                        || repo_state.node_preds.get(nk).unwrap().iter().any(|&pred_nk| {
+                    let push = repo_state.pr_needs_push.contains(pr_num);
+                    let rebase = repo_state.node_preds.get(nk).unwrap().iter().any(|&pred_nk| {
                             matches!(repo_state.nodes.get(pred_nk), Some(Node::Pr(parent_pr)) if prs.get(parent_pr).is_some_and(|p| p.state == gh::PrState::Merged))
                         });
                     // Base mismatch (only for open PRs — can't change base of closed PRs).
@@ -454,21 +460,26 @@ pub fn build<'a>(
                         let expected = repo_state.expected_base(nk, prs, default_branch);
                         gh_pr.base_ref_name != *expected
                     };
-                    (push_or_rebase, base_update)
+                    (push, rebase, base_update, gh_pr.is_queued())
                 }
             } else {
-                (false, false)
+                (false, false, false, false)
             };
 
-            let propagates = needs_push_or_rebase
-                || repo_state
-                    .node_preds
-                    .get(nk)
-                    .unwrap()
-                    .iter()
-                    .any(|&pred_nk| repo_state.node_needs_sync.get(pred_nk).copied() == Some(true));
+            let inherited = repo_state
+                .node_preds
+                .get(nk)
+                .unwrap()
+                .iter()
+                .any(|&pred_nk| repo_state.node_needs_sync.get(pred_nk).copied() == Some(true));
 
-            if propagates || needs_base_update {
+            // A PR in the merge queue is frozen: sync won't push it or update its base
+            // (that would dequeue it), so its own push need is local-only and must not
+            // cascade to children. A pending rebase still cascades (the rebase physically
+            // moves all descendants), as does anything inherited from further up.
+            let propagates = needs_rebase || inherited || (needs_push && !is_queued);
+
+            if propagates || needs_push || needs_base_update {
                 repo_state.node_needs_sync.insert(nk, propagates);
             }
         }
@@ -878,7 +889,7 @@ pub fn render_show(
                 format!(
                     "{}{sync_indicator}  {}{ci_review}  {}\n{}",
                     crate::style::pr_num(*pr_id, Some(&gh_pr.url)),
-                    crate::style::status(gh_pr.state, gh_pr.is_draft),
+                    crate::style::status(gh_pr),
                     crate::style::bookmark(&gh_pr.head_ref_name),
                     gh_pr.title,
                 )
@@ -1059,7 +1070,7 @@ pub fn render_log(
                         format!(
                             "{}{sync_indicator} {}{ci_review}",
                             crate::style::pr_num(*pr_id, Some(&pr.url)),
-                            crate::style::status(pr.state, pr.is_draft),
+                            crate::style::status(pr),
                         )
                     } else {
                         format!("{}{sync_indicator}", crate::style::pr_num(*pr_id, None))
@@ -1344,6 +1355,8 @@ pub fn plan_sync<'a>(
     // 4. Push — collect all PR bookmarks that need pushing.
     // Skip nodes that are conflicted or have a conflicted ancestor (can't push children
     // of a conflicted intermediate).
+    // Also skip PRs in the merge queue: pushing to a queued PR's branch would dequeue it.
+    // (Their children are *not* blocked — a queued PR's push need doesn't cascade, see `build`.)
     {
         let mut push_bookmarks = Vec::new();
         let mut blocked_by_conflict: HashSet<NodeKey> = HashSet::new();
@@ -1387,6 +1400,17 @@ pub fn plan_sync<'a>(
                 ));
                 continue;
             }
+            if gh_pr.is_queued() {
+                // Only warn if there is actually something to push; the node may be in
+                // `node_needs_sync` for a base mismatch alone (handled in step 5).
+                if state.pr_needs_push.contains(pr_num) {
+                    warnings.push(format!(
+                        "skip push {} ({}) — in merge queue (pushing would dequeue it)",
+                        pr_num, gh_pr.head_ref_name,
+                    ));
+                }
+                continue;
+            }
             push_bookmarks.push((*pr_num, &*gh_pr.head_ref_name));
         }
         // Warn about PR bookmarks that need pushing but whose *tip commit* landed in an
@@ -1422,6 +1446,7 @@ pub fn plan_sync<'a>(
     }
 
     // 5. Update GitHub base branches (open PRs only — can't change base of closed PRs).
+    // Skip queued PRs: retargeting would dequeue them.
     for &nk in state.topo_order.iter() {
         if !state.node_needs_sync.contains_key(nk) {
             continue;
@@ -1439,13 +1464,21 @@ pub fn plan_sync<'a>(
             continue;
         }
         let expected = state.expected_base(nk, prs, default_branch);
-        if gh_pr.base_ref_name != *expected {
-            actions.push(SyncAction::UpdateBase {
-                pr: *pr_num,
-                bookmark: &gh_pr.head_ref_name,
-                new_base: expected,
-            });
+        if gh_pr.base_ref_name == *expected {
+            continue;
         }
+        if gh_pr.is_queued() {
+            warnings.push(format!(
+                "skip base update {} ({}) — in merge queue",
+                pr_num, gh_pr.head_ref_name,
+            ));
+            continue;
+        }
+        actions.push(SyncAction::UpdateBase {
+            pr: *pr_num,
+            bookmark: &gh_pr.head_ref_name,
+            new_base: expected,
+        });
     }
 
     Ok(SyncPlan { actions, warnings })
