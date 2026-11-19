@@ -1,0 +1,16 @@
+---
+source: src/tests.rs
+expression: "render_show(&f, false, false)"
+input_file: src/fixtures/hydro-merge-queue-1795111233.json.gz
+---
+○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3216PR #3216]8;;[0m  [32mReady[0m  [1m[35msandbox-b6b5c420-fb02-4823-9999-1bd08408df41[0m
+│  feat(hydro_lang)!: scripted sim hooks for lossy network channels (`TCP.lossy` / `UDP.lossy`)
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3270PR #3270]8;;[0m*  [32mReady[0m  [1m[35mlazy-ingress[0m
+│ │  refactor(hydro_lang): make Hydro tick ingress lazy for everything except batched-in streams
+│ │ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3380PR #3380]8;;[0m*  [33mQueued#1[0m  [1m[35msandbox-5baa106a-9ff9-4aea-915b-23ff71d197d0[0m
+│ ├─╯  test(hydro_test): make the Paxos benchmark and `*_some_throughput` tests fail on zero throughput
+│ ○  [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3324PR #3324]8;;[0m  [2mMerged[0m  [1m[35mno-snapshot-triggering-tests[0m
+│ │  test: stop relying on snapshots triggering ticks
+│ [1m[36m◆[0m  [1m[32mtrunk()[0m
+├─╯
+[2m~[0m  [2m(elided revisions)[0m

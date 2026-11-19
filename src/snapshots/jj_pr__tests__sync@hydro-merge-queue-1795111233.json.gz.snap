@@ -1,0 +1,8 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+input_file: src/fixtures/hydro-merge-queue-1795111233.json.gz
+---
+abandon merged #3324 (delete no-snapshot-triggering-tests)
+simplify redundant parent edges of merge commits (if any)
+push: #3270 (lazy-ingress)
