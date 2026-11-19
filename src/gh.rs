@@ -109,6 +109,10 @@ pub enum CheckStatus {
 
 /// State of a PR's entry in the merge queue.
 /// Mirrors GitHub's GraphQL `MergeQueueEntryState`.
+///
+/// All of these are *in-queue* states: the entry exists only while the PR is in the queue
+/// and GitHub returns `null` (→ `GhPr::merge_queue == None`) once it leaves, whether by
+/// merging, being dequeued (e.g. a push or retarget), or being ejected after `Unmergeable`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum MergeQueueEntryState {
@@ -128,7 +132,8 @@ pub enum MergeQueueEntryState {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub struct MergeQueueEntry {
     pub state: MergeQueueEntryState,
-    /// 1-based position in the queue.
+    /// 1-based position in the queue. Populated for every `state` (observed `AwaitingChecks`
+    /// entries at positions 1 and 2 in a two-entry queue), not just `Queued`.
     pub position: u64,
 }
 

@@ -2,9 +2,9 @@
 source: src/tests.rs
 expression: "render_show(&f, true, false)"
 ---
-○  [1m[36m]8;;https://github.com/test/repo/pull/1PR #1]8;;[0m  [33mQueued#3[0m  [1m[35mfeat-a[0m
+○  [1m[36m]8;;https://github.com/test/repo/pull/1PR #1]8;;[0m  [34mQueued#3[0m  [1m[35mfeat-a[0m
 │  PR #1
-│ ○  [1m[36m]8;;https://github.com/test/repo/pull/2PR #2]8;;[0m  [33mQueued#2[0m  [1m[35mfeat-b[0m
+│ ○  [1m[36m]8;;https://github.com/test/repo/pull/2PR #2]8;;[0m  [34mQueued#2[0m  [1m[35mfeat-b[0m
 ├─╯  PR #2
 │ ○  [1m[36m]8;;https://github.com/test/repo/pull/3PR #3]8;;[0m  [32mQueued#1[0m  [1m[35mfeat-c[0m
 ├─╯  PR #3

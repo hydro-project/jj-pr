@@ -9,7 +9,7 @@ input_file: src/fixtures/hydro-merge-queue-1795111233.json.gz
 │  fix(hydro_lang, hydro_deploy)!: update async-ssh2-russh 0.4.0, fix RUSTSEC-2026-0153 and RUSTSEC-2026-0154 (#3384)
 │ ○  [1m[35mlvpxvtyulzmy[0m [34m9b29f761203c[0m [2m(no PR)[0m
 │ │  Update Benchmarks 2026-11-19 fbaccddb35111327f96922259d60dc1607395545
-│ │ ○  [1m[35mtrrwupttkztu[0m [34m1513ac9849ca[0m [1m[35msandbox-5baa106a-9ff9-4aea-915b-23ff71d197d0[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3380PR #3380]8;;[0m* [33mQueued#1[0m
+│ │ ○  [1m[35mtrrwupttkztu[0m [34m1513ac9849ca[0m [1m[35msandbox-5baa106a-9ff9-4aea-915b-23ff71d197d0[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3380PR #3380]8;;[0m* [34mQueued#1[0m
 │ │ │  test(hydro_test): make the Paxos benchmark and `*_some_throughput` tests fail on zero throughput
 │ │ │ [1m[32m@[0m  [1m[35mlxqovxkzvrvw[0m [34m2e80d624fdb7[0m [2m(no PR)[0m
 │ │ │ │  [32m(empty)[0m [32m(no description set)[0m

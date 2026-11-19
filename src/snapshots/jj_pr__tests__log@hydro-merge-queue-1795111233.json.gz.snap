@@ -3,7 +3,7 @@ source: src/tests.rs
 expression: "render_log(&f, false, false)"
 input_file: src/fixtures/hydro-merge-queue-1795111233.json.gz
 ---
-○  [1m[35mtrrwupttkztu[0m [34m1513ac9849ca[0m [1m[35msandbox-5baa106a-9ff9-4aea-915b-23ff71d197d0[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3380PR #3380]8;;[0m* [33mQueued#1[0m
+○  [1m[35mtrrwupttkztu[0m [34m1513ac9849ca[0m [1m[35msandbox-5baa106a-9ff9-4aea-915b-23ff71d197d0[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3380PR #3380]8;;[0m* [34mQueued#1[0m
 │  test(hydro_test): make the Paxos benchmark and `*_some_throughput` tests fail on zero throughput
 │ ○  [1m[35mlstptvtzvrov[0m [34ma5371084c10f[0m [1m[35mlazy-ingress[0m [1m[36m]8;;https://github.com/hydro-project/hydro/pull/3270PR #3270]8;;[0m* [32mReady[0m
 ├─╯  refactor(hydro_lang): make Hydro tick ingress lazy for everything except batched-in streams

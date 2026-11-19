@@ -443,6 +443,7 @@ pub fn build<'a>(
             // `needs_rebase`: a parent PR was merged, so this node (and all descendants)
             // will be rebased onto trunk.
             // `needs_base_update`: GitHub base branch doesn't match the DAG.
+            // `is_queued`: PR is in GitHub's merge queue (frozen — see below).
             let (needs_push, needs_rebase, needs_base_update, is_queued) = if let Some(Node::Pr(pr_num)) =
                 repo_state.nodes.get(nk)
             {

@@ -37,6 +37,8 @@ const EMPTY: Style = Style::new().fg_color(Some(anstyle::Color::Ansi(AnsiColor::
 
 const DRAFT: Style = Style::new().fg_color(Some(anstyle::Color::Ansi(AnsiColor::Yellow)));
 const READY: Style = Style::new().fg_color(Some(anstyle::Color::Ansi(AnsiColor::Green)));
+/// In the merge queue, waiting/being tested — "automation in progress".
+const QUEUED: Style = Style::new().fg_color(Some(anstyle::Color::Ansi(AnsiColor::Blue)));
 const MERGED: Style = Style::new().effects(Effects::DIMMED);
 const CLOSED: Style = Style::new().fg_color(Some(anstyle::Color::Ansi(AnsiColor::Red)));
 const TRUNK_LABEL: Style = Style::new()
@@ -97,7 +99,7 @@ pub fn status(pr: &GhPr) -> String {
                 MergeQueueEntryState::Mergeable => READY,
                 MergeQueueEntryState::Unmergeable => CLOSED,
                 MergeQueueEntryState::Queued | MergeQueueEntryState::AwaitingChecks | MergeQueueEntryState::Locked => {
-                    DRAFT
+                    QUEUED
                 }
             };
             styled(style, &format!("Queued#{}", entry.position))

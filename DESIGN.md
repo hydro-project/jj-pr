@@ -119,7 +119,7 @@ Nodes in `needs_sync` display a `*` indicator in both `show` and `log` views.
 
 ### `jj-pr` / `jj-pr show`
 
-Renders the node DAG as a graph. Shows PR number, state (Draft/Ready/Queued#N/Closed/Merged), bookmark name, title, and `*` sync indicator. `Queued#N` replaces Draft/Ready for PRs in the merge queue (N = queue position; colored green once `MERGEABLE`, red if `UNMERGEABLE`). Ambiguous nodes show context-sensitive hints:
+Renders the node DAG as a graph. Shows PR number, state (Draft/Ready/Queued#N/Closed/Merged), bookmark name, title, and `*` sync indicator. `Queued#N` replaces Draft/Ready for PRs in the merge queue (N = queue position; blue while pending, green once `MERGEABLE`, red if `UNMERGEABLE`). Ambiguous nodes show context-sensitive hints:
 - Shared commits → "restructure PRs"
 - Wrong trailer → "edit commit description"
 - Both → mentions both fixes
