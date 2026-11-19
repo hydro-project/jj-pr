@@ -1,0 +1,7 @@
+---
+source: src/tests.rs
+expression: plan_sync(&f)
+---
+skip base update #1 (feat-a) — in merge queue
+stamp #2 trailer on chb2
+push: #2 (feat-b)

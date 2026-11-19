@@ -17,7 +17,7 @@ Core philosophy:
 Three readonly data sources, loaded once per invocation:
 
 1. **`jj_entries: Vec<JjLogEntry>`** — raw commit data from `jj log` over `trunk().. | trunk()`, including commit/change IDs, parents, descriptions, local/remote bookmarks, and trunk membership.
-2. **`prs: BTreeMap<PrNum, GhPr>`** — GitHub PR metadata from `gh pr list --state all`, including number, head/base ref names, state (Open/Closed/Merged), draft status, URL, and title.
+2. **`prs: BTreeMap<PrNum, GhPr>`** — GitHub PR metadata from `gh pr list --state all`, including number, head/base ref names, state (Open/Closed/Merged), draft status, merge queue entry (state + position, if queued), URL, and title.
 3. **`default_branch: String`** — the GitHub repo's default branch name from `gh repo view`, used as the base for top-level PRs.
 
 ### RepoState
@@ -108,13 +108,18 @@ Computed during `build()` via a single forward pass over the topo order. A node 
 
 Merged PR nodes are never in `needs_sync` — they are the trigger for sync actions on their descendants, not targets themselves.
 
+PRs in GitHub's **merge queue** (`GhPr::merge_queue` is `Some`) are *frozen*: `sync` will neither push them nor
+retarget their base, since either would remove them from the queue. A queued PR can still be in `needs_sync` (so the
+`*` indicator reveals unpushed local changes), but its own push need does **not** propagate to children — children sync
+only for their own reasons (own divergence, own base mismatch, or a merged ancestor whose rebase moves them anyway).
+
 Nodes in `needs_sync` display a `*` indicator in both `show` and `log` views.
 
 ## Commands
 
 ### `jj-pr` / `jj-pr show`
 
-Renders the node DAG as a graph. Shows PR number, state (Draft/Ready/Closed/Merged), bookmark name, title, and `*` sync indicator. Ambiguous nodes show context-sensitive hints:
+Renders the node DAG as a graph. Shows PR number, state (Draft/Ready/Queued#N/Closed/Merged), bookmark name, title, and `*` sync indicator. `Queued#N` replaces Draft/Ready for PRs in the merge queue (N = queue position; colored green once `MERGEABLE`, red if `UNMERGEABLE`). Ambiguous nodes show context-sensitive hints:
 - Shared commits → "restructure PRs"
 - Wrong trailer → "edit commit description"
 - Both → mentions both fixes
@@ -133,8 +138,8 @@ Skippable with `--no-fetch`. Actions in order:
 1. **Stamp missing trailers** — for commits owned by a PR node whose description lacks the correct `PR: #N` trailer. Uses `change_id` (stable across rewrites) for `jj describe`.
 2. **Rebase children of merged PRs** — `jj rebase -s <bookmark>+ -d trunk()` for each merged PR with children.
 3. **Abandon merged PR commits** — `jj abandon <bookmark>`.
-4. **Push** — single `jj git push --bookmark ...` for all affected bookmarks (Open and Closed, not Merged).
-5. **Update GitHub base branches** — `gh pr edit --base` for PRs whose base doesn't match the DAG.
+4. **Push** — single `jj git push --bookmark ...` for all affected bookmarks (Open and Closed, not Merged or in the merge queue — queued PRs are skipped with a warning).
+5. **Update GitHub base branches** — `gh pr edit --base` for PRs whose base doesn't match the DAG (again skipping queued PRs with a warning).
 
 Blocks if `bookmarks_blocking` is non-empty. Supports `--dry-run` and `[Y/n]` confirmation (skippable with `-y`).
 Note: the automatic fetch runs before planning, i.e. before the confirmation prompt and even under `--dry-run`
@@ -175,4 +180,5 @@ src/
 - **Ambiguous instead of error** — invalid states (shared commits, wrong trailers) produce `Ambiguous` nodes with user-facing hints rather than hard errors.
 - **Merged PRs excluded from needs_sync** — they trigger actions on descendants but are not sync targets themselves. Enforced by `assert!` in plan_sync.
 - **Closed treated as Open** — closed PRs are pushed and have bases updated, since the user may re-open them.
+- **Queued PRs are frozen** — pushing to or retargeting a PR in GitHub's merge queue removes it from the queue, so sync skips both (with warnings) and doesn't let the queued PR's own push need cascade to children. Children of a queued PR are otherwise left alone: the existing merged-parent flow handles them once the queue lands the parent.
 - **`default_branch` from GitHub** — uses `gh repo view` to get the actual default branch name instead of hardcoding `main`.

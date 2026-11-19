@@ -68,7 +68,8 @@ jj pr          # or: jj-pr show
 ```
 
 PR numbers are clickable hyperlinks in supported terminals. A `*` after the PR number means there are pending actions
-for that PR.
+for that PR. PRs in GitHub's merge queue show `Queued#N` (N = position) instead of `Ready`; `jj pr sync` won't push
+or retarget them, since that would kick them out of the queue.
 
 If there are ambiguous commits, they show up as warnings with hints.
 ```apl

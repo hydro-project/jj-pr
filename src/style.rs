@@ -1,6 +1,6 @@
 use anstyle::{AnsiColor, Effects, Style};
 
-use crate::gh::PrState;
+use crate::gh::{GhPr, MergeQueueEntryState, PrState};
 use crate::types::{Bookmark, ChangeId, CommitId};
 
 // --- Glyphs ---
@@ -86,12 +86,24 @@ pub fn bookmark(name: &Bookmark<str>) -> String {
     styled(BOOKMARK, name.as_str())
 }
 
-pub fn status(state: PrState, is_draft: bool) -> String {
-    match (state, is_draft) {
-        (PrState::Closed, _) => styled(CLOSED, "Closed"),
-        (PrState::Open, true) => styled(DRAFT, "Draft"),
-        (PrState::Open, false) => styled(READY, "Ready"),
-        (PrState::Merged, _) => styled(MERGED, "Merged"),
+/// The PR lifecycle label: `Draft`, `Ready`, `Queued#N`, `Merged`, or `Closed`.
+pub fn status(pr: &GhPr) -> String {
+    match (pr.state, pr.is_draft, pr.merge_queue) {
+        (PrState::Closed, _, _) => styled(CLOSED, "Closed"),
+        (PrState::Merged, _, _) => styled(MERGED, "Merged"),
+        // A queued PR is on its way to being merged — show it in place of `Ready`.
+        (PrState::Open, _, Some(entry)) => {
+            let style = match entry.state {
+                MergeQueueEntryState::Mergeable => READY,
+                MergeQueueEntryState::Unmergeable => CLOSED,
+                MergeQueueEntryState::Queued | MergeQueueEntryState::AwaitingChecks | MergeQueueEntryState::Locked => {
+                    DRAFT
+                }
+            };
+            styled(style, &format!("Queued#{}", entry.position))
+        }
+        (PrState::Open, true, None) => styled(DRAFT, "Draft"),
+        (PrState::Open, false, None) => styled(READY, "Ready"),
     }
 }
 
